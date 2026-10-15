@@ -104,9 +104,9 @@ export const keywordsRouter = createTRPCRouter({
 
   /** Look up any keyword without tracking it (served from cache when fresh). */
   explore: publicProcedure
-    .input(z.object({ term: termInput, country: countryInput, force: z.boolean().default(false) }))
-    .mutation(async ({ input }) => {
-      const keyword = await getOrFetchKeyword(input.term, input.country, { force: input.force });
+    .input(z.object({ term: termInput, country: countryInput }))
+    .query(async ({ input }) => {
+      const keyword = await getOrFetchKeyword(input.term, input.country);
       return { ...keyword, stale: isStale(keyword.lastFetchedAt) };
     }),
 
