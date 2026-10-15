@@ -1,0 +1,31 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { useTRPC } from "@/trpc/react";
+
+/** Deletes a folder (its apps move to the top level) and leaves its page if it's open. */
+export function useDeleteFolder() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const pathname = useLocation({ select: (l) => l.pathname });
+  const navigate = useNavigate();
+
+  return useMutation(
+    trpc.folders.delete.mutationOptions({
+      onSuccess: async ({ movedCount }, { id }) => {
+        if (pathname === `/folders/${id}`) void navigate({ to: "/" });
+        // Leave the deleted folder's own `get` query alone: refetching it would just 404.
+        await Promise.all([
+          queryClient.invalidateQueries(trpc.folders.list.pathFilter()),
+          queryClient.invalidateQueries(trpc.apps.tracked.pathFilter()),
+        ]);
+        toast.success(
+          movedCount > 0
+            ? `Folder deleted — ${movedCount} app${movedCount === 1 ? "" : "s"} moved out`
+            : "Folder deleted",
+        );
+      },
+      onError: (err) => toast.error(err.message),
+    }),
+  );
+}

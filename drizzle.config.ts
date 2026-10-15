@@ -1,11 +1,10 @@
-import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
+// Only used to generate migrations; the app applies them itself on startup.
 export default defineConfig({
-  schema: "./src/server/db/schema.ts",
+  schema: "./src/main/db/schema.ts",
   out: "./drizzle",
   dialect: "sqlite",
-  dbCredentials: { url: process.env.DATABASE_PATH ?? ".data/openaso.db" },
   strict: true,
   verbose: true,
 });

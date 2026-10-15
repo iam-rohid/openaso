@@ -1,8 +1,8 @@
 # OpenASO
 
-A local, self-hosted App Store Optimization (ASO) tool inspired by [Astro](https://tryastro.app). Track
+A desktop App Store Optimization (ASO) app for macOS, Windows and Linux, inspired by [Astro](https://tryastro.app). Track
 keyword rankings for your iOS apps, research keyword popularity and difficulty, get keyword suggestions, and
-look at competitors' keywords. It all runs on your machine, uses Apple's free public endpoints, and caches
+look at competitors' keywords. It all runs on your computer, uses Apple's free public endpoints, and caches
 results in a local SQLite database.
 
 ## Features
@@ -23,33 +23,36 @@ results in a local SQLite database.
 - **Competitor keywords**: any app's page lists every cached keyword it ranks for. *Discover keywords*
   checks likely keywords for it automatically.
 - **Keyword Explorer**: look up any keyword without tracking it, then track it for an app in one click.
-- **Country switching**: 51 storefronts. The active one lives in the URL (`?country=GB`) and is remembered.
+- **Country switching**: 51 storefronts. The active one carries across pages and is remembered between launches.
 - **Caching and refresh**: keyword data is shared per term and storefront and reused while fresh (24h by
   default). Per-row, bulk, "outdated only" and "refresh all" buttons re-fetch on demand. Every fetch stores a
   snapshot, which is what powers the trends.
 - Dark and light themes.
 
-## Quick start
+## Development
 
 Requirements: Node 20+, pnpm.
 
 ```bash
-pnpm install
-cp .env.example .env     # optional; the defaults work as-is
-pnpm dev                 # http://localhost:3000
+pnpm install             # also rebuilds better-sqlite3 for Electron
+pnpm dev                 # launches the app with hot reload
 ```
 
-The database is a SQLite file at `.data/openaso.db` (override with `DATABASE_PATH`). It's created, and
-migrations are applied, whenever the server boots (`src/instrumentation.ts`).
+The database is a SQLite file in the app's data folder (`OpenASO Dev` in development, `OpenASO` when
+installed), under `~/Library/Application Support` on macOS, `%APPDATA%` on Windows and `~/.config` on Linux.
+It's created, and migrations are applied, on launch. Before an existing database is migrated it's copied to
+`openaso.db.bak`.
 
 ### Useful scripts
 
-| Script             | What it does                                 |
-| ------------------ | -------------------------------------------- |
-| `pnpm db:generate` | Generate a migration after editing the schema |
-| `pnpm db:migrate`  | Apply migrations                             |
-| `pnpm db:studio`   | Browse the database with Drizzle Studio      |
-| `pnpm typecheck`   | TypeScript check                             |
+| Script             | What it does                                       |
+| ------------------ | -------------------------------------------------- |
+| `pnpm dev`         | Run the app with hot reload                         |
+| `pnpm build`       | Build main, preload and renderer into `out/`        |
+| `pnpm preview`     | Run the production build                            |
+| `pnpm db:generate` | Generate a migration after editing the schema       |
+| `pnpm typecheck`   | TypeScript check                                    |
+| `pnpm lint`        | ESLint                                              |
 
 ## How the data works
 
@@ -76,7 +79,7 @@ closely for low- and mid-volume keywords.
 ### Caching
 
 - `keywords`: one row per *(term, storefront)*, shared by every app that tracks it. Requests within the TTL
-  (`KEYWORD_CACHE_TTL_HOURS`, default 24) never touch Apple, and concurrent requests for the same keyword share
+  (24 hours) never touch Apple, and concurrent requests for the same keyword share
   one fetch.
 - `keyword_snapshots`: appended on every fetch. Trends and position history come from here.
 - `apps`: app metadata, refreshed weekly or when it's needed for a different storefront.
@@ -87,23 +90,29 @@ host and retried with backoff. If you hit the limit, wait a minute and try again
 
 ## Tech stack
 
-Next.js 16 (App Router) · tRPC v11 · TanStack Query · TanStack Table v9 · Drizzle ORM · SQLite (better-sqlite3) ·
-shadcn/ui (Radix) · Tailwind CSS v4 · nuqs · Zod
+Electron · electron-vite · React 19 · TanStack Router · tRPC v11 (over IPC) · TanStack Query · TanStack Table v9 ·
+Drizzle ORM · SQLite (better-sqlite3) · shadcn/ui (Radix) · Tailwind CSS v4 · Zod
+
+The renderer talks to the main process through tRPC: its client `fetch` is routed over IPC, and the main process
+answers with tRPC's fetch adapter, so there's no local server or open port.
 
 ```
 src/
-├── app/                      # routes: home, /apps/[appId], /explore, /api/trpc
-├── components/
-│   ├── apps/                 # add-app dialog, app keywords page
-│   ├── keywords/             # table, columns, ranking sheet, add/suggest dialogs
-│   ├── explore/ home/ layout/ shared/
-│   └── ui/                   # shadcn/ui primitives
-├── hooks/                    # country (URL state), debounce, localStorage
-├── lib/                      # countries/storefronts, formatting
-├── server/
+├── main/                     # Electron main process
+│   ├── index.ts              # window, app lifecycle, database setup
+│   ├── ipc.ts                # tRPC-over-IPC handler
+│   ├── api/                  # tRPC routers
 │   ├── apple/                # Apple endpoint clients + rate-limited fetch
 │   ├── services/             # keyword cache, scoring, suggestions, app cache
-│   ├── api/                  # tRPC routers
-│   └── db/                   # Drizzle schema, client, migrator
-└── trpc/                     # React tRPC client & query client
+│   └── db/                   # Drizzle schema, connection, migrator
+├── preload/                  # exposes the IPC bridge to the renderer
+├── renderer/                 # Vite + React UI
+│   ├── index.html
+│   └── src/
+│       ├── routes/           # TanStack Router file routes: /, /explore, /apps/$appId, /folders/$folderId
+│       ├── components/       # apps, keywords, explore, folders, layout, shared, ui (shadcn)
+│       ├── hooks/            # country (URL state), debounce, localStorage
+│       ├── lib/              # formatting, utils
+│       └── trpc/             # tRPC client (IPC fetch) & query client
+└── shared/                   # countries, folders, IPC types — used by both processes
 ```

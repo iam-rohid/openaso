@@ -1,0 +1,101 @@
+import path from "node:path";
+import { app, BrowserWindow, dialog, shell } from "electron";
+import { initDatabase } from "@main/db";
+import { registerTrpcHandler } from "@main/ipc";
+
+// Keep development data apart from the installed app's.
+if (!app.isPackaged) app.setPath("userData", path.join(app.getPath("appData"), "OpenASO Dev"));
+
+let mainWindow: BrowserWindow | null = null;
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 820,
+    minWidth: 900,
+    minHeight: 600,
+    show: false,
+    backgroundColor: "#0a0a0a",
+    webPreferences: {
+      preload: path.join(__dirname, "../preload/index.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  win.once("ready-to-show", () => win.show());
+
+  // Links never open inside the app: web pages go to the default browser.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^(https?|itms-apps):/.test(url)) void shell.openExternal(url);
+    return { action: "deny" };
+  });
+  win.webContents.on("will-navigate", (event, url) => {
+    if (url.startsWith(win.webContents.getURL().split("#")[0])) return;
+    event.preventDefault();
+    if (/^https?:/.test(url)) void shell.openExternal(url);
+  });
+
+  if (process.env.ELECTRON_RENDERER_URL) {
+    void win.loadURL(process.env.ELECTRON_RENDERER_URL);
+  } else {
+    void win.loadFile(path.join(__dirname, "../renderer/index.html"));
+  }
+
+  win.on("closed", () => {
+    if (mainWindow === win) mainWindow = null;
+  });
+  mainWindow = win;
+}
+
+/** Opens and migrates the database; on failure, explains and quits. */
+async function setUpDatabase() {
+  const dataDir = app.getPath("userData");
+  const file = path.join(dataDir, "openaso.db");
+  const migrationsFolder = app.isPackaged
+    ? path.join(process.resourcesPath, "drizzle")
+    : path.join(app.getAppPath(), "drizzle");
+  try {
+    initDatabase(file, migrationsFolder);
+    return true;
+  } catch (err) {
+    console.error("Failed to open the database", err);
+    const { response } = await dialog.showMessageBox({
+      type: "error",
+      title: "OpenASO",
+      message: "OpenASO couldn't open its database.",
+      detail: `${err instanceof Error ? err.message : String(err)}\n\nDatabase: ${file}`,
+      buttons: ["Quit", "Reveal Data Folder"],
+      defaultId: 0,
+    });
+    if (response === 1) await shell.openPath(dataDir);
+    return false;
+  }
+}
+
+// Two instances writing the same database would corrupt each other's view of it.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  });
+
+  void app.whenReady().then(async () => {
+    if (!(await setUpDatabase())) return app.quit();
+    registerTrpcHandler();
+    createWindow();
+
+    // macOS: clicking the dock icon reopens the window.
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  });
+
+  app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") app.quit();
+  });
+}
