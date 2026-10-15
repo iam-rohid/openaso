@@ -17,5 +17,20 @@ services:
       timeout: 5s
       retries: 10
 
+  # Optional: run the whole app in Docker with `docker compose --profile app up -d --build`
+  app:
+    profiles: ["app"]
+    build: .
+    container_name: free-astro-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://astro:astro@db:5432/astro
+      KEYWORD_CACHE_TTL_HOURS: 24
+    ports:
+      - "3000:3000"
+
 volumes:
   pgdata:
