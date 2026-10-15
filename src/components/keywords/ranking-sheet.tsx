@@ -132,7 +132,7 @@ export function RankingSheet({
         onOpenChange(open);
       }}
     >
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
+      <SheetContent className="flex w-full flex-col gap-0 p-0 data-[side=right]:sm:max-w-lg">
         <SheetHeader className="border-b p-4 pr-12">
           <SheetTitle className="flex items-center gap-2 text-lg">
             <span className="truncate">{target?.term}</span>
@@ -203,7 +203,6 @@ export function RankingSheet({
             {ranking.isLoading &&
               Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 p-2">
-                  <Skeleton className="h-4 w-6" />
                   <Skeleton className="size-10 rounded-xl" />
                   <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-4 w-1/2" />
@@ -223,11 +222,15 @@ export function RankingSheet({
                     app.id === highlightAppId && "bg-primary/10 hover:bg-primary/15",
                   )}
                 >
-                  <span className="text-muted-foreground w-8 text-right text-sm tabular-nums">{app.position}</span>
                   <AppIcon src={app.iconUrl} name={app.name} size={40} />
                   <div className="min-w-0 flex-1 space-y-0.5">
-                    <p className="truncate text-sm font-medium" title={app.name}>
-                      <Highlight text={app.name} term={target?.term ?? ""} />
+                    <p className="flex items-center gap-1.5 text-sm font-medium" title={app.name}>
+                      <span className="bg-foreground/10 text-muted-foreground shrink-0 rounded px-1.5 text-xs leading-5 tabular-nums">
+                        {app.position}
+                      </span>
+                      <span className="truncate">
+                        <Highlight text={app.name} term={target?.term ?? ""} />
+                      </span>
                     </p>
                     <p className="truncate text-xs" title={app.subtitle ?? undefined}>
                       {app.subtitle ? (
