@@ -2,19 +2,18 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalLinkIcon, KeyRoundIcon, PlusIcon, RefreshCwIcon, SearchIcon, StarIcon } from "lucide-react";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppIcon } from "@/components/shared/app-icon";
 import { ScoreBar } from "@/components/shared/score-bar";
 import { Sparkline } from "@/components/shared/sparkline";
 import { Badge } from "@/components/ui/badge";
+import { CompetitorKeywordsDialog, type CompetitorApp } from "./competitor-keywords-dialog";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { withCountry } from "@/hooks/use-country";
 import { countryFlag, type CountryCode } from "@/lib/countries";
 import { compactNumber, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -23,8 +22,8 @@ import { useTRPC } from "@/trpc/react";
 export type RankingTarget = { keywordId: number; term: string; country: string };
 
 /**
- * Full App Store ranking for a keyword. Every app links to its own keyword view,
- * which is how you dig into competitors' keywords.
+ * Full App Store ranking for a keyword. Any app's ranked keywords can be opened
+ * as suggestions to add to a tracked app, which is how you dig into competitors.
  */
 export function RankingSheet({
   target,
@@ -38,6 +37,7 @@ export function RankingSheet({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("");
+  const [keywordsOf, setKeywordsOf] = useState<CompetitorApp | null>(null);
 
   // The top results come back fast; the full list may need metadata lookups for
   // ~250 apps on first open, so show the preview until it arrives.
@@ -189,11 +189,7 @@ export function RankingSheet({
                 >
                   <span className="text-muted-foreground w-8 text-right text-sm tabular-nums">{app.position}</span>
                   <AppIcon src={app.iconUrl} name={app.name} size={40} />
-                  <Link
-                    href={withCountry(`/apps/${app.id}`, country)}
-                    onClick={() => onOpenChange(false)}
-                    className="min-w-0 flex-1"
-                  >
+                  <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1.5 truncate text-sm font-medium">
                       <span className="truncate">{app.name}</span>
                       {app.titleMatch && (
@@ -214,18 +210,22 @@ export function RankingSheet({
                         </>
                       )}
                     </p>
-                  </Link>
+                  </div>
                   <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" asChild>
-                          <Link href={withCountry(`/apps/${app.id}`, country)} onClick={() => onOpenChange(false)}>
+                    {app.id !== highlightAppId && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setKeywordsOf({ id: app.id, name: app.name, iconUrl: app.iconUrl })}
+                          >
                             <KeyRoundIcon />
-                          </Link>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>View keywords</TooltipContent>
-                    </Tooltip>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>View keywords</TooltipContent>
+                      </Tooltip>
+                    )}
                     {!isTracked && (
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -266,6 +266,12 @@ export function RankingSheet({
             )}
           </div>
         </div>
+        <CompetitorKeywordsDialog
+          competitor={keywordsOf}
+          country={country}
+          defaultTargetAppId={highlightAppId}
+          onOpenChange={(open) => !open && setKeywordsOf(null)}
+        />
       </SheetContent>
     </Sheet>
   );
