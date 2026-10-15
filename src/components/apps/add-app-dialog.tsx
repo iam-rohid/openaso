@@ -26,9 +26,12 @@ import { useTRPC } from "@/trpc/react";
 export function AddAppDialog({
   open,
   onOpenChange,
+  folderId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Newly tracked apps go straight into this folder. */
+  folderId?: number;
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -48,7 +51,10 @@ export function AddAppDialog({
   const track = useMutation(
     trpc.apps.track.mutationOptions({
       onSuccess: async (app) => {
-        await queryClient.invalidateQueries(trpc.apps.tracked.pathFilter());
+        await Promise.all([
+          queryClient.invalidateQueries(trpc.apps.tracked.pathFilter()),
+          queryClient.invalidateQueries(trpc.folders.pathFilter()),
+        ]);
         toast.success(`${app.name} added`);
         onOpenChange(false);
         setQuery("");
@@ -134,7 +140,7 @@ export function AddAppDialog({
                       size="sm"
                       variant="secondary"
                       disabled={track.isPending}
-                      onClick={() => track.mutate({ id: app.id, country })}
+                      onClick={() => track.mutate({ id: app.id, country, folderId })}
                     >
                       {isPending ? <Spinner /> : <PlusIcon />} Add
                     </Button>

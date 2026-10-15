@@ -11,6 +11,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { FolderColor } from "../../lib/folders";
 
 /**
  * Cached App Store metadata. Keyed by Apple's numeric track id (stored as text).
@@ -37,11 +38,21 @@ export const apps = pgTable("apps", {
   fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-/** Apps the user has added to their sidebar. */
+/** One-level folders for grouping tracked apps in the sidebar and on the home page. */
+export const appFolders = pgTable("app_folders", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  color: text("color").$type<FolderColor>().notNull().default("blue"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Apps the user has added to their sidebar. Deleting a folder moves its apps back to the top level. */
 export const trackedApps = pgTable("tracked_apps", {
   appId: text("app_id")
     .primaryKey()
     .references(() => apps.id, { onDelete: "cascade" }),
+  folderId: integer("folder_id").references(() => appFolders.id, { onDelete: "set null" }),
   defaultCountry: text("default_country").notNull().default("US"),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -118,5 +129,6 @@ export const searchHints = pgTable(
 
 export type App = typeof apps.$inferSelect;
 export type NewApp = typeof apps.$inferInsert;
+export type AppFolder = typeof appFolders.$inferSelect;
 export type Keyword = typeof keywords.$inferSelect;
 export type KeywordSnapshot = typeof keywordSnapshots.$inferSelect;

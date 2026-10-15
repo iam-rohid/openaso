@@ -4,7 +4,7 @@ import { z } from "zod";
 import { searchApps } from "@/server/apple/itunes";
 import { apps, appKeywords, keywords, trackedApps } from "@/server/db/schema";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
-import { appIdInput, countryInput } from "@/server/api/inputs";
+import { appIdInput, countryInput, folderIdInput } from "@/server/api/inputs";
 import { ensureApps, upsertApps } from "@/server/services/apps";
 
 /** Accepts "123", "id123" or a full apps.apple.com URL. */
@@ -25,6 +25,7 @@ export const appsRouter = createTRPCRouter({
         genre: apps.genre,
         rating: apps.rating,
         ratingCount: apps.ratingCount,
+        folderId: trackedApps.folderId,
         createdAt: trackedApps.createdAt,
         keywordCount: sql<number>`(
           select count(*)::int from ${appKeywords}
@@ -64,7 +65,7 @@ export const appsRouter = createTRPCRouter({
     }),
 
   track: publicProcedure
-    .input(z.object({ id: appIdInput, country: countryInput }))
+    .input(z.object({ id: appIdInput, country: countryInput, folderId: folderIdInput.optional() }))
     .mutation(async ({ ctx, input }) => {
       const app = (await ensureApps([input.id], input.country, { requireFull: true })).get(input.id);
       if (!app) throw new TRPCError({ code: "NOT_FOUND", message: "App not found in this storefront" });
@@ -73,9 +74,22 @@ export const appsRouter = createTRPCRouter({
         .from(trackedApps);
       await ctx.db
         .insert(trackedApps)
-        .values({ appId: input.id, defaultCountry: input.country, sortOrder: max + 1 })
+        .values({ appId: input.id, folderId: input.folderId, defaultCountry: input.country, sortOrder: max + 1 })
         .onConflictDoNothing();
       return app;
+    }),
+
+  /** Moves a tracked app into a folder (or back to the top level with `null`), placing it last. */
+  moveToFolder: publicProcedure
+    .input(z.object({ id: appIdInput, folderId: folderIdInput.nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      const [{ max }] = await ctx.db
+        .select({ max: sql<number>`coalesce(max(${trackedApps.sortOrder}), 0)::int` })
+        .from(trackedApps);
+      await ctx.db
+        .update(trackedApps)
+        .set({ folderId: input.folderId, sortOrder: max + 1 })
+        .where(eq(trackedApps.appId, input.id));
     }),
 
   untrack: publicProcedure.input(z.object({ id: appIdInput })).mutation(async ({ ctx, input }) => {
