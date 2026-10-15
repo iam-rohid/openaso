@@ -107,12 +107,21 @@ export async function suggestKeywords(
     ? [seedTerm, `${seedTerm} `, ...seedTerm.split(" ").filter((w) => w.length > 2 && !STOPWORDS.has(w))]
     : [
         ...tracked.slice(0, 8).map((k) => k.term),
-        ...(app ? ngrams(app.name, 1).slice(0, 4) : []),
+        ...(app ? ngrams(app.name, 2).filter((g) => g.includes(" ")).slice(0, 4) : []),
       ];
   const hintLists = await Promise.all(
     [...new Set(prefixes)].map((p) => limit(() => getHints(p, country).catch(() => []))),
   );
-  hintLists.forEach((hints) => hints.forEach((h, i) => pool.add(h, 3 - i * 0.2, "autocomplete")));
+  [...new Set(prefixes)].forEach((prefix, n) => {
+    const prefixWords = prefix.trim().split(" ");
+    hintLists[n].forEach((hint, i) => {
+      // Keep expansions that contain the prefix as whole words ("red" → "red flag",
+      // not "reddit"), and skip "Brand: tagline" style app names.
+      const words = hint.split(" ");
+      const related = prefixWords.every((w) => words.includes(w));
+      if (related && !hint.includes(":")) pool.add(hint, 3 - i * 0.2, "autocomplete");
+    });
+  });
 
   // 3. Phrases competitors put in their titles.
   const rankingSources = seedTerm
@@ -145,5 +154,8 @@ export async function suggestKeywords(
       })),
     ),
   );
-  return scored.sort((a, b) => b.popularity - a.popularity || b.score - a.score);
+  // Blend search popularity with how strongly the term relates to the app.
+  const rank = (s: { popularity: number; score: number }) =>
+    s.popularity * (0.5 + 0.5 * Math.min(1, s.score / 8));
+  return scored.sort((a, b) => rank(b) - rank(a));
 }
