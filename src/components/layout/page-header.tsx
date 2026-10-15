@@ -12,7 +12,8 @@ export function PageHeader({ children, className }: { children?: React.ReactNode
       )}
     >
       <SidebarTrigger />
-      <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-5" />
+      {/* The base separator stretches to the row; pin it to a short, centered line. */}
+      <Separator orientation="vertical" className="mr-1 h-5! self-center!" />
       {children}
     </header>
   );

@@ -1,13 +1,21 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { FolderXIcon, MoreHorizontalIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { FolderXIcon, HomeIcon, MoreHorizontalIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { AddAppDialog } from "@/components/apps/add-app-dialog";
 import { AppCard } from "@/components/apps/app-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { CountrySelect } from "@/components/shared/country-select";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -65,14 +73,28 @@ export function FolderView({ folderId }: { folderId: number }) {
   return (
     <div className="flex min-h-svh flex-col">
       <PageHeader>
-        {folder.data ? (
-          <h1 className="flex min-w-0 items-center gap-2 text-sm font-semibold">
-            <FolderGlyph color={folder.data.color} className="size-4 shrink-0" />
-            <span className="truncate">{folder.data.name}</span>
-          </h1>
-        ) : (
-          <Skeleton className="h-5 w-32" />
-        )}
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="flex-nowrap">
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={withCountry("/", country)} className="flex items-center gap-1.5">
+                  <HomeIcon className="size-4" /> Home
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className="min-w-0">
+              {folder.data ? (
+                <BreadcrumbPage className="flex min-w-0 items-center gap-2 font-semibold">
+                  <FolderGlyph color={folder.data.color} className="size-4 shrink-0" />
+                  <h1 className="truncate">{folder.data.name}</h1>
+                </BreadcrumbPage>
+              ) : (
+                <Skeleton className="h-5 w-32" />
+              )}
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <div className="ml-auto flex items-center gap-2">
           <CountrySelect />
           <Button className="bg-indigo-600 text-white hover:bg-indigo-500" onClick={() => setAddOpen(true)}>
