@@ -55,6 +55,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCountry, withCountry } from "@/hooks/use-country";
 import { useAfterMenuClose } from "@/hooks/use-after-menu-close";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
@@ -150,12 +151,22 @@ export function AppSidebar() {
 
           <SidebarGroup>
             <SidebarGroupLabel>My Apps</SidebarGroupLabel>
-            <SidebarGroupAction title="New folder" className="right-10" onClick={() => openFolderDialog({})}>
-              <FolderPlusIcon /> <span className="sr-only">New folder</span>
-            </SidebarGroupAction>
-            <SidebarGroupAction title="Add app" onClick={() => setAddOpen(true)}>
-              <PlusIcon /> <span className="sr-only">Add app</span>
-            </SidebarGroupAction>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarGroupAction className="right-10" onClick={() => openFolderDialog({})}>
+                  <FolderPlusIcon /> <span className="sr-only">New folder</span>
+                </SidebarGroupAction>
+              </TooltipTrigger>
+              <TooltipContent>New folder</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarGroupAction onClick={() => setAddOpen(true)}>
+                  <PlusIcon /> <span className="sr-only">Add app</span>
+                </SidebarGroupAction>
+              </TooltipTrigger>
+              <TooltipContent>Add app</TooltipContent>
+            </Tooltip>
             <SidebarGroupContent>
               <SidebarMenu>
                 {(tracked.isLoading || folders.isLoading) &&
@@ -200,17 +211,6 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <ThemeToggle />
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip="Add app"
-                variant="outline"
-                className="justify-between"
-                onClick={() => setAddOpen(true)}
-              >
-                <span>Add App</span>
-                <PlusIcon />
-              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
