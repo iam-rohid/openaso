@@ -60,7 +60,7 @@ export function KeywordExplorer() {
     enabled: term.length > 0,
   });
   const rankingData = useQuery({
-    ...trpc.keywords.ranking.queryOptions({ keywordId: keyword.data?.id ?? 0 }),
+    ...trpc.keywords.ranking.queryOptions({ keywordId: keyword.data?.id ?? 0, limit: 10 }),
     enabled: !!keyword.data,
   });
   const recent = useQuery(trpc.keywords.recent.queryOptions({ country }));

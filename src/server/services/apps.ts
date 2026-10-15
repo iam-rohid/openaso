@@ -64,7 +64,8 @@ export async function ensureApps(
   const missing = ids.filter((id) => {
     const app = cached.get(id);
     if (!app || force) return true;
-    if (requireFull && !app.description) return true;
+    // Ratings differ per storefront, so full views refetch when the storefront changes.
+    if (requireFull && (!app.description || app.country !== country)) return true;
     return now - app.fetchedAt.getTime() > APP_TTL_MS;
   });
 

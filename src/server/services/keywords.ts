@@ -265,16 +265,15 @@ export async function listRankedKeywords(appId: string, country: string) {
 }
 
 /** Full ranking for a keyword, filling in app metadata that isn't cached yet. */
-export async function getKeywordRanking(keywordId: number) {
+export async function getKeywordRanking(keywordId: number, limit?: number) {
   const [keyword] = await db.select().from(keywords).where(eq(keywords.id, keywordId)).limit(1);
   if (!keyword) return null;
-  const appsById = await ensureApps(keyword.rankedAppIds, keyword.country).catch(() =>
-    getCachedApps(keyword.rankedAppIds),
-  );
+  const ids = limit ? keyword.rankedAppIds.slice(0, limit) : keyword.rankedAppIds;
+  const appsById = await ensureApps(ids, keyword.country).catch(() => getCachedApps(ids));
   return {
     keyword,
     stale: isStale(keyword.lastFetchedAt),
-    apps: keyword.rankedAppIds.map((id, i) => {
+    apps: ids.map((id, i) => {
       const app = appsById.get(id);
       return {
         position: i + 1,

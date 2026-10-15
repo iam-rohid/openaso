@@ -39,10 +39,18 @@ export function RankingSheet({
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("");
 
-  const ranking = useQuery({
+  // The top results come back fast; the full list may need metadata lookups for
+  // ~250 apps on first open, so show the preview until it arrives.
+  const preview = useQuery({
+    ...trpc.keywords.ranking.queryOptions({ keywordId: target?.keywordId ?? 0, limit: 25 }),
+    enabled: !!target,
+  });
+  const full = useQuery({
     ...trpc.keywords.ranking.queryOptions({ keywordId: target?.keywordId ?? 0 }),
     enabled: !!target,
   });
+  const ranking = full.data ? full : preview;
+  const loadingRest = !full.data && full.isFetching;
   const history = useQuery({
     ...trpc.keywords.history.queryOptions({
       keywordId: target?.keywordId ?? 0,
@@ -139,7 +147,7 @@ export function RankingSheet({
                 <SearchIcon />
               </InputGroupAddon>
               <InputGroupInput
-                placeholder={`Filter ${ranking.data?.apps.length ?? ""} apps…`}
+                placeholder={`Filter ${keyword?.resultCount ?? ""} apps…`}
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
               />
@@ -251,6 +259,11 @@ export function RankingSheet({
                 </div>
               );
             })}
+            {loadingRest && preview.data && (
+              <p className="text-muted-foreground flex items-center justify-center gap-2 p-4 text-sm">
+                <RefreshCwIcon className="size-3.5 animate-spin" /> Loading the rest of the ranking…
+              </p>
+            )}
           </div>
         </div>
       </SheetContent>

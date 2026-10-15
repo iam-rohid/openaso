@@ -92,11 +92,13 @@ export const keywordsRouter = createTRPCRouter({
         .where(and(eq(appKeywords.appId, input.appId), eq(appKeywords.keywordId, input.keywordId)));
     }),
 
-  ranking: publicProcedure.input(z.object({ keywordId: z.number().int() })).query(async ({ input }) => {
-    const ranking = await getKeywordRanking(input.keywordId);
-    if (!ranking) throw new TRPCError({ code: "NOT_FOUND", message: "Keyword not found" });
-    return ranking;
-  }),
+  ranking: publicProcedure
+    .input(z.object({ keywordId: z.number().int(), limit: z.number().int().min(1).max(300).optional() }))
+    .query(async ({ input }) => {
+      const ranking = await getKeywordRanking(input.keywordId, input.limit);
+      if (!ranking) throw new TRPCError({ code: "NOT_FOUND", message: "Keyword not found" });
+      return ranking;
+    }),
 
   history: publicProcedure
     .input(z.object({ keywordId: z.number().int(), appId: appIdInput.nullable() }))
