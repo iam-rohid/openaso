@@ -291,7 +291,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
               <span className="sr-only">Keyword actions</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="min-w-48">
             <DropdownMenuItem onClick={() => actions.onOpenRanking(k)}>
               <ListOrderedIcon /> View ranking
             </DropdownMenuItem>

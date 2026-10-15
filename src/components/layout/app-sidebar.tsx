@@ -135,18 +135,18 @@ export function AppSidebar() {
                       </Link>
                     </SidebarMenuButton>
                     {app.keywordCount > 0 && (
-                      <SidebarMenuBadge className="group-hover/menu-item:opacity-0">
+                      <SidebarMenuBadge className="group-hover/menu-item:opacity-0 group-has-[[data-state=open]]/menu-item:opacity-0 group-has-[button:focus-visible]/menu-item:opacity-0">
                         {app.keywordCount}
                       </SidebarMenuBadge>
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <SidebarMenuAction showOnHover className="top-3!">
+                        <SidebarMenuAction className="top-3! group-hover/menu-item:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 md:opacity-0">
                           <MoreHorizontalIcon />
                           <span className="sr-only">More</span>
                         </SidebarMenuAction>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent side="right" align="start">
+                      <DropdownMenuContent side="right" align="start" className="min-w-48">
                         <DropdownMenuItem asChild>
                           <a href={`https://apps.apple.com/${country.toLowerCase()}/app/id${app.id}`} target="_blank" rel="noreferrer">
                             <ExternalLinkIcon /> View on App Store
