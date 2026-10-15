@@ -1,7 +1,6 @@
 "use client";
 
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createTRPCClient, httpBatchStreamLink, loggerLink } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
@@ -44,7 +43,6 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
         {children}
-        <ReactQueryDevtools buttonPosition="bottom-left" />
       </TRPCProvider>
     </QueryClientProvider>
   );
