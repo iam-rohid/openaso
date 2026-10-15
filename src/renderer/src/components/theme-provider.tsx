@@ -50,6 +50,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const resolvedTheme = theme === "system" ? (systemDark ? "dark" : "light") : theme;
 
   useEffect(() => applyTheme(resolvedTheme), [resolvedTheme]);
+  useEffect(() => window.openaso.setTheme(theme), [theme]);
 
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);

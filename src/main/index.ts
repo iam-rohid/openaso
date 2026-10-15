@@ -1,21 +1,33 @@
 import path from "node:path";
-import { app, BrowserWindow, dialog, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
+import { THEME_CHANNEL, type ThemeSource } from "@shared/ipc";
+import { loadAppState, restorableBounds, saveAppState, trackWindowState } from "@main/app-state";
 import { initDatabase } from "@main/db";
 import { registerTrpcHandler } from "@main/ipc";
+import { buildMenu } from "@main/menu";
 
 // Keep development data apart from the installed app's.
 if (!app.isPackaged) app.setPath("userData", path.join(app.getPath("appData"), "OpenASO Dev"));
 
 let mainWindow: BrowserWindow | null = null;
 
+const isMac = process.platform === "darwin";
+
 function createWindow() {
+  const state = loadAppState();
+  const bounds = restorableBounds(state);
   const win = new BrowserWindow({
-    width: 1280,
-    height: 820,
+    width: bounds?.width ?? 1280,
+    height: bounds?.height ?? 820,
+    x: bounds?.x,
+    y: bounds?.y,
     minWidth: 900,
     minHeight: 600,
     show: false,
-    backgroundColor: "#0a0a0a",
+    // Matches the page background so there's no flash before the renderer paints.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#ffffff",
+    // macOS: no title bar; the traffic lights sit level with the page toolbar (56px tall).
+    ...(isMac && { titleBarStyle: "hiddenInset", trafficLightPosition: { x: 18, y: 21 } }),
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
       contextIsolation: true,
@@ -24,6 +36,8 @@ function createWindow() {
     },
   });
 
+  if (bounds && state.window?.maximized) win.maximize();
+  trackWindowState(win);
   win.once("ready-to-show", () => win.show());
 
   // Links never open inside the app: web pages go to the default browser.
@@ -74,6 +88,17 @@ async function setUpDatabase() {
   }
 }
 
+const THEMES: ThemeSource[] = ["light", "dark", "system"];
+
+/** The renderer reports theme changes so native chrome follows, and the next launch starts in it. */
+function registerThemeHandler() {
+  ipcMain.on(THEME_CHANNEL, (_event, theme: ThemeSource) => {
+    if (!THEMES.includes(theme) || nativeTheme.themeSource === theme) return;
+    nativeTheme.themeSource = theme;
+    saveAppState({ theme });
+  });
+}
+
 // Two instances writing the same database would corrupt each other's view of it.
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -85,8 +110,11 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   void app.whenReady().then(async () => {
+    nativeTheme.themeSource = loadAppState().theme ?? "dark";
     if (!(await setUpDatabase())) return app.quit();
     registerTrpcHandler();
+    registerThemeHandler();
+    buildMenu();
     createWindow();
 
     // macOS: clicking the dock icon reopens the window.

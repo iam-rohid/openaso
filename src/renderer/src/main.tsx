@@ -7,6 +7,9 @@ import { createRoot } from "react-dom/client";
 import { savedCountry } from "@/hooks/use-country";
 import { routeTree } from "./routeTree.gen";
 
+// Lets CSS adapt to the platform's window chrome (e.g. macOS traffic lights).
+document.documentElement.dataset.platform = window.openaso.platform;
+
 // Reopen on the storefront the app was last left on. After launch, links carry it along.
 const country = savedCountry();
 if (country && !window.location.hash.includes("country=")) {

@@ -131,3 +131,27 @@
     @apply font-sans;
   }
 }
+
+/*
+ * macOS uses a hidden title bar with the traffic lights inset over the top-left corner
+ * (see `trafficLightPosition` in the main process). The sidebar header and page header
+ * stand in for the title bar: they drag the window, while their controls stay clickable.
+ * Unlayered on purpose, so it overrides the padding utilities on these elements.
+ */
+html[data-platform="darwin"] {
+  [data-slot="sidebar-header"] {
+    padding-top: 3.25rem;
+  }
+  /* Icon-only sidebar is narrower than the traffic lights, so the page toolbar makes room. */
+  [data-slot="sidebar-wrapper"]:has([data-slot="sidebar"][data-state="collapsed"]) [data-slot="page-header"] {
+    padding-left: 2.5rem;
+  }
+  [data-slot="sidebar-header"],
+  [data-slot="page-header"] {
+    -webkit-app-region: drag;
+  }
+  :is([data-slot="sidebar-header"], [data-slot="page-header"])
+    :is(a, button, input, select, textarea, [role="button"], [role="combobox"], [role="tab"]) {
+    -webkit-app-region: no-drag;
+  }
+}

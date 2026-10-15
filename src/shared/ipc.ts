@@ -22,8 +22,13 @@ export type IpcResponse = {
   body: string;
 };
 
+export const THEME_CHANNEL = "theme";
+export type ThemeSource = "light" | "dark" | "system";
+
 /** Exposed on `window.openaso` by the preload script. */
 export type PreloadApi = {
   trpc: (request: IpcRequest) => Promise<IpcResponse>;
+  /** Keeps native chrome (title bar, menus, dialogs) in the app's theme. */
+  setTheme: (theme: ThemeSource) => void;
   platform: NodeJS.Platform;
 };

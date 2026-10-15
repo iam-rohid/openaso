@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 export function PageHeader({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (
     <header
+      data-slot="page-header"
       className={cn(
         "bg-background/80 sticky top-0 z-20 flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2 backdrop-blur",
         className,
