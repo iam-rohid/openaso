@@ -146,21 +146,24 @@ type BaseKeyword = Pick<
   "id" | "term" | "country" | "popularity" | "difficulty" | "resultCount" | "lastFetchedAt"
 > & { rankedAppIds: string[]; notes?: string | null; tracked?: boolean };
 
+/** 1-based position of `appId` in a snapshot, computed in SQL to avoid shipping the arrays. */
+function snapshotPosition(appId: string) {
+  return sql<number | null>`(
+    select e.key + 1 from json_each(${keywordSnapshots.rankedAppIds}) e where e.value = ${appId} limit 1
+  )`;
+}
+
 /** Decorate keywords with the given app's position, history and top-ranking apps. */
 async function buildRows(appId: string, base: BaseKeyword[]): Promise<KeywordRow[]> {
   if (base.length === 0) return [];
   const ids = base.map((k) => k.id);
 
-  // Position of `appId` in every snapshot, computed in SQL to avoid shipping the arrays.
   const snapshots = await db
     .select({
       keywordId: keywordSnapshots.keywordId,
       at: keywordSnapshots.fetchedAt,
       popularity: keywordSnapshots.popularity,
-      position: sql<number | null>`(
-        select e.ord::int from jsonb_array_elements_text(${keywordSnapshots.rankedAppIds})
-        with ordinality as e(id, ord) where e.id = ${appId} limit 1
-      )`,
+      position: snapshotPosition(appId),
     })
     .from(keywordSnapshots)
     .where(inArray(keywordSnapshots.keywordId, ids))
@@ -247,7 +250,7 @@ export async function listRankedKeywords(appId: string, country: string) {
       tracked: sql<boolean>`exists (
         select 1 from ${appKeywords}
         where ${appKeywords.keywordId} = ${keywords.id} and ${appKeywords.appId} = ${appId}
-      )`,
+      )`.mapWith(Boolean),
       notes: sql<string | null>`(
         select ${appKeywords.notes} from ${appKeywords}
         where ${appKeywords.keywordId} = ${keywords.id} and ${appKeywords.appId} = ${appId}
@@ -257,7 +260,7 @@ export async function listRankedKeywords(appId: string, country: string) {
     .where(
       and(
         eq(keywords.country, country),
-        sql`${keywords.rankedAppIds} @> ${JSON.stringify([appId])}::jsonb`,
+        sql`exists (select 1 from json_each(${keywords.rankedAppIds}) where value = ${appId})`,
       ),
     )
     .orderBy(desc(keywords.popularity), keywords.term);
@@ -302,12 +305,7 @@ export async function getKeywordHistory(keywordId: number, appId: string | null)
       popularity: keywordSnapshots.popularity,
       difficulty: keywordSnapshots.difficulty,
       resultCount: keywordSnapshots.resultCount,
-      position: appId
-        ? sql<number | null>`(
-            select e.ord::int from jsonb_array_elements_text(${keywordSnapshots.rankedAppIds})
-            with ordinality as e(id, ord) where e.id = ${appId} limit 1
-          )`
-        : sql<number | null>`null`,
+      position: appId ? snapshotPosition(appId) : sql<number | null>`null`,
     })
     .from(keywordSnapshots)
     .where(eq(keywordSnapshots.keywordId, keywordId))

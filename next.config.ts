@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   // Hide the floating Next.js badge; compile and runtime errors still show.
   devIndicators: false,
   images: {

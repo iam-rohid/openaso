@@ -28,7 +28,7 @@ export const appsRouter = createTRPCRouter({
         folderId: trackedApps.folderId,
         createdAt: trackedApps.createdAt,
         keywordCount: sql<number>`(
-          select count(*)::int from ${appKeywords}
+          select count(*) from ${appKeywords}
           join ${keywords} on ${keywords.id} = ${appKeywords.keywordId}
           where ${appKeywords.appId} = ${apps.id} and ${keywords.country} = ${input.country}
         )`,
@@ -70,7 +70,7 @@ export const appsRouter = createTRPCRouter({
       const app = (await ensureApps([input.id], input.country, { requireFull: true })).get(input.id);
       if (!app) throw new TRPCError({ code: "NOT_FOUND", message: "App not found in this storefront" });
       const [{ max }] = await ctx.db
-        .select({ max: sql<number>`coalesce(max(${trackedApps.sortOrder}), 0)::int` })
+        .select({ max: sql<number>`coalesce(max(${trackedApps.sortOrder}), 0)` })
         .from(trackedApps);
       await ctx.db
         .insert(trackedApps)
@@ -84,7 +84,7 @@ export const appsRouter = createTRPCRouter({
     .input(z.object({ id: appIdInput, folderId: folderIdInput.nullable() }))
     .mutation(async ({ ctx, input }) => {
       const [{ max }] = await ctx.db
-        .select({ max: sql<number>`coalesce(max(${trackedApps.sortOrder}), 0)::int` })
+        .select({ max: sql<number>`coalesce(max(${trackedApps.sortOrder}), 0)` })
         .from(trackedApps);
       await ctx.db
         .update(trackedApps)

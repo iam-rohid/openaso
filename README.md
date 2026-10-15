@@ -3,7 +3,7 @@
 A local, self-hosted App Store Optimization (ASO) tool inspired by [Astro](https://tryastro.app). Track
 keyword rankings for your iOS apps, research keyword popularity and difficulty, get keyword suggestions, and
 look at competitors' keywords. It all runs on your machine, uses Apple's free public endpoints, and caches
-results in Postgres.
+results in a local SQLite database.
 
 ## Features
 
@@ -31,28 +31,21 @@ results in Postgres.
 
 ## Quick start
 
-Requirements: Node 20+, pnpm, Docker.
+Requirements: Node 20+, pnpm.
 
 ```bash
 pnpm install
-cp .env.example .env     # defaults match docker-compose
-pnpm setup               # starts Postgres in Docker and runs migrations
+cp .env.example .env     # optional; the defaults work as-is
 pnpm dev                 # http://localhost:3000
 ```
 
-Migrations also run automatically whenever the server boots (`src/instrumentation.ts`).
-
-### Run everything in Docker
-
-```bash
-pnpm docker:app          # docker compose --profile app up -d --build  → http://localhost:3000
-```
+The database is a SQLite file at `.data/openaso.db` (override with `DATABASE_PATH`). It's created, and
+migrations are applied, whenever the server boots (`src/instrumentation.ts`).
 
 ### Useful scripts
 
 | Script             | What it does                                 |
 | ------------------ | -------------------------------------------- |
-| `pnpm db:up`       | Start Postgres (port 5433)                   |
 | `pnpm db:generate` | Generate a migration after editing the schema |
 | `pnpm db:migrate`  | Apply migrations                             |
 | `pnpm db:studio`   | Browse the database with Drizzle Studio      |
@@ -94,7 +87,7 @@ host and retried with backoff. If you hit the limit, wait a minute and try again
 
 ## Tech stack
 
-Next.js 16 (App Router) · tRPC v11 · TanStack Query · TanStack Table v9 · Drizzle ORM · PostgreSQL 17 ·
+Next.js 16 (App Router) · tRPC v11 · TanStack Query · TanStack Table v9 · Drizzle ORM · SQLite (better-sqlite3) ·
 shadcn/ui (Radix) · Tailwind CSS v4 · nuqs · Zod
 
 ```

@@ -20,22 +20,22 @@ export const foldersRouter = createTRPCRouter({
         name: appFolders.name,
         color: appFolders.color,
         // Correlated subqueries use explicit aliases: drizzle leaves columns unqualified in single-table selects.
-        appCount: sql<number>`(select count(*)::int from tracked_apps ta where ta.folder_id = ${appFolders}.id)`,
+        appCount: sql<number>`(select count(*) from tracked_apps ta where ta.folder_id = ${appFolders}.id)`,
         keywordCount: sql<number>`(
-          select count(*)::int from app_keywords ak
+          select count(*) from app_keywords ak
           join tracked_apps ta on ta.app_id = ak.app_id
           join keywords k on k.id = ak.keyword_id
           where ta.folder_id = ${appFolders}.id and k.country = ${input.country}
         )`,
-        previewIcons: sql<(string | null)[]>`coalesce((
-          select json_agg(t.icon_url) from (
+        previewIcons: sql<string>`(
+          select json_group_array(t.icon_url) from (
             select a.icon_url from tracked_apps ta
             join apps a on a.id = ta.app_id
             where ta.folder_id = ${appFolders}.id
             order by ta.sort_order, ta.created_at
             limit 4
           ) t
-        ), '[]'::json)`,
+        )`.mapWith((json: string) => JSON.parse(json) as (string | null)[]),
       })
       .from(appFolders)
       .orderBy(asc(appFolders.sortOrder), asc(appFolders.createdAt));
@@ -51,16 +51,19 @@ export const foldersRouter = createTRPCRouter({
   create: publicProcedure
     .input(folderFields.extend({ appId: appIdInput.optional() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.transaction(async (tx) => {
-        const [{ max }] = await tx
-          .select({ max: sql<number>`coalesce(max(${appFolders.sortOrder}), 0)::int` })
-          .from(appFolders);
-        const [folder] = await tx
+      // better-sqlite3 transactions are synchronous, so the callback can't await.
+      return ctx.db.transaction((tx) => {
+        const { max } = tx
+          .select({ max: sql<number>`coalesce(max(${appFolders.sortOrder}), 0)` })
+          .from(appFolders)
+          .get()!;
+        const folder = tx
           .insert(appFolders)
           .values({ name: input.name, color: input.color, sortOrder: max + 1 })
-          .returning();
+          .returning()
+          .get();
         if (input.appId) {
-          await tx.update(trackedApps).set({ folderId: folder.id }).where(eq(trackedApps.appId, input.appId));
+          tx.update(trackedApps).set({ folderId: folder.id }).where(eq(trackedApps.appId, input.appId)).run();
         }
         return folder;
       });
@@ -80,12 +83,13 @@ export const foldersRouter = createTRPCRouter({
 
   /** Deletes the folder only; its apps fall back to the top level via ON DELETE SET NULL. */
   delete: publicProcedure.input(z.object({ id: folderIdInput })).mutation(async ({ ctx, input }) => {
-    return ctx.db.transaction(async (tx) => {
-      const moved = await tx
+    return ctx.db.transaction((tx) => {
+      const moved = tx
         .select({ appId: trackedApps.appId })
         .from(trackedApps)
-        .where(eq(trackedApps.folderId, input.id));
-      await tx.delete(appFolders).where(eq(appFolders.id, input.id));
+        .where(eq(trackedApps.folderId, input.id))
+        .all();
+      tx.delete(appFolders).where(eq(appFolders.id, input.id)).run();
       return { movedCount: moved.length };
     });
   }),
