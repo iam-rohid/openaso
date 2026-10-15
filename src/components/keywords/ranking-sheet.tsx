@@ -1,10 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLinkIcon, KeyRoundIcon, PlusIcon, RefreshCwIcon, SearchIcon, StarIcon } from "lucide-react";
+import { EyeIcon, PlusIcon, RefreshCwIcon, SearchIcon, StarIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppIcon } from "@/components/shared/app-icon";
+import { AppLinksMenu } from "@/components/shared/app-links-menu";
 import { ScoreBar } from "@/components/shared/score-bar";
 import { Sparkline } from "@/components/shared/sparkline";
 import { Badge } from "@/components/ui/badge";
@@ -211,7 +212,7 @@ export function RankingSheet({
                       )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 has-[[data-state=open]]:opacity-100">
                     {app.id !== highlightAppId && (
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -220,7 +221,7 @@ export function RankingSheet({
                             size="icon-sm"
                             onClick={() => setKeywordsOf({ id: app.id, name: app.name, iconUrl: app.iconUrl })}
                           >
-                            <KeyRoundIcon />
+                            <EyeIcon />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>View keywords</TooltipContent>
@@ -241,20 +242,7 @@ export function RankingSheet({
                         <TooltipContent>Add to My Apps</TooltipContent>
                       </Tooltip>
                     )}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" asChild>
-                          <a
-                            href={app.storeUrl ?? `https://apps.apple.com/${country.toLowerCase()}/app/id${app.id}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <ExternalLinkIcon />
-                          </a>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Open in App Store</TooltipContent>
-                    </Tooltip>
+                    <AppLinksMenu appId={app.id} country={country} storeUrl={app.storeUrl} />
                   </div>
                 </div>
               );

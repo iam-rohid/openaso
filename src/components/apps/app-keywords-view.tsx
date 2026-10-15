@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDownIcon,
-  ExternalLinkIcon,
   EyeIcon,
   LightbulbIcon,
   PlusIcon,
@@ -21,6 +20,7 @@ import { RankingSheet, type RankingTarget } from "@/components/keywords/ranking-
 import { SuggestionsDialog } from "@/components/keywords/suggestions-dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { AppIcon } from "@/components/shared/app-icon";
+import { AppLinksMenu } from "@/components/shared/app-links-menu";
 import { CountrySelect } from "@/components/shared/country-select";
 import {
   AlertDialog,
@@ -275,20 +275,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
               </Button>
             )
           )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" asChild>
-                <a
-                  href={app.data?.storeUrl ?? `https://apps.apple.com/${country.toLowerCase()}/app/id${appId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <ExternalLinkIcon />
-                </a>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Open in App Store</TooltipContent>
-          </Tooltip>
+          <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" />
         </div>
       </PageHeader>
 
