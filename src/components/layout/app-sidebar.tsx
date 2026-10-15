@@ -216,11 +216,10 @@ export function AppSidebar() {
               <SidebarMenuButton
                 tooltip="Add app"
                 variant="outline"
-                className="justify-between group-data-[collapsible=icon]:justify-center"
                 onClick={() => setAddOpen(true)}
               >
-                <span className="group-data-[collapsible=icon]:hidden">Add App</span>
                 <PlusIcon />
+                <span>Add App</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
