@@ -91,7 +91,7 @@ export function AppSidebar() {
   const isEmpty = tracked.data?.length === 0 && folders.data?.length === 0;
 
   // Folders default to expanded; only explicit collapses are stored.
-  const [expanded, setExpanded] = useLocalStorageState<Record<string, boolean>>("free-astro:folders-expanded", {});
+  const [expanded, setExpanded] = useLocalStorageState<Record<string, boolean>>("openaso:folders-expanded", {});
   const isExpanded = (id: number) => expanded[id] ?? true;
   const setFolderExpanded = (id: number, open: boolean) => setExpanded((prev) => ({ ...prev, [id]: open }));
 
@@ -118,7 +118,7 @@ export function AppSidebar() {
                     <span className="text-sm font-bold">A</span>
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">Free Astro</span>
+                    <span className="truncate font-semibold">OpenASO</span>
                     <span className="text-muted-foreground truncate text-xs">ASO toolkit</span>
                   </div>
                 </Link>

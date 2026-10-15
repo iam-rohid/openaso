@@ -49,9 +49,9 @@ export function KeywordTable({
   /** Extra controls rendered on the right of the table toolbar. */
   toolbar?: React.ReactNode;
 }) {
-  const [sorting, setSorting] = useLocalStorageState<SortingState>("free-astro:kw-sort", DEFAULT_SORT);
+  const [sorting, setSorting] = useLocalStorageState<SortingState>("openaso:kw-sort", DEFAULT_SORT);
   const [columnVisibility, setColumnVisibility] = useLocalStorageState<ColumnVisibilityState>(
-    "free-astro:kw-columns",
+    "openaso:kw-columns",
     DEFAULT_VISIBILITY,
   );
   const [globalFilter, setGlobalFilter] = useState("");

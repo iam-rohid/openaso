@@ -1,18 +1,20 @@
+name: openaso
+
 services:
   db:
     image: postgres:17-alpine
-    container_name: free-astro-db
+    container_name: openaso-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: astro
-      POSTGRES_PASSWORD: astro
-      POSTGRES_DB: astro
+      POSTGRES_USER: openaso
+      POSTGRES_PASSWORD: openaso
+      POSTGRES_DB: openaso
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U astro -d astro"]
+      test: ["CMD-SHELL", "pg_isready -U openaso -d openaso"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -21,13 +23,13 @@ services:
   app:
     profiles: ["app"]
     build: .
-    container_name: free-astro-app
+    container_name: openaso-app
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://astro:astro@db:5432/astro
+      DATABASE_URL: postgres://openaso:openaso@db:5432/openaso
       KEYWORD_CACHE_TTL_HOURS: 24
     ports:
       - "3000:3000"

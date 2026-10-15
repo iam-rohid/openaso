@@ -1,4 +1,4 @@
-# Free Astro
+# OpenASO
 
 A local, self-hosted App Store Optimization (ASO) tool inspired by [Astro](https://tryastro.app). Track
 keyword rankings for your iOS apps, research keyword popularity and difficulty, get keyword suggestions, and
@@ -60,7 +60,7 @@ pnpm docker:app          # docker compose --profile app up -d --build  → http:
 
 ## How the data works
 
-Apple only exposes real search volume through the Search Ads API, which needs an account. Free Astro uses
+Apple only exposes real search volume through the Search Ads API, which needs an account. OpenASO uses
 free endpoints and estimates the rest:
 
 | Data                | Source                                                                                                    |
@@ -69,7 +69,7 @@ free endpoints and estimates the rest:
 | App metadata        | iTunes Search & Lookup APIs (`itunes.apple.com/search`, `/lookup`)                                        |
 | Autocomplete        | App Store search hints (`MZSearchHints.woa/wa/hints`)                                                     |
 
-- **Popularity (5–100)**: estimated from autocomplete. Free Astro binary-searches for the shortest prefix at
+- **Popularity (5–100)**: estimated from autocomplete. OpenASO binary-searches for the shortest prefix at
   which Apple suggests the keyword: the fewer letters a user has to type, the more people search for it. The
   keyword's position in that suggestion list also counts. Keywords Apple never suggests get the minimum of 5,
   the same floor as Apple Search Ads.

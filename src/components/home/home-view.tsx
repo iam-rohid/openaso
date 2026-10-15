@@ -66,7 +66,7 @@ export function HomeView() {
               </EmptyMedia>
               <EmptyTitle>Add your first app</EmptyTitle>
               <EmptyDescription>
-                Search the App Store for your app (or a competitor), then add keywords or let Free Astro suggest
+                Search the App Store for your app (or a competitor), then add keywords or let OpenASO suggest
                 some.
               </EmptyDescription>
             </EmptyHeader>

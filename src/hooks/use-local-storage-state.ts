@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 
-const EVENT = "free-astro:local-storage";
+const EVENT = "openaso:local-storage";
 
 function subscribe(callback: () => void) {
   window.addEventListener("storage", callback);

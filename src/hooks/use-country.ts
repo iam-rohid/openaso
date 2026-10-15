@@ -4,7 +4,7 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useCallback, useEffect } from "react";
 import { COUNTRY_CODES, DEFAULT_COUNTRY, type CountryCode } from "@/lib/countries";
 
-const STORAGE_KEY = "free-astro:country";
+const STORAGE_KEY = "openaso:country";
 const countryParser = parseAsStringLiteral(COUNTRY_CODES).withDefault(DEFAULT_COUNTRY);
 
 /**

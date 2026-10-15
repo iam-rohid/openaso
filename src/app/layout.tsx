@@ -7,7 +7,7 @@ const geistSans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Free Astro", template: "%s · Free Astro" },
+  title: { default: "OpenASO", template: "%s · OpenASO" },
   description: "Local App Store keyword research & rank tracking",
 };
 
