@@ -17,7 +17,7 @@ import {
   normalizeTerm,
   refreshKeywords,
 } from "@/server/services/keywords";
-import { suggestKeywords } from "@/server/services/suggestions";
+import { discoverKeywords, suggestKeywords } from "@/server/services/suggestions";
 
 const termInput = z.string().trim().min(1).max(100);
 
@@ -134,6 +134,11 @@ export const keywordsRouter = createTRPCRouter({
       const term = normalizeTerm(input.term);
       return term ? getHints(term, input.country) : [];
     }),
+
+  /** Fetch likely keywords for any app so its rankings can be discovered. */
+  discover: publicProcedure
+    .input(z.object({ appId: appIdInput, country: countryInput }))
+    .mutation(({ input }) => discoverKeywords(input.appId, input.country)),
 
   suggestions: publicProcedure
     .input(z.object({ appId: appIdInput, country: countryInput, seed: termInput.optional() }))

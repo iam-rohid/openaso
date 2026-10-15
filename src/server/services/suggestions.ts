@@ -5,7 +5,7 @@ import { db } from "@/server/db";
 import { appKeywords, keywords } from "@/server/db/schema";
 import { ensureApps, getCachedApps } from "./apps";
 import { getHints } from "./hints";
-import { normalizeTerm } from "./keywords";
+import { getOrFetchKeyword, normalizeTerm } from "./keywords";
 import { estimatePopularity } from "./scoring";
 
 const STOPWORDS = new Set(
@@ -158,4 +158,23 @@ export async function suggestKeywords(
   const rank = (s: { popularity: number; score: number }) =>
     s.popularity * (0.5 + 0.5 * Math.min(1, s.score / 8));
   return scored.sort((a, b) => rank(b) - rank(a));
+}
+
+const DISCOVER_LIMIT = 15;
+
+/**
+ * Seeds the local keyword cache with likely keywords for an app (typically a
+ * competitor) so its rankings show up in the "ranked keywords" view.
+ */
+export async function discoverKeywords(appId: string, country: string) {
+  const candidates = (await suggestKeywords(appId, country)).slice(0, DISCOVER_LIMIT);
+  const limit = pLimit(4);
+  const results = await Promise.allSettled(
+    candidates.map((c) => limit(() => getOrFetchKeyword(c.term, country))),
+  );
+  const fetched = results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+  return {
+    checked: fetched.length,
+    ranked: fetched.filter((k) => k.rankedAppIds.includes(appId)).length,
+  };
 }

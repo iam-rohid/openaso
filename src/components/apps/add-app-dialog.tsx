@@ -15,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { useCountry, withCountry } from "@/hooks/use-country";
@@ -80,7 +79,7 @@ export function AddAppDialog({
           />
         </InputGroup>
 
-        <ScrollArea className="-mx-2 h-[420px]">
+        <div className="-mx-2 h-[420px] overflow-y-auto">
           <div className="space-y-0.5 px-2">
             {search.isLoading &&
               Array.from({ length: 6 }).map((_, i) => (
@@ -109,7 +108,7 @@ export function AddAppDialog({
                     <p className="truncate font-medium">{app.name}</p>
                     <p className="text-muted-foreground flex items-center gap-1.5 truncate text-xs">
                       <span className="truncate">{app.developer}</span>
-                      {app.rating != null && (
+                      {app.rating != null && !!app.ratingCount && (
                         <>
                           <span>·</span>
                           <StarIcon className="size-3 fill-current" />
@@ -144,7 +143,7 @@ export function AddAppDialog({
               );
             })}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

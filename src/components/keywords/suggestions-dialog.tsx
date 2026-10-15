@@ -17,7 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { countryFlag, type CountryCode } from "@/lib/countries";
@@ -150,7 +149,7 @@ export function SuggestionsDialog({
           </Button>
         </div>
 
-        <ScrollArea className="-mx-2 h-[400px]">
+        <div className="-mx-2 h-[400px] overflow-y-auto">
           <div className="px-2">
             {suggestions.isLoading && (
               <div className="space-y-1">
@@ -190,7 +189,7 @@ export function SuggestionsDialog({
               </label>
             ))}
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter>
           <Button

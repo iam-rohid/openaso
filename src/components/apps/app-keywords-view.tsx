@@ -8,6 +8,7 @@ import {
   LightbulbIcon,
   PlusIcon,
   RefreshCwIcon,
+  SparklesIcon,
   StarIcon,
 } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -119,6 +120,27 @@ export function AppKeywordsView({ appId }: { appId: string }) {
       onError: (err) => toast.error(err.message),
     }),
   );
+  const discover = useMutation(
+    trpc.keywords.discover.mutationOptions({
+      onSuccess: async ({ checked, ranked }) => {
+        await invalidateKeywords();
+        toast.success(`Checked ${checked} keywords — ranks for ${ranked}`);
+      },
+      onError: (err) => toast.error(err.message),
+    }),
+  );
+  const discoverButton = (
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={discover.isPending}
+      onClick={() => discover.mutate({ appId, country })}
+    >
+      {discover.isPending ? <Spinner /> : <SparklesIcon />}
+      {discover.isPending ? "Discovering…" : "Discover keywords"}
+    </Button>
+  );
+
   const track = useMutation(
     trpc.apps.track.mutationOptions({
       onSuccess: async (a) => {
@@ -273,11 +295,12 @@ export function AppKeywordsView({ appId }: { appId: string }) {
       {app.data && !isTracked && (
         <div className="mx-4 mt-3 flex items-start gap-3 rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-sm">
           <EyeIcon className="mt-0.5 size-4 shrink-0 text-sky-500" />
-          <p>
+          <p className="flex-1">
             You’re viewing a competitor. These are the keywords from your local database where{" "}
-            <strong>{app.data.name}</strong> appears in the App Store results. Track more keywords (or explore
-            them) to discover more of its rankings.
+            <strong>{app.data.name}</strong> appears in the App Store results. Use <em>Discover keywords</em> to
+            check likely keywords from its title, autocomplete and similar apps.
           </p>
+          {discoverButton}
         </div>
       )}
 
@@ -289,6 +312,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
         actions={actions}
         toolbar={
           <>
+            {scope === "ranked" && isTracked && discoverButton}
             {keywords.data && keywords.data.length > 0 && (
               <span className="text-muted-foreground hidden text-xs md:inline">
                 Ranked in {ranked} · Top 10 in {top10}
@@ -332,6 +356,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
                   : "This app doesn’t appear in any keyword cached for this storefront yet."}
               </EmptyDescription>
             </EmptyHeader>
+            {scope === "ranked" && <EmptyContent>{discoverButton}</EmptyContent>}
             {isTracked && scope === "tracked" && (
               <EmptyContent className="flex-row justify-center">
                 <Button className="bg-indigo-600 text-white hover:bg-indigo-500" onClick={() => setAddOpen(true)}>

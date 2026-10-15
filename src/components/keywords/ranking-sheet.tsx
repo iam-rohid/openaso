@@ -11,7 +11,6 @@ import { Sparkline } from "@/components/shared/sparkline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -156,7 +155,7 @@ export function RankingSheet({
           </div>
         </SheetHeader>
 
-        <ScrollArea className="min-h-0 flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="p-2">
             {ranking.isLoading &&
               Array.from({ length: 10 }).map((_, i) => (
@@ -197,7 +196,7 @@ export function RankingSheet({
                     </p>
                     <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
                       <span className="truncate">{app.developer}</span>
-                      {app.rating != null && (
+                      {app.rating != null && !!app.ratingCount && (
                         <>
                           <span>·</span>
                           <StarIcon className="size-3 shrink-0 fill-current" />
@@ -253,7 +252,7 @@ export function RankingSheet({
               );
             })}
           </div>
-        </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>
   );

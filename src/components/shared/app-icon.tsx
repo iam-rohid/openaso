@@ -35,7 +35,7 @@ export function AppIcon({
       height={size}
       loading="lazy"
       style={style}
-      className={cn("ring-border shrink-0 object-cover ring-1", className)}
+      className={cn("bg-muted ring-border shrink-0 object-cover ring-1", className)}
     />
   );
 }

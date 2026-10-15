@@ -261,7 +261,7 @@ export function KeywordExplorer() {
                         </p>
                         <p className="text-muted-foreground truncate text-xs">{app.developer}</p>
                       </div>
-                      {app.rating != null && (
+                      {app.rating != null && !!app.ratingCount && (
                         <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
                           <StarIcon className="size-3 fill-current" /> {app.rating.toFixed(1)} ·{" "}
                           {compactNumber(app.ratingCount)}
