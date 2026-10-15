@@ -1,14 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { EyeIcon, PlusIcon, RefreshCwIcon, SearchIcon, StarIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { CalendarIcon, EyeIcon, PlusIcon, RefreshCwIcon, SearchIcon, StarIcon } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppIcon } from "@/components/shared/app-icon";
 import { AppLinksMenu } from "@/components/shared/app-links-menu";
 import { ScoreBar } from "@/components/shared/score-bar";
 import { Sparkline } from "@/components/shared/sparkline";
-import { Badge } from "@/components/ui/badge";
 import { CompetitorKeywordsDialog, type CompetitorApp } from "./competitor-keywords-dialog";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -21,6 +20,41 @@ import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
 
 export type RankingTarget = { keywordId: number; term: string; country: string };
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Marks where the keyword appears in `text`: the whole phrase strongly, any of its
+ * words on their own more softly. Matches whole words only, ignoring case.
+ */
+function Highlight({ text, term }: { text: string; term: string }) {
+  const phrase = term.trim().toLowerCase();
+  const words = [...new Set(phrase.split(/\s+/).filter(Boolean))];
+  if (words.length === 0) return text;
+
+  const alternatives = [...new Set([phrase, ...words])].sort((a, b) => b.length - a.length);
+  const pattern = new RegExp(
+    `(?<![\\p{L}\\p{N}])(${alternatives.map(escapeRegExp).join("|")})(?![\\p{L}\\p{N}])`,
+    "giu",
+  );
+  return text.split(pattern).map((part, i) =>
+    i % 2 === 0 ? (
+      <Fragment key={i}>{part}</Fragment>
+    ) : (
+      <mark
+        key={i}
+        className={cn(
+          "rounded-[3px] px-0.5 text-inherit",
+          part.toLowerCase() === phrase ? "bg-amber-400/40" : "bg-amber-400/15",
+        )}
+      >
+        {part}
+      </mark>
+    ),
+  );
+}
+
+const releaseFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" });
 
 /**
  * Full App Store ranking for a keyword. Any app's ranked keywords can be opened
@@ -84,7 +118,7 @@ export function RankingSheet({
   const apps = useMemo(() => {
     const q = filter.trim().toLowerCase();
     const list = ranking.data?.apps ?? [];
-    return q ? list.filter((a) => `${a.name} ${a.developer}`.toLowerCase().includes(q)) : list;
+    return q ? list.filter((a) => `${a.name} ${a.subtitle ?? ""} ${a.developer}`.toLowerCase().includes(q)) : list;
   }, [ranking.data, filter]);
 
   const keyword = ranking.data?.keyword;
@@ -173,7 +207,8 @@ export function RankingSheet({
                   <Skeleton className="size-10 rounded-xl" />
                   <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-3 w-1/3" />
+                    <Skeleton className="h-3 w-2/5" />
+                    <Skeleton className="h-3 w-3/5" />
                   </div>
                 </div>
               ))}
@@ -184,35 +219,48 @@ export function RankingSheet({
                 <div
                   key={app.id}
                   className={cn(
-                    "group hover:bg-muted/60 flex items-center gap-3 rounded-lg p-2",
+                    "group hover:bg-muted/60 relative flex items-center gap-3 rounded-lg p-2",
                     app.id === highlightAppId && "bg-primary/10 hover:bg-primary/15",
                   )}
                 >
                   <span className="text-muted-foreground w-8 text-right text-sm tabular-nums">{app.position}</span>
                   <AppIcon src={app.iconUrl} name={app.name} size={40} />
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-1.5 truncate text-sm font-medium">
-                      <span className="truncate">{app.name}</span>
-                      {app.titleMatch && (
-                        <Badge variant="secondary" className="h-4 shrink-0 px-1 text-[10px]">
-                          title match
-                        </Badge>
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <p className="truncate text-sm font-medium" title={app.name}>
+                      <Highlight text={app.name} term={target?.term ?? ""} />
+                    </p>
+                    <p className="truncate text-xs" title={app.subtitle ?? undefined}>
+                      {app.subtitle ? (
+                        <Highlight text={app.subtitle} term={target?.term ?? ""} />
+                      ) : (
+                        <span className="text-muted-foreground/60 italic">No subtitle</span>
                       )}
                     </p>
                     <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
-                      <span className="truncate">{app.developer}</span>
-                      {app.rating != null && !!app.ratingCount && (
+                      <StarIcon className="size-3 shrink-0 fill-current" />
+                      <span className="shrink-0 tabular-nums">
+                        {app.rating != null && app.ratingCount ? app.rating.toFixed(1) : "—"}
+                      </span>
+                      <span>·</span>
+                      <span className="shrink-0 tabular-nums">
+                        {compactNumber(app.ratingCount ?? 0)} ratings
+                      </span>
+                      {app.releaseDate && (
                         <>
                           <span>·</span>
-                          <StarIcon className="size-3 shrink-0 fill-current" />
-                          <span className="shrink-0">
-                            {app.rating.toFixed(1)} ({compactNumber(app.ratingCount)})
-                          </span>
+                          <CalendarIcon className="size-3 shrink-0" />
+                          <span className="shrink-0">{releaseFormat.format(new Date(app.releaseDate))}</span>
+                        </>
+                      )}
+                      {app.developer && (
+                        <>
+                          <span>·</span>
+                          <span className="truncate">{app.developer}</span>
                         </>
                       )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 has-[[data-state=open]]:opacity-100">
+                  <div className="bg-muted absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-0.5 rounded-md opacity-0 shadow-sm transition-opacity group-hover:opacity-100 has-[[data-state=open]]:opacity-100">
                     {app.id !== highlightAppId && (
                       <Tooltip>
                         <TooltipTrigger asChild>

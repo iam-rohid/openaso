@@ -20,6 +20,8 @@ import type { FolderColor } from "../../lib/folders";
 export const apps = pgTable("apps", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  /** App Store subtitle; "" once fetched for apps without one, null when not fetched yet. */
+  subtitle: text("subtitle"),
   developer: text("developer").notNull().default(""),
   developerId: text("developer_id"),
   bundleId: text("bundle_id"),

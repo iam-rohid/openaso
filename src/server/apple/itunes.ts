@@ -32,6 +32,7 @@ function toApp(r: ItunesSoftware): AppleApp {
   return {
     id: String(r.trackId),
     name: r.trackName,
+    subtitle: null,
     developer: r.artistName ?? "",
     developerId: r.artistId ? String(r.artistId) : null,
     bundleId: r.bundleId ?? null,

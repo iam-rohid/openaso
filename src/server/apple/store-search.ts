@@ -14,6 +14,7 @@ const USER_AGENT = "AppStore/3.0 iOS/17.0 model/iPhone15,2 hwp/t8120 build/21A32
 type Lockup = {
   id: string;
   name: string;
+  subtitle?: string;
   artistName?: string;
   artistId?: string;
   bundleId?: string;
@@ -40,6 +41,7 @@ function lockupToApp(l: Lockup): AppleApp {
   return {
     id: String(l.id),
     name: l.name,
+    subtitle: l.subtitle ?? "",
     developer: l.artistName ?? "",
     developerId: l.artistId ?? null,
     bundleId: l.bundleId ?? null,
@@ -78,4 +80,34 @@ export async function storeSearch(term: string, country: string): Promise<StoreS
     rankedAppIds: [...new Set(rankedAppIds)],
     apps: Object.values(lockups).map(lockupToApp),
   };
+}
+
+const LOCKUP_URL = "https://uclient-api.itunes.apple.com/WebObjects/MZStorePlatform.woa/wa/lookup";
+const LOCKUP_CHUNK = 150;
+
+/**
+ * Subtitles by app id from the store platform lookup (the iTunes Lookup API has
+ * none). Apps Apple returns without one map to "".
+ */
+export async function lookupSubtitles(ids: string[], country: string): Promise<Map<string, string>> {
+  const unique = [...new Set(ids)];
+  const chunks: string[][] = [];
+  for (let i = 0; i < unique.length; i += LOCKUP_CHUNK) chunks.push(unique.slice(i, i + LOCKUP_CHUNK));
+
+  const results = await Promise.all(
+    chunks.map(async (chunk) => {
+      const url = `${LOCKUP_URL}?${new URLSearchParams({
+        version: "2",
+        p: "lockup",
+        caller: "U",
+        platform: "itunes",
+        cc: country.toLowerCase(),
+        id: chunk.join(","),
+      })}`;
+      const res = await appleFetch(url);
+      const json = (await res.json()) as { results?: Record<string, Lockup> };
+      return Object.values(json.results ?? {}).map((l) => [String(l.id), l.subtitle ?? ""] as const);
+    }),
+  );
+  return new Map(results.flat());
 }

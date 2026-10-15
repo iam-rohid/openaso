@@ -1,6 +1,7 @@
 import "server-only";
 import { inArray, sql } from "drizzle-orm";
 import { lookupApps } from "@/server/apple/itunes";
+import { lookupSubtitles } from "@/server/apple/store-search";
 import type { AppleApp } from "@/server/apple/types";
 import { db } from "@/server/db";
 import { apps, type App } from "@/server/db/schema";
@@ -24,6 +25,7 @@ export async function upsertApps(list: AppleApp[], country: string) {
       target: apps.id,
       set: {
         name: sql`excluded.name`,
+        subtitle: keep("subtitle"),
         developer: sql`excluded.developer`,
         developerId: keep("developer_id"),
         bundleId: keep("bundle_id"),
@@ -64,6 +66,8 @@ export async function ensureApps(
   const missing = ids.filter((id) => {
     const app = cached.get(id);
     if (!app || force) return true;
+    // Apps cached before subtitles were stored pick theirs up on next use.
+    if (app.subtitle == null) return true;
     // Ratings differ per storefront, so full views refetch when the storefront changes.
     if (requireFull && (!app.description || app.country !== country)) return true;
     return now - app.fetchedAt.getTime() > APP_TTL_MS;
@@ -71,7 +75,15 @@ export async function ensureApps(
 
   if (missing.length > 0) {
     try {
-      await upsertApps(await lookupApps(missing, country), country);
+      // Subtitles come from a separate endpoint; losing them shouldn't lose the rest.
+      const [looked, subtitles] = await Promise.all([
+        lookupApps(missing, country),
+        lookupSubtitles(missing, country).catch(() => new Map<string, string>()),
+      ]);
+      await upsertApps(
+        looked.map((a) => ({ ...a, subtitle: subtitles.get(a.id) ?? null })),
+        country,
+      );
     } catch (err) {
       // Serving slightly stale metadata beats failing the whole request.
       if (missing.every((id) => cached.has(id))) return cached;

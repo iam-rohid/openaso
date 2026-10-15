@@ -2,6 +2,8 @@
 export type AppleApp = {
   id: string;
   name: string;
+  /** null when the source doesn't carry subtitles. */
+  subtitle: string | null;
   developer: string;
   developerId: string | null;
   bundleId: string | null;

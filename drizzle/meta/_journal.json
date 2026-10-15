@@ -15,6 +15,13 @@
       "when": 1792085520123,
       "tag": "0001_app_folders",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792087436525,
+      "tag": "0002_app_subtitle",
+      "breakpoints": true
     }
   ]
 }

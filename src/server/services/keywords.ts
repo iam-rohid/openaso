@@ -279,6 +279,7 @@ export async function getKeywordRanking(keywordId: number, limit?: number) {
         position: i + 1,
         id,
         name: app?.name ?? `App ${id}`,
+        subtitle: app?.subtitle || null,
         developer: app?.developer ?? "",
         iconUrl: app?.iconUrl ?? null,
         rating: app?.rating ?? null,
@@ -286,6 +287,7 @@ export async function getKeywordRanking(keywordId: number, limit?: number) {
         genre: app?.genre ?? null,
         formattedPrice: app?.formattedPrice ?? null,
         storeUrl: app?.storeUrl ?? null,
+        releaseDate: app?.releaseDate ?? null,
         titleMatch: app?.name.toLowerCase().includes(keyword.term) ?? false,
       };
     }),
