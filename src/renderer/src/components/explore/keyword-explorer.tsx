@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDownIcon, CompassIcon, PlusIcon, RefreshCwIcon, SearchIcon, StarIcon } from "lucide-react";
-import { getRouteApi, Link } from "@tanstack/react-router";
+import { ChevronDownIcon, CompassIcon, PlusIcon, RefreshCwIcon, SearchIcon } from "lucide-react";
+import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CompetitorKeywordsDialog, type CompetitorApp } from "@/components/keywords/competitor-keywords-dialog";
+import { RankedAppRow } from "@/components/keywords/ranked-app-row";
 import { RankingSheet, type RankingTarget } from "@/components/keywords/ranking-sheet";
 import { PageHeader } from "@/components/layout/page-header";
 import { AppIcon } from "@/components/shared/app-icon";
 import { CountrySelect } from "@/components/shared/country-select";
 import { ScoreBar } from "@/components/shared/score-bar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -27,7 +28,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useCountry } from "@/hooks/use-country";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { countryFlag } from "@shared/countries";
-import { compactNumber, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
 
@@ -42,6 +43,7 @@ export function KeywordExplorer() {
   const setTerm = (q: string) => navigate({ search: (prev) => ({ ...prev, q: q || undefined }), replace: true });
   const [input, setInput] = useState(term);
   const [ranking, setRanking] = useState<RankingTarget | null>(null);
+  const [keywordsOf, setKeywordsOf] = useState<CompetitorApp | null>(null);
   // Keep the input in sync when the URL term changes (back/forward, chip clicks).
   const [syncedTerm, setSyncedTerm] = useState(term);
   if (syncedTerm !== term) {
@@ -66,6 +68,7 @@ export function KeywordExplorer() {
   });
   const recent = useQuery(trpc.keywords.recent.queryOptions({ country }));
   const tracked = useQuery(trpc.apps.tracked.queryOptions({ country }));
+  const trackedIds = new Set(tracked.data?.map((a) => a.id));
 
   const refresh = useMutation(
     trpc.keywords.refresh.mutationOptions({
@@ -83,6 +86,16 @@ export function KeywordExplorer() {
         await queryClient.invalidateQueries(trpc.apps.tracked.pathFilter());
         const app = tracked.data?.find((a) => a.id === appId);
         toast.success(`Now tracking “${term}” for ${app?.name ?? "app"}`);
+      },
+      onError: (err) => toast.error(err.message),
+    }),
+  );
+
+  const track = useMutation(
+    trpc.apps.track.mutationOptions({
+      onSuccess: async (app) => {
+        await queryClient.invalidateQueries(trpc.apps.tracked.pathFilter());
+        toast.success(`${app.name} added to My Apps`);
       },
       onError: (err) => toast.error(err.message),
     }),
@@ -233,42 +246,25 @@ export function KeywordExplorer() {
                     </Button>
                   )}
                 </div>
-                <div className="divide-y rounded-xl border">
+                <div className="rounded-xl border p-2">
                   {(keyword.isLoading || rankingData.isLoading) &&
                     Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3">
+                      <div key={i} className="flex items-center gap-3 p-2">
                         <Skeleton className="size-10 rounded-xl" />
                         <Skeleton className="h-4 w-1/3" />
                       </div>
                     ))}
                   {rankingData.data?.apps.slice(0, 10).map((app) => (
-                    <Link
+                    <RankedAppRow
                       key={app.id}
-                      to="/apps/$appId" params={{ appId: app.id }}
-                      className="hover:bg-muted/50 flex items-center gap-3 p-3"
-                    >
-                      <span className="text-muted-foreground w-5 text-right text-sm tabular-nums">
-                        {app.position}
-                      </span>
-                      <AppIcon src={app.iconUrl} name={app.name} size={40} />
-                      <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-1.5 truncate text-sm font-medium">
-                          <span className="truncate">{app.name}</span>
-                          {app.titleMatch && (
-                            <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-                              title match
-                            </Badge>
-                          )}
-                        </p>
-                        <p className="text-muted-foreground truncate text-xs">{app.developer}</p>
-                      </div>
-                      {app.rating != null && !!app.ratingCount && (
-                        <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
-                          <StarIcon className="size-3 fill-current" /> {app.rating.toFixed(1)} ·{" "}
-                          {compactNumber(app.ratingCount)}
-                        </span>
-                      )}
-                    </Link>
+                      app={app}
+                      term={term}
+                      country={country}
+                      isTracked={trackedIds.has(app.id)}
+                      trackPending={track.isPending}
+                      onViewKeywords={() => setKeywordsOf({ id: app.id, name: app.name, iconUrl: app.iconUrl })}
+                      onTrack={() => track.mutate({ id: app.id, country })}
+                    />
                   ))}
                 </div>
               </div>
@@ -327,6 +323,11 @@ export function KeywordExplorer() {
       </main>
 
       <RankingSheet target={ranking} onOpenChange={(o) => !o && setRanking(null)} />
+      <CompetitorKeywordsDialog
+        competitor={keywordsOf}
+        country={country}
+        onOpenChange={(open) => !open && setKeywordsOf(null)}
+      />
     </div>
   );
 }

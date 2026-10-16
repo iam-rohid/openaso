@@ -1,58 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarIcon, EyeIcon, PlusIcon, RefreshCwIcon, SearchIcon, StarIcon } from "lucide-react";
-import { Fragment, useMemo, useState } from "react";
+import { RefreshCwIcon, SearchIcon } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AppIcon } from "@/components/shared/app-icon";
-import { AppLinksMenu } from "@/components/shared/app-links-menu";
 import { ScoreBar } from "@/components/shared/score-bar";
 import { Sparkline } from "@/components/shared/sparkline";
 import { CompetitorKeywordsDialog, type CompetitorApp } from "./competitor-keywords-dialog";
+import { RankedAppRow } from "./ranked-app-row";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { countryFlag, type CountryCode } from "@shared/countries";
-import { compactNumber, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
 
 export type RankingTarget = { keywordId: number; term: string; country: string };
-
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-/**
- * Marks where the keyword appears in `text`: the whole phrase strongly, any of its
- * words on their own more softly. Matches whole words only, ignoring case.
- */
-function Highlight({ text, term }: { text: string; term: string }) {
-  const phrase = term.trim().toLowerCase();
-  const words = [...new Set(phrase.split(/\s+/).filter(Boolean))];
-  if (words.length === 0) return text;
-
-  const alternatives = [...new Set([phrase, ...words])].sort((a, b) => b.length - a.length);
-  const pattern = new RegExp(
-    `(?<![\\p{L}\\p{N}])(${alternatives.map(escapeRegExp).join("|")})(?![\\p{L}\\p{N}])`,
-    "giu",
-  );
-  return text.split(pattern).map((part, i) =>
-    i % 2 === 0 ? (
-      <Fragment key={i}>{part}</Fragment>
-    ) : (
-      <mark
-        key={i}
-        className={cn(
-          "rounded-[3px] px-0.5 text-inherit",
-          part.toLowerCase() === phrase ? "bg-amber-400/40" : "bg-amber-400/15",
-        )}
-      >
-        {part}
-      </mark>
-    ),
-  );
-}
-
-const releaseFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" });
 
 /**
  * Full App Store ranking for a keyword. Any app's ranked keywords can be opened
@@ -210,92 +174,19 @@ export function RankingSheet({
                 </div>
               ))}
             {ranking.isError && <p className="text-destructive p-4 text-sm">{ranking.error.message}</p>}
-            {apps.map((app) => {
-              const isTracked = trackedIds.has(app.id);
-              return (
-                <div
-                  key={app.id}
-                  className={cn(
-                    "group hover:bg-muted/60 relative flex items-center gap-3 rounded-lg p-2",
-                    app.id === highlightAppId && "bg-primary/10 hover:bg-primary/15",
-                  )}
-                >
-                  <AppIcon src={app.iconUrl} name={app.name} size={40} />
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <p className="flex items-center gap-1.5 text-sm font-medium" title={app.name}>
-                      <span className="bg-foreground/10 text-muted-foreground shrink-0 rounded px-1.5 text-xs leading-5 tabular-nums">
-                        {app.position}
-                      </span>
-                      <span className="truncate">
-                        <Highlight text={app.name} term={target?.term ?? ""} />
-                      </span>
-                    </p>
-                    <p className="truncate text-xs" title={app.subtitle ?? undefined}>
-                      {app.subtitle ? (
-                        <Highlight text={app.subtitle} term={target?.term ?? ""} />
-                      ) : (
-                        <span className="text-muted-foreground/60 italic">No subtitle</span>
-                      )}
-                    </p>
-                    <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
-                      <StarIcon className="size-3 shrink-0 fill-current" />
-                      <span className="shrink-0 tabular-nums">
-                        {app.rating != null && app.ratingCount ? app.rating.toFixed(1) : "—"}
-                      </span>
-                      <span>·</span>
-                      <span className="shrink-0 tabular-nums">
-                        {compactNumber(app.ratingCount ?? 0)} ratings
-                      </span>
-                      {app.releaseDate && (
-                        <>
-                          <span>·</span>
-                          <CalendarIcon className="size-3 shrink-0" />
-                          <span className="shrink-0">{releaseFormat.format(new Date(app.releaseDate))}</span>
-                        </>
-                      )}
-                      {app.developer && (
-                        <>
-                          <span>·</span>
-                          <span className="truncate">{app.developer}</span>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="bg-muted absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-0.5 rounded-md opacity-0 shadow-sm transition-opacity group-hover:opacity-100 has-[[data-state=open]]:opacity-100">
-                    {app.id !== highlightAppId && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => setKeywordsOf({ id: app.id, name: app.name, iconUrl: app.iconUrl })}
-                          >
-                            <EyeIcon />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>View keywords</TooltipContent>
-                      </Tooltip>
-                    )}
-                    {!isTracked && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            disabled={track.isPending}
-                            onClick={() => track.mutate({ id: app.id, country })}
-                          >
-                            <PlusIcon />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Add to My Apps</TooltipContent>
-                      </Tooltip>
-                    )}
-                    <AppLinksMenu appId={app.id} country={country} storeUrl={app.storeUrl} />
-                  </div>
-                </div>
-              );
-            })}
+            {apps.map((app) => (
+              <RankedAppRow
+                key={app.id}
+                app={app}
+                term={target?.term ?? ""}
+                country={country}
+                highlighted={app.id === highlightAppId}
+                isTracked={trackedIds.has(app.id)}
+                trackPending={track.isPending}
+                onViewKeywords={() => setKeywordsOf({ id: app.id, name: app.name, iconUrl: app.iconUrl })}
+                onTrack={() => track.mutate({ id: app.id, country })}
+              />
+            ))}
             {loadingRest && preview.data && (
               <p className="text-muted-foreground flex items-center justify-center gap-2 p-4 text-sm">
                 <RefreshCwIcon className="size-3.5 animate-spin" /> Loading the rest of the ranking…

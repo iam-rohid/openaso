@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDownIcon,
-  EyeIcon,
   LightbulbIcon,
   PlusIcon,
   RefreshCwIcon,
-  SparklesIcon,
   StarIcon,
 } from "lucide-react";
-import { getRouteApi } from "@tanstack/react-router";
+import { Navigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AddKeywordsDialog } from "@/components/keywords/add-keywords-dialog";
+import { KeywordColumnsMenu } from "@/components/keywords/keyword-columns-menu";
+import { KeywordSearch } from "@/components/keywords/keyword-search";
 import { KeywordTable } from "@/components/keywords/keyword-table";
 import type { KeywordRow, KeywordTableActions } from "@/components/keywords/keyword-table-features";
 import { RankingSheet, type RankingTarget } from "@/components/keywords/ranking-sheet";
@@ -46,39 +46,31 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCountry } from "@/hooks/use-country";
 import { compactNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
 
-const route = getRouteApi("/apps/$appId");
-
 export function AppKeywordsView({ appId }: { appId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [country] = useCountry();
-  const scopeParam = route.useSearch({ select: (s) => s.view ?? "tracked" });
-  const navigate = route.useNavigate();
-  const setScope = (view: "ranked" | undefined) =>
-    navigate({ search: (prev) => ({ ...prev, view }), replace: true });
 
   const [addOpen, setAddOpen] = useState(false);
   const [suggest, setSuggest] = useState<{ open: boolean; seed?: string }>({ open: false });
   const [ranking, setRanking] = useState<RankingTarget | null>(null);
   const [pendingRemoval, setPendingRemoval] = useState<KeywordRow[] | null>(null);
   const [refreshingIds, setRefreshingIds] = useState<Set<number>>(new Set());
+  const [filter, setFilter] = useState("");
 
   const app = useQuery(trpc.apps.get.queryOptions({ id: appId, country }));
+  // Only apps in My Apps get this page; competitors are explored from the ranking views.
   const isTracked = app.data?.isTracked ?? false;
-  // Untracked apps (competitors) only have the "ranked" view.
-  const scope = app.data && !isTracked ? "ranked" : scopeParam;
 
   const keywords = useQuery({
-    ...trpc.keywords.list.queryOptions({ appId, country, scope }),
-    enabled: !!app.data,
+    ...trpc.keywords.list.queryOptions({ appId, country, scope: "tracked" }),
+    enabled: isTracked,
   });
 
   const invalidateKeywords = () => queryClient.invalidateQueries(trpc.keywords.pathFilter());
@@ -121,41 +113,12 @@ export function AppKeywordsView({ appId }: { appId: string }) {
       onError: (err) => toast.error(err.message),
     }),
   );
-  const discover = useMutation(
-    trpc.keywords.discover.mutationOptions({
-      onSuccess: async ({ checked, ranked }) => {
-        await invalidateKeywords();
-        toast.success(`Checked ${checked} keywords — ranks for ${ranked}`);
-      },
-      onError: (err) => toast.error(err.message),
-    }),
-  );
-  const discoverButton = (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={discover.isPending}
-      onClick={() => discover.mutate({ appId, country })}
-    >
-      {discover.isPending ? <Spinner /> : <SparklesIcon />}
-      {discover.isPending ? "Discovering…" : "Discover keywords"}
-    </Button>
-  );
 
-  const track = useMutation(
-    trpc.apps.track.mutationOptions({
-      onSuccess: async (a) => {
-        await queryClient.invalidateQueries(trpc.apps.pathFilter());
-        toast.success(`${a.name} added to My Apps`);
-      },
-      onError: (err) => toast.error(err.message),
-    }),
-  );
 
   const actions = useMemo<KeywordTableActions>(
     () => ({
       appId,
-      editable: isTracked,
+      editable: true,
       refreshingIds,
       onOpenRanking: (row) => setRanking({ keywordId: row.id, term: row.term, country: row.country }),
       onRefresh: (ids) => refresh.mutate({ keywordIds: ids }),
@@ -163,7 +126,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
       onSuggest: (term) => setSuggest({ open: true, seed: term }),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mutate is stable
-    [appId, isTracked, refreshingIds],
+    [appId, refreshingIds],
   );
 
   const trackedTerms = useMemo(
@@ -174,6 +137,8 @@ export function AppKeywordsView({ appId }: { appId: string }) {
   const ranked = keywords.data?.filter((k) => k.position != null).length ?? 0;
   const top10 = keywords.data?.filter((k) => k.position != null && k.position <= 10).length ?? 0;
   const refreshing = refresh.isPending || refreshApp.isPending;
+
+  if (app.data && !isTracked) return <Navigate to="/" />;
 
   if (app.isError) {
     return (
@@ -199,13 +164,20 @@ export function AppKeywordsView({ appId }: { appId: string }) {
             <AppIcon src={app.data.iconUrl} name={app.data.name} size={32} />
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold">{app.data.name}</p>
-              <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
-                <span className="truncate">{app.data.developer}</span>
+              <p className="text-muted-foreground flex items-center gap-1 truncate text-xs tabular-nums">
                 {app.data.rating != null && (
                   <>
-                    · <StarIcon className="size-3 fill-current" /> {app.data.rating.toFixed(1)} (
-                    {compactNumber(app.data.ratingCount)})
+                    <StarIcon className="size-3 shrink-0 fill-current" /> {app.data.rating.toFixed(1)} (
+                    {compactNumber(app.data.ratingCount)}) ·{" "}
                   </>
+                )}
+                {keywords.data ? (
+                  <span className="truncate">
+                    {keywords.data.length} keyword{keywords.data.length === 1 ? "" : "s"}
+                    {keywords.data.length > 0 && ` · Ranked in ${ranked} · Top 10 in ${top10}`}
+                  </span>
+                ) : (
+                  <Skeleton className="h-3 w-24" />
                 )}
               </p>
             </div>
@@ -253,7 +225,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
 
           <CountrySelect />
 
-          {isTracked ? (
+          {isTracked && (
             <>
               <Button className="bg-indigo-600 text-white hover:bg-indigo-500" onClick={() => setAddOpen(true)}>
                 <span className="hidden sm:inline">Add Keywords</span> <PlusIcon />
@@ -265,87 +237,32 @@ export function AppKeywordsView({ appId }: { appId: string }) {
                 <span className="hidden sm:inline">Get Suggestions</span> <LightbulbIcon />
               </Button>
             </>
-          ) : (
-            app.data && (
-              <Button
-                className="bg-indigo-600 text-white hover:bg-indigo-500"
-                disabled={track.isPending}
-                onClick={() => track.mutate({ id: appId, country })}
-              >
-                {track.isPending ? <Spinner /> : <PlusIcon />} Add to My Apps
-              </Button>
-            )
           )}
+          <KeywordColumnsMenu />
           <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" />
+          <KeywordSearch value={filter} onChange={setFilter} />
         </div>
       </PageHeader>
 
-      {app.data && !isTracked && (
-        <div className="mx-4 mt-3 flex items-start gap-3 rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-sm">
-          <EyeIcon className="mt-0.5 size-4 shrink-0 text-sky-500" />
-          <p className="flex-1">
-            You’re viewing a competitor. These are the keywords from your local database where{" "}
-            <strong>{app.data.name}</strong> appears in the App Store results. Use <em>Discover keywords</em> to
-            check likely keywords from its title, autocomplete and similar apps.
-          </p>
-          {discoverButton}
-        </div>
-      )}
-
       <KeywordTable
-        // Remount per app/storefront/view so selection and filters reset.
-        key={`${appId}-${country}-${scope}`}
+        // Remount per app/storefront so selection resets.
+        key={`${appId}-${country}`}
         data={keywords.data}
         isLoading={app.isLoading || keywords.isLoading}
         actions={actions}
-        toolbar={
-          <>
-            {scope === "ranked" && isTracked && discoverButton}
-            {keywords.data && keywords.data.length > 0 && (
-              <span className="text-muted-foreground hidden text-xs md:inline">
-                Ranked in {ranked} · Top 10 in {top10}
-              </span>
-            )}
-            {isTracked && (
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                value={scope}
-                onValueChange={(v) => v && void setScope(v === "ranked" ? "ranked" : undefined)}
-              >
-                <ToggleGroupItem value="tracked" className="px-3">
-                  Tracked
-                </ToggleGroupItem>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <ToggleGroupItem value="ranked" className="px-3">
-                      All rankings
-                    </ToggleGroupItem>
-                  </TooltipTrigger>
-                  <TooltipContent>Every cached keyword this app ranks for, tracked or not</TooltipContent>
-                </Tooltip>
-              </ToggleGroup>
-            )}
-          </>
-        }
+        globalFilter={filter}
         emptyState={
           <Empty className="py-16">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <LightbulbIcon />
               </EmptyMedia>
-              <EmptyTitle>
-                {scope === "tracked" ? "No keywords tracked in this storefront" : "No rankings found yet"}
-              </EmptyTitle>
+              <EmptyTitle>No keywords tracked in this storefront</EmptyTitle>
               <EmptyDescription>
-                {scope === "tracked"
-                  ? "Add keywords manually or let us suggest some based on the app and its competitors."
-                  : "This app doesn’t appear in any keyword cached for this storefront yet."}
+                Add keywords manually or let us suggest some based on the app and its competitors.
               </EmptyDescription>
             </EmptyHeader>
-            {scope === "ranked" && <EmptyContent>{discoverButton}</EmptyContent>}
-            {isTracked && scope === "tracked" && (
+            {isTracked && (
               <EmptyContent className="flex-row justify-center">
                 <Button className="bg-indigo-600 text-white hover:bg-indigo-500" onClick={() => setAddOpen(true)}>
                   Add Keywords <PlusIcon />

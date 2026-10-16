@@ -8,7 +8,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /** External links for an app: copy its App Store link, or open it in the App Store or Sensor Tower. */
 export function AppLinksMenu({
@@ -27,17 +26,12 @@ export function AppLinksMenu({
 
   return (
     <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size={size}>
-              <MoreHorizontalIcon />
-              <span className="sr-only">App links</span>
-            </Button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent>App links</TooltipContent>
-      </Tooltip>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size={size}>
+          <MoreHorizontalIcon />
+          <span className="sr-only">App links</span>
+        </Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
         <DropdownMenuItem
           onClick={() => {
