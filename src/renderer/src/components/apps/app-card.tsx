@@ -36,7 +36,7 @@ export function AppCard({
             ) : (
               <p className="text-muted-foreground truncate text-xs">{app.developer}</p>
             )}
-            <div className="text-muted-foreground flex items-center gap-3 text-xs">
+            <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs whitespace-nowrap">
               <span className="inline-flex items-center gap-1">
                 <KeyRoundIcon className="size-3" /> {app.keywordCount} keywords
               </span>

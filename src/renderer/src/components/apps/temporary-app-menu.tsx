@@ -12,7 +12,7 @@ import {
 import { useAfterMenuClose } from "@/hooks/use-after-menu-close";
 
 /** Header menu for a temporary app, standing in for the App Store links real apps get. */
-export function TemporaryAppMenu({ app }: { app: { id: string; name: string } }) {
+export function TemporaryAppMenu({ app }: { app: { id: string; name: string; country: string } }) {
   const menu = useAfterMenuClose();
   const [renameOpen, setRenameOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);

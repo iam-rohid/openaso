@@ -276,7 +276,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
           )}
           <KeywordColumnsMenu hideRankColumns={isTemporary} />
           {app.data?.isTemporary ? (
-            <TemporaryAppMenu app={app.data} />
+            <TemporaryAppMenu app={{ ...app.data, country }} />
           ) : (
             <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" variant="outline" />
           )}

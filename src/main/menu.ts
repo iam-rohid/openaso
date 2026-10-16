@@ -2,7 +2,7 @@ import { app, Menu, shell, type MenuItemConstructorOptions } from "electron";
 
 const REPO_URL = "https://github.com/iam-rohid/openaso";
 
-export function buildMenu({ onCheckForUpdates }: { onCheckForUpdates: () => void }) {
+export function buildMenu({ onCheckForUpdates, onNewApp }: { onCheckForUpdates: () => void; onNewApp: () => void }) {
   const isMac = process.platform === "darwin";
   const devItems: MenuItemConstructorOptions[] = app.isPackaged
     ? []
@@ -33,7 +33,14 @@ export function buildMenu({ onCheckForUpdates }: { onCheckForUpdates: () => void
           } satisfies MenuItemConstructorOptions,
         ]
       : []),
-    { role: "fileMenu" },
+    {
+      label: "File",
+      submenu: [
+        { label: "New App…", accelerator: "CmdOrCtrl+N", click: onNewApp },
+        { type: "separator" },
+        isMac ? { role: "close" } : { role: "quit" },
+      ],
+    },
     { role: "editMenu" },
     {
       label: "View",

@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
 import {
+  NEW_APP_CHANNEL,
   THEME_CHANNEL,
   TRPC_CHANNEL,
   UPDATE_CHANNEL,
@@ -15,6 +16,11 @@ const api: PreloadApi = {
     const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus) => callback(status);
     ipcRenderer.on(UPDATE_CHANNEL, listener);
     return () => ipcRenderer.removeListener(UPDATE_CHANNEL, listener);
+  },
+  onNewApp: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on(NEW_APP_CHANNEL, listener);
+    return () => ipcRenderer.removeListener(NEW_APP_CHANNEL, listener);
   },
   installUpdate: () => ipcRenderer.send(UPDATE_INSTALL_CHANNEL),
   platform: process.platform,

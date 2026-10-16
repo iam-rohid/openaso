@@ -1,6 +1,6 @@
 import path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
-import { THEME_CHANNEL, type ThemeSource } from "@shared/ipc";
+import { NEW_APP_CHANNEL, THEME_CHANNEL, type ThemeSource } from "@shared/ipc";
 import { loadAppState, restorableBounds, saveAppState, trackWindowState } from "@main/app-state";
 import { initDatabase } from "@main/db";
 import { registerTrpcHandler } from "@main/ipc";
@@ -63,6 +63,7 @@ function createWindow() {
     if (mainWindow === win) mainWindow = null;
   });
   mainWindow = win;
+  return win;
 }
 
 /** Opens and migrates the database; on failure, explains and quits. */
@@ -116,7 +117,20 @@ if (!app.requestSingleInstanceLock()) {
     if (!(await setUpDatabase())) return app.quit();
     registerTrpcHandler();
     registerThemeHandler();
-    buildMenu({ onCheckForUpdates: () => void checkForUpdatesInteractively() });
+    buildMenu({
+      onCheckForUpdates: () => void checkForUpdatesInteractively(),
+      onNewApp: () => {
+        // On macOS the app keeps running without a window; open one and ask once it has loaded.
+        if (!mainWindow) {
+          const win = createWindow();
+          win.webContents.once("did-finish-load", () => win.webContents.send(NEW_APP_CHANNEL));
+          return;
+        }
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+        mainWindow.webContents.send(NEW_APP_CHANNEL);
+      },
+    });
     createWindow();
     initUpdater(() => mainWindow);
 

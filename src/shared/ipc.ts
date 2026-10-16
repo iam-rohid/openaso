@@ -25,6 +25,9 @@ export type IpcResponse = {
 export const THEME_CHANNEL = "theme";
 export type ThemeSource = "light" | "dark" | "system";
 
+/** File › New App… (⌘N) asks the renderer to open the add-app box. */
+export const NEW_APP_CHANNEL = "menu:new-app";
+
 export const UPDATE_CHANNEL = "update";
 export const UPDATE_INSTALL_CHANNEL = "update:install";
 
@@ -40,6 +43,8 @@ export type PreloadApi = {
   setTheme: (theme: ThemeSource) => void;
   /** Subscribes to update notifications; returns an unsubscribe function. */
   onUpdate: (callback: (status: UpdateStatus) => void) => () => void;
+  /** Subscribes to File › New App…; returns an unsubscribe function. */
+  onNewApp: (callback: () => void) => () => void;
   /** Quits and installs a downloaded update. */
   installUpdate: () => void;
   platform: NodeJS.Platform;

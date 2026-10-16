@@ -108,6 +108,9 @@ export function AppSidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFolderId]);
 
+  // File › New App… (⌘N) opens the add-app box from anywhere.
+  useEffect(() => window.openaso.onNewApp(() => setAddOpen(true)), []);
+
   const rowProps = { folders: folders.data ?? [], onNewFolder: openFolderDialog };
 
   return (
