@@ -24,6 +24,16 @@ import { FolderGlyph } from "@/components/folders/folder-glyph";
 import { useDeleteFolder } from "@/components/folders/use-delete-folder";
 import { AppIcon } from "@/components/shared/app-icon";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -280,6 +290,7 @@ function AppRow({
   const params = useParams({ strict: false });
   const [country] = useCountry();
   const menu = useAfterMenuClose();
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const invalidate = () =>
     Promise.all([
@@ -359,11 +370,27 @@ function AppRow({
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={() => untrack.mutate({ id: app.id })}>
+          <DropdownMenuItem variant="destructive" onSelect={() => menu.defer(() => setConfirmRemove(true))}>
             <Trash2Icon /> Remove app
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <AlertDialog open={confirmRemove} onOpenChange={setConfirmRemove}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove “{app.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              It’ll stop being tracked, and its keyword list and notes will be deleted. This can’t be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => untrack.mutate({ id: app.id })}>
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarMenuItem>
   );
 }
