@@ -111,6 +111,19 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
+                  <SidebarMenuButton variant="outline" className="justify-center" onClick={() => setAddOpen(true)}>
+                    <PlusIcon />
+                    <span>Add App</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === "/"}>
                     <Link to="/">
                       <HomeIcon /> <span>Home</span>
@@ -188,12 +201,6 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <ThemeToggle />
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton variant="outline" onClick={() => setAddOpen(true)}>
-                <PlusIcon />
-                <span>Add App</span>
-              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
