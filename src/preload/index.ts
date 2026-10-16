@@ -4,6 +4,7 @@ import {
   THEME_CHANNEL,
   TRPC_CHANNEL,
   UPDATE_CHANNEL,
+  UPDATE_GET_CHANNEL,
   UPDATE_INSTALL_CHANNEL,
   type PreloadApi,
   type UpdateStatus,
@@ -12,6 +13,7 @@ import {
 const api: PreloadApi = {
   trpc: (request) => ipcRenderer.invoke(TRPC_CHANNEL, request),
   setTheme: (theme) => ipcRenderer.send(THEME_CHANNEL, theme),
+  getUpdate: () => ipcRenderer.invoke(UPDATE_GET_CHANNEL),
   onUpdate: (callback) => {
     const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus) => callback(status);
     ipcRenderer.on(UPDATE_CHANNEL, listener);

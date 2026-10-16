@@ -69,6 +69,7 @@ import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { cn } from "@/lib/utils";
 import { type RouterOutputs, useTRPC } from "@/trpc/react";
 import { ThemeToggle } from "./theme-toggle";
+import { UpdateItem } from "./update-item";
 
 type TrackedApp = RouterOutputs["apps"]["tracked"][number];
 type Folder = RouterOutputs["folders"]["list"][number];
@@ -199,6 +200,7 @@ export function AppSidebar() {
 
         <SidebarFooter>
           <SidebarMenu>
+            <UpdateItem />
             <SidebarMenuItem>
               <ThemeToggle />
             </SidebarMenuItem>

@@ -5,7 +5,7 @@ import { loadAppState, restorableBounds, saveAppState, trackWindowState } from "
 import { initDatabase } from "@main/db";
 import { registerTrpcHandler } from "@main/ipc";
 import { buildMenu } from "@main/menu";
-import { checkForUpdatesInteractively, initUpdater, resendUpdateStatus } from "@main/updater";
+import { checkForUpdatesInteractively, initUpdater } from "@main/updater";
 
 // Keep development data apart from the installed app's.
 if (!app.isPackaged) app.setPath("userData", path.join(app.getPath("appData"), "OpenASO Dev"));
@@ -40,7 +40,6 @@ function createWindow() {
   if (bounds && state.window?.maximized) win.maximize();
   trackWindowState(win);
   win.once("ready-to-show", () => win.show());
-  win.webContents.on("did-finish-load", () => resendUpdateStatus(win));
 
   // Links never open inside the app: web pages go to the default browser.
   win.webContents.setWindowOpenHandler(({ url }) => {
