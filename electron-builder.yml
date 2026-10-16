@@ -32,14 +32,16 @@ mac:
     # The zip is what electron-updater reads to detect new versions.
     - target: zip
       arch: [arm64, x64]
-  # Unsigned for now: ad-hoc sign so Apple Silicon will run it, without the hardened
-  # runtime (which would reject Electron's frameworks under an ad-hoc signature).
-  identity: "-"
-  hardenedRuntime: false
+  # Signed with the Developer ID Application certificate in CSC_LINK (or the keychain) and
+  # notarized when APPLE_API_KEY, APPLE_API_KEY_ID and APPLE_API_ISSUER are set; without them
+  # notarization is skipped. Squirrel.Mac only installs updates into a signed app.
+  hardenedRuntime: true
 
 dmg:
   artifactName: ${productName}-${version}-mac-${arch}.${ext}
 
+# Unsigned: SmartScreen warns on first install, but updates still install. Don't set
+# publisherName while it's unsigned, or the updater will reject unsigned updates.
 win:
   target:
     - target: nsis

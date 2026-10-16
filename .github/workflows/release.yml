@@ -1,6 +1,7 @@
-# Pushing a version tag (e.g. v0.2.0) builds the installers on each OS and uploads them
-# to a draft GitHub Release. Review the draft, then publish it: installed apps only see
-# published releases when they check for updates.
+# Pushing a version tag (e.g. v0.2.0) creates a draft GitHub Release with notes generated from
+# the commits since the previous tag, then builds the installers on each OS and uploads them to
+# it. Review the draft, then publish it: installed apps only see published releases when they
+# check for updates, and every install picks the release up within a few hours.
 name: Release
 
 on:
@@ -11,7 +12,33 @@ permissions:
   contents: write
 
 jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate release notes
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest
+        env:
+          OUTPUT: RELEASE_NOTES.md
+
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
+          else
+            gh release create "$GITHUB_REF_NAME" --draft --title "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
+          fi
+
   build:
+    needs: draft
     strategy:
       fail-fast: false
       matrix:
@@ -42,6 +69,26 @@ jobs:
             exit 1
           fi
 
+      # An unsigned macOS build can't update itself, so never ship one by accident.
+      - name: Prepare macOS signing and notarization
+        if: runner.os == 'macOS'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_P8 APPLE_API_KEY_ID APPLE_API_ISSUER; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing the $name secret (see docs/code-signing.md)"
+              exit 1
+            fi
+          done
+          key="$RUNNER_TEMP/AuthKey_$APPLE_API_KEY_ID.p8"
+          printf '%s\n' "$APPLE_API_KEY_P8" > "$key"
+          echo "APPLE_API_KEY=$key" >> "$GITHUB_ENV"
+
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm typecheck
@@ -52,3 +99,8 @@ jobs:
         run: pnpm exec electron-builder ${{ matrix.args }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS only: on Windows, CSC_LINK would be used to sign the installer.
+          CSC_LINK: ${{ runner.os == 'macOS' && secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.CSC_KEY_PASSWORD || '' }}
+          APPLE_API_KEY_ID: ${{ runner.os == 'macOS' && secrets.APPLE_API_KEY_ID || '' }}
+          APPLE_API_ISSUER: ${{ runner.os == 'macOS' && secrets.APPLE_API_ISSUER || '' }}
