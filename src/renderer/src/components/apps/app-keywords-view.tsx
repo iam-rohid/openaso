@@ -160,7 +160,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
   }
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="flex h-svh flex-col">
       <PageHeader>
         {app.data ? (
           <div className="flex min-w-0 items-center gap-2.5">
