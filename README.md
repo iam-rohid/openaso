@@ -20,18 +20,17 @@ Download the installer for your system from the
 Nothing else is needed: no Node, Docker or database server. Your data is stored on your computer (Help → Open
 Data Folder shows where).
 
-The app isn't code-signed yet, so your system will warn you the first time:
-
-- **macOS**: open the `.dmg` and drag OpenASO to Applications. If macOS says the app "is damaged" or "can't be
-  opened", run `xattr -cr /Applications/OpenASO.app` in Terminal, then open it again. (Right-click → Open, or
-  System Settings → Privacy & Security → Open Anyway, also works.)
-- **Windows**: if SmartScreen shows "Windows protected your PC", click **More info → Run anyway**.
+- **macOS**: open the `.dmg` and drag OpenASO to Applications. The app is signed and notarized from v0.3.0.
+  (Versions before that weren't: if macOS says one "is damaged", run `xattr -cr /Applications/OpenASO.app`.)
+- **Windows**: the installer isn't code-signed yet. If SmartScreen shows "Windows protected your PC", click
+  **More info → Run anyway**.
 - **Linux**: make the AppImage executable (`chmod +x OpenASO-*.AppImage`) and run it, or install the `.deb`
   with `sudo apt install ./OpenASO-*.deb`.
 
-**Updates**: OpenASO checks for a new version on launch (and from *Check for Updates…* in the menu). On Windows
-and with the AppImage it downloads in the background and offers to restart. On macOS and with the `.deb` it shows
-a link to the new release to download.
+**Updates**: OpenASO checks for a new version on launch and every few hours (or from *Check for Updates…* in
+the menu), and downloads it in the background. When it's ready, a **Restart to update** button appears at the
+bottom of the sidebar; otherwise it installs the next time you quit. With the `.deb`, the button links to the
+new release to download instead. If you're on macOS v0.2.0 or earlier, download v0.3.0 by hand once.
 
 ## Features
 
@@ -87,9 +86,13 @@ It's created, and migrations are applied, on launch. Before an existing database
 
 1. Bump `version` in `package.json` and commit.
 2. Tag and push: `git tag v0.2.0 && git push origin main v0.2.0`.
-3. The [Release workflow](.github/workflows/release.yml) builds the macOS, Windows and Linux installers and
-   uploads them to a **draft** GitHub Release.
-4. Review the draft and publish it. Installed apps only see published releases.
+3. The [Release workflow](.github/workflows/release.yml) creates a **draft** GitHub Release with notes
+   generated from the `feat:`, `fix:` and `perf:` commits since the previous tag ([cliff.toml](cliff.toml)),
+   then builds the macOS (signed and notarized, see [docs/code-signing.md](docs/code-signing.md)), Windows
+   and Linux installers and uploads them to it.
+4. Edit the notes if needed; the app shows them in its *What's new* dialog. Check that `latest-mac.yml`,
+   `latest.yml` and `latest-linux.yml` were uploaded: a platform without its file silently stops updating.
+5. Publish the draft. Installed apps only see published releases, and pick them up within a few hours.
 
 To try a build locally: `pnpm dist` (installers for this OS in `dist/`) or `pnpm dist:dir` (just the app).
 
