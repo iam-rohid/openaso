@@ -1,20 +1,20 @@
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { cn } from "@/lib/utils";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 
 /**
- * Keyword filter for the page header. ⌘F focuses it, Esc clears it. On narrow
- * windows it collapses to an icon until opened.
+ * Keyword filter for the page header. Starts as an icon; clicking it (or ⌘F) opens a
+ * focused input. Esc clears and closes it, and an empty input closes on blur.
  */
 export function KeywordSearch({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [expanded, setExpanded] = useState(false);
+  const open = expanded || value.length > 0;
 
   const focus = () => {
     setExpanded(true);
-    // Wait a frame so a collapsed input is visible before focusing it.
+    // Wait a frame so the input is mounted before focusing it.
     requestAnimationFrame(() => {
       inputRef.current?.focus();
       inputRef.current?.select();
@@ -32,31 +32,50 @@ export function KeywordSearch({ value, onChange }: { value: string; onChange: (v
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  return (
-    <>
-      <Button variant="ghost" size="icon" className={cn("md:hidden", expanded && "hidden")} onClick={focus}>
+  if (!open) {
+    return (
+      <Button variant="ghost" size="icon" onClick={focus}>
         <SearchIcon />
         <span className="sr-only">Filter keywords</span>
       </Button>
-      <InputGroup className={cn("w-52", !expanded && "max-md:hidden")}>
-        <InputGroupAddon>
-          <SearchIcon />
-        </InputGroupAddon>
-        <InputGroupInput
-          ref={inputRef}
-          placeholder="Filter keywords…"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
+    );
+  }
+
+  return (
+    <InputGroup className="w-52">
+      <InputGroupAddon>
+        <SearchIcon />
+      </InputGroupAddon>
+      <InputGroupInput
+        ref={inputRef}
+        autoFocus
+        placeholder="Filter keywords…"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            onChange("");
+            setExpanded(false);
+          }
+        }}
+        onBlur={() => setExpanded(false)}
+      />
+      {value && (
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton
+            size="icon-xs"
+            // Keep focus in the input so the user can type a new filter straight away.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
               onChange("");
-              setExpanded(false);
-              e.currentTarget.blur();
-            }
-          }}
-          onBlur={() => !value && setExpanded(false)}
-        />
-      </InputGroup>
-    </>
+              focus();
+            }}
+          >
+            <XIcon />
+            <span className="sr-only">Clear filter</span>
+          </InputGroupButton>
+        </InputGroupAddon>
+      )}
+    </InputGroup>
   );
 }
