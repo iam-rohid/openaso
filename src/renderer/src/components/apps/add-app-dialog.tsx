@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckIcon, PlusIcon, SearchIcon, StarIcon } from "lucide-react";
+import { CheckIcon, LinkIcon, PlusIcon, SearchIcon, StarIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { TemporaryAppForm } from "@/components/apps/temporary-app-form";
 import { AppIcon } from "@/components/shared/app-icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { useCountry } from "@/hooks/use-country";
@@ -25,17 +26,21 @@ export function AddAppDialog({
   open,
   onOpenChange,
   folderId,
+  linkFrom,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Newly tracked apps go straight into this folder. */
   folderId?: number;
+  /** Pick the App Store listing this temporary app becomes, instead of adding an app. */
+  linkFrom?: { id: string; name: string };
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [country] = useCountry();
   const [query, setQuery] = useState("");
+  const [step, setStep] = useState<"search" | "temporary">("search");
   const debounced = useDebouncedValue(query.trim(), 350);
 
   const tracked = useQuery(trpc.apps.tracked.queryOptions({ country }));
@@ -46,28 +51,69 @@ export function AddAppDialog({
     staleTime: 5 * 60 * 1000,
   });
 
+  const setOpen = (next: boolean) => {
+    onOpenChange(next);
+    if (!next) setStep("search");
+  };
+  const onAdded = async (app: { id: string; name: string }, message: string) => {
+    toast.success(message);
+    setOpen(false);
+    setQuery("");
+    // Navigate before invalidating so a just-linked temporary app's page doesn't refetch
+    // itself; it's gone, so it's also kept out of history.
+    await navigate({ to: "/apps/$appId", params: { appId: app.id }, replace: !!linkFrom });
+    await Promise.all([
+      queryClient.invalidateQueries(trpc.apps.pathFilter()),
+      queryClient.invalidateQueries(trpc.folders.pathFilter()),
+      queryClient.invalidateQueries(trpc.keywords.pathFilter()),
+    ]);
+  };
+  const onError = (err: { message: string }) => toast.error(err.message);
+
   const track = useMutation(
-    trpc.apps.track.mutationOptions({
-      onSuccess: async (app) => {
-        await Promise.all([
-          queryClient.invalidateQueries(trpc.apps.tracked.pathFilter()),
-          queryClient.invalidateQueries(trpc.folders.pathFilter()),
-        ]);
-        toast.success(`${app.name} added`);
-        onOpenChange(false);
-        setQuery("");
-        void navigate({ to: "/apps/$appId", params: { appId: app.id } });
-      },
-      onError: (err) => toast.error(err.message),
+    trpc.apps.track.mutationOptions({ onSuccess: (app) => onAdded(app, `${app.name} added`), onError }),
+  );
+  const createTemporary = useMutation(
+    trpc.apps.createTemporary.mutationOptions({ onSuccess: (app) => onAdded(app, `${app.name} added`), onError }),
+  );
+  const link = useMutation(
+    trpc.apps.linkTemporary.mutationOptions({
+      onSuccess: ({ app, moved }) =>
+        onAdded(app, `Linked: moved ${moved} keyword${moved === 1 ? "" : "s"} to ${app.name}`),
+      onError,
     }),
   );
+  const isPending = track.isPending || link.isPending;
+  const pendingId = track.isPending ? track.variables?.id : link.isPending ? link.variables?.targetId : undefined;
+
+  if (step === "temporary") {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <TemporaryAppForm
+            title="Add Temporary App"
+            description="Research keywords for an app that isn’t on the App Store yet. Link it to the real listing once it launches."
+            initialName={query.trim()}
+            submitLabel="Create"
+            cancelLabel="Back"
+            isPending={createTemporary.isPending}
+            onSubmit={(name) => createTemporary.mutate({ name, country, folderId })}
+            onCancel={() => setStep("search")}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="gap-3 sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Add app</DialogTitle>
+          <DialogTitle>{linkFrom ? `Link “${linkFrom.name}”` : "Add app"}</DialogTitle>
           <DialogDescription>
+            {linkFrom
+              ? "Its keywords and notes move to the App Store app you pick, and the temporary app is removed. "
+              : ""}
             Search the {countryFlag(country)} {country} App Store by name, or paste an App Store link or id.
           </DialogDescription>
         </DialogHeader>
@@ -81,6 +127,13 @@ export function AddAppDialog({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+          {!linkFrom && (
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton variant="secondary" onClick={() => setStep("temporary")}>
+                Add Temporary App
+              </InputGroupButton>
+            </InputGroupAddon>
+          )}
         </InputGroup>
 
         <div className="-mx-2 h-[420px] overflow-y-auto">
@@ -97,14 +150,21 @@ export function AddAppDialog({
               ))}
             {search.isError && <p className="text-destructive p-4 text-sm">{search.error.message}</p>}
             {search.data?.length === 0 && (
-              <p className="text-muted-foreground p-8 text-center text-sm">No apps found.</p>
+              <div className="text-muted-foreground flex flex-col items-center gap-3 p-8 text-center text-sm">
+                <p>No apps found.</p>
+                {!linkFrom && (
+                  <Button size="sm" variant="secondary" onClick={() => setStep("temporary")}>
+                    <PlusIcon /> Add “{debounced.slice(0, 30)}” as a temporary app
+                  </Button>
+                )}
+              </div>
             )}
             {debounced.length <= 1 && (
               <p className="text-muted-foreground p-8 text-center text-sm">Start typing to search.</p>
             )}
             {search.data?.map((app) => {
               const isTracked = trackedIds.has(app.id);
-              const isPending = track.isPending && track.variables?.id === app.id;
+              const isRowPending = pendingId === app.id;
               return (
                 <div key={app.id} className="hover:bg-muted/60 flex items-center gap-3 rounded-lg p-2">
                   <AppIcon src={app.iconUrl} name={app.name} size={44} />
@@ -122,12 +182,21 @@ export function AddAppDialog({
                       {app.genre && <span className="hidden sm:inline">· {app.genre}</span>}
                     </p>
                   </div>
-                  {isTracked ? (
+                  {linkFrom ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={isPending}
+                      onClick={() => link.mutate({ id: linkFrom.id, targetId: app.id, country })}
+                    >
+                      {isRowPending ? <Spinner /> : <LinkIcon />} {isTracked ? "Merge into" : "Link"}
+                    </Button>
+                  ) : isTracked ? (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        onOpenChange(false);
+                        setOpen(false);
                         void navigate({ to: "/apps/$appId", params: { appId: app.id } });
                       }}
                     >
@@ -137,10 +206,10 @@ export function AddAppDialog({
                     <Button
                       size="sm"
                       variant="secondary"
-                      disabled={track.isPending}
+                      disabled={isPending}
                       onClick={() => track.mutate({ id: app.id, country, folderId })}
                     >
-                      {isPending ? <Spinner /> : <PlusIcon />} Add
+                      {isRowPending ? <Spinner /> : <PlusIcon />} Add
                     </Button>
                   )}
                 </div>
