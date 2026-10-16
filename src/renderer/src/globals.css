@@ -142,9 +142,13 @@ html[data-platform="darwin"] {
   [data-slot="sidebar-header"] {
     padding-top: 3.25rem;
   }
-  /* Icon-only sidebar is narrower than the traffic lights, so the page toolbar makes room. */
+  /* Matches the sidebar's own slide (duration-200 ease-linear). */
+  [data-slot="page-header"] {
+    transition: padding-left 200ms linear;
+  }
+  /* With the sidebar hidden, the page toolbar makes room for the traffic lights. */
   [data-slot="sidebar-wrapper"]:has([data-slot="sidebar"][data-state="collapsed"]) [data-slot="page-header"] {
-    padding-left: 2.5rem;
+    padding-left: 5.5rem;
   }
   [data-slot="sidebar-header"],
   [data-slot="page-header"] {

@@ -28,7 +28,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -52,7 +51,6 @@ import {
   SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarRail,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCountry } from "@/hooks/use-country";
@@ -75,8 +73,6 @@ export function AppSidebar() {
   const pathname = useLocation({ select: (l) => l.pathname });
   const params = useParams({ strict: false });
   const [country] = useCountry();
-  const { state, isMobile } = useSidebar();
-  const iconOnly = state === "collapsed" && !isMobile;
   const [addOpen, setAddOpen] = useState(false);
   const [folderDialog, setFolderDialog] = useState<{ open: boolean; target: FolderDialogTarget }>({
     open: false,
@@ -107,7 +103,7 @@ export function AppSidebar() {
 
   return (
     <>
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="offcanvas">
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -131,14 +127,14 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname === "/"} tooltip="Home">
+                  <SidebarMenuButton asChild isActive={pathname === "/"}>
                     <Link to="/">
                       <HomeIcon /> <span>Home</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname === "/explore"} tooltip="Keyword Explorer">
+                  <SidebarMenuButton asChild isActive={pathname === "/explore"}>
                     <Link to="/explore">
                       <CompassIcon /> <span>Keyword Explorer</span>
                     </Link>
@@ -175,16 +171,14 @@ export function AppSidebar() {
                     </SidebarMenuItem>
                   ))}
                 {isEmpty && (
-                  <p className="text-muted-foreground px-2 py-1.5 text-xs group-data-[collapsible=icon]:hidden">
+                  <p className="text-muted-foreground px-2 py-1.5 text-xs">
                     No apps yet. Add one to start tracking keywords.
                   </p>
                 )}
                 {tracked.data &&
                   folders.data?.map((folder) => {
                     const apps = tracked.data.filter((app) => app.folderId === folder.id);
-                    return iconOnly ? (
-                      <CollapsedFolderRow key={folder.id} folder={folder} apps={apps} />
-                    ) : (
+                    return (
                       <FolderRow
                         key={folder.id}
                         folder={folder}
@@ -212,11 +206,7 @@ export function AppSidebar() {
               <ThemeToggle />
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip="Add app"
-                variant="outline"
-                onClick={() => setAddOpen(true)}
-              >
+              <SidebarMenuButton variant="outline" onClick={() => setAddOpen(true)}>
                 <PlusIcon />
                 <span>Add App</span>
               </SidebarMenuButton>
@@ -235,7 +225,7 @@ export function AppSidebar() {
   );
 }
 
-/** Expanded-sidebar folder: the whole row toggles its apps; the hover menu opens, edits or deletes it. */
+/** Sidebar folder: the whole row toggles its apps; the hover menu opens, edits or deletes it. */
 function FolderRow({
   folder,
   open,
@@ -297,47 +287,6 @@ function FolderRow({
   );
 }
 
-/** Icon-only sidebar folder: a single folder icon that opens a dropdown of its apps. */
-function CollapsedFolderRow({ folder, apps }: { folder: Folder; apps: TrackedApp[] }) {
-  const params = useParams({ strict: false });
-  const isActive = params.folderId === String(folder.id) || apps.some((app) => app.id === params.appId);
-
-  return (
-    <SidebarMenuItem>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuButton size="lg" isActive={isActive} className="group-data-[collapsible=icon]:p-0!">
-            <span className="flex size-8 shrink-0 items-center justify-center">
-              <FolderGlyph color={folder.color} className="size-5" />
-            </span>
-            <span className="sr-only">{folder.name}</span>
-          </SidebarMenuButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start" className="min-w-56">
-          <DropdownMenuLabel className="flex items-center gap-2">
-            <FolderGlyph color={folder.color} className="size-4" />
-            <span className="truncate">{folder.name}</span>
-          </DropdownMenuLabel>
-          <DropdownMenuItem asChild>
-            <Link to="/folders/$folderId" params={{ folderId: String(folder.id) }}>
-              <FolderOpenIcon /> Open folder
-            </Link>
-          </DropdownMenuItem>
-          {apps.length > 0 && <DropdownMenuSeparator />}
-          {apps.map((app) => (
-            <DropdownMenuItem key={app.id} asChild>
-              <Link to="/apps/$appId" params={{ appId: app.id }}>
-                <AppIcon src={app.iconUrl} name={app.name} size={20} />
-                <span className="truncate">{app.name}</span>
-              </Link>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </SidebarMenuItem>
-  );
-}
-
 function AppRow({
   app,
   folders,
@@ -381,8 +330,6 @@ function AppRow({
         asChild
         size="lg"
         isActive={params.appId === app.id}
-        tooltip={app.name}
-        className="group-data-[collapsible=icon]:p-0!"
       >
         <Link to="/apps/$appId" params={{ appId: app.id }}>
           <AppIcon src={app.iconUrl} name={app.name} size={32} />
