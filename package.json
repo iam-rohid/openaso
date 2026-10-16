@@ -47,7 +47,7 @@
     "drizzle-kit": "^0.31.11",
     "drizzle-orm": "^0.45.4",
     "electron": "^44.7.2",
-    "electron-builder": "^26.15.3",
+    "electron-builder": "^26.17.0",
     "electron-updater": "^6.8.9",
     "electron-vite": "^6.0.0",
     "eslint": "^9",
