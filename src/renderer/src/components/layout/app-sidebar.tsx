@@ -326,7 +326,7 @@ function AppRow({
       {app.keywordCount > 0 && <SidebarMenuBadge className={BADGE_HOVER_HIDE}>{app.keywordCount}</SidebarMenuBadge>}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuAction className={cn("top-3!", ACTION_ON_HOVER)}>
+          <SidebarMenuAction className={ACTION_ON_HOVER}>
             <MoreHorizontalIcon />
             <span className="sr-only">More</span>
           </SidebarMenuAction>
