@@ -171,14 +171,15 @@ export function AppKeywordsView({ appId }: { appId: string }) {
                 {app.data.rating != null && (
                   <>
                     <StarIcon className="size-3 shrink-0 fill-current" /> {app.data.rating.toFixed(1)} (
-                    {compactNumber(app.data.ratingCount)}) ·{" "}
+                    {compactNumber(app.data.ratingCount)})
                   </>
                 )}
                 {keywords.data ? (
-                  <span className="truncate">
-                    {keywords.data.length} keyword{keywords.data.length === 1 ? "" : "s"}
-                    {keywords.data.length > 0 && ` · Ranked in ${ranked} · Top 10 in ${top10}`}
-                  </span>
+                  keywords.data.length > 0 && (
+                    <span className="truncate">
+                      {app.data.rating != null && "· "}Ranked in {ranked} · Top 10 in {top10}
+                    </span>
+                  )
                 ) : (
                   <Skeleton className="h-3 w-24" />
                 )}
