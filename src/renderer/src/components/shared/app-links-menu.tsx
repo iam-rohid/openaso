@@ -15,11 +15,13 @@ export function AppLinksMenu({
   country,
   storeUrl,
   size = "icon-sm",
+  variant = "ghost",
 }: {
   appId: string;
   country: string;
   storeUrl?: string | null;
   size?: "icon" | "icon-sm";
+  variant?: "ghost" | "outline";
 }) {
   const appStoreUrl = storeUrl ?? `https://apps.apple.com/${country.toLowerCase()}/app/id${appId}`;
   const sensorTowerUrl = `https://app.sensortower.com/overview/${appId}?country=${country.toUpperCase()}`;
@@ -27,7 +29,7 @@ export function AppLinksMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={size}>
+        <Button variant={variant} size={size}>
           <MoreHorizontalIcon />
           <span className="sr-only">App links</span>
         </Button>

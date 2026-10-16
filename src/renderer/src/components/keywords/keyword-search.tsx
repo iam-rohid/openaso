@@ -34,7 +34,7 @@ export function KeywordSearch({ value, onChange }: { value: string; onChange: (v
 
   if (!open) {
     return (
-      <Button variant="ghost" size="icon" onClick={focus}>
+      <Button variant="outline" size="icon" onClick={focus}>
         <SearchIcon />
         <span className="sr-only">Filter keywords</span>
       </Button>

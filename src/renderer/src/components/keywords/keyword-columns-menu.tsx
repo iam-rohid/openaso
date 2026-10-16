@@ -27,7 +27,7 @@ export function KeywordColumnsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="outline" size="icon">
           <Columns3Icon />
           <span className="sr-only">Columns</span>
         </Button>

@@ -239,7 +239,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
             </>
           )}
           <KeywordColumnsMenu />
-          <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" />
+          <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" variant="outline" />
           <KeywordSearch value={filter} onChange={setFilter} />
         </div>
       </PageHeader>
