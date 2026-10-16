@@ -128,7 +128,8 @@ export function AddAppDialog({
           Search the App Store by app or developer name, or paste an App Store link.
         </DialogDescription>
 
-        <CommandPrimitive shouldFilter={false} loop className="flex flex-col">
+        {/* min-w-0: as the dialog's grid item it would otherwise widen to fit untruncated names. */}
+        <CommandPrimitive shouldFilter={false} loop className="flex min-w-0 flex-col">
           <div className="flex h-16 items-center gap-3 pr-3 pl-5">
             {search.isFetching ? (
               <Spinner className="text-muted-foreground size-5" />
@@ -164,7 +165,7 @@ export function AddAppDialog({
             <CommandPrimitive.List className="max-h-[min(440px,60vh)] scroll-py-2 overflow-y-auto border-t p-2">
               {search.isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2">
+                  <div key={i} className="flex items-center gap-3 px-3 py-2">
                     <Skeleton className="size-11 rounded-xl" />
                     <div className="flex-1 space-y-1.5">
                       <Skeleton className="h-4 w-1/2" />
@@ -196,7 +197,7 @@ export function AddAppDialog({
                     key={app.id}
                     value={app.id}
                     onSelect={() => choose(app)}
-                    className="group data-[selected=true]:bg-muted flex cursor-default items-center gap-3 rounded-lg p-2 outline-none"
+                    className="group data-[selected=true]:bg-muted flex cursor-default items-center gap-3 rounded-lg px-3 py-2 outline-none"
                   >
                     <AppIcon src={app.iconUrl} name={app.name} size={44} />
                     <div className="min-w-0 flex-1">
