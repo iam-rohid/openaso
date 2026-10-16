@@ -2,6 +2,7 @@ import { inArray, sql } from "drizzle-orm";
 import { lookupApps } from "@main/apple/itunes";
 import { lookupSubtitles } from "@main/apple/store-search";
 import type { AppleApp } from "@main/apple/types";
+import { isTemporaryAppId } from "@shared/apps";
 import { db } from "@main/db";
 import { apps, type App } from "@main/db/schema";
 
@@ -53,7 +54,8 @@ export async function getCachedApps(ids: string[]): Promise<Map<string, App>> {
 
 /**
  * Returns metadata for the given ids, looking up any that are missing (or stale /
- * incomplete when `requireFull`) from the iTunes Lookup API first.
+ * incomplete when `requireFull`) from the iTunes Lookup API first. Temporary apps
+ * aren't on the App Store, so they are only ever served from the cache.
  */
 export async function ensureApps(
   ids: string[],
@@ -63,6 +65,7 @@ export async function ensureApps(
   const cached = await getCachedApps(ids);
   const now = Date.now();
   const missing = ids.filter((id) => {
+    if (isTemporaryAppId(id)) return false;
     const app = cached.get(id);
     if (!app || force) return true;
     // Apps cached before subtitles were stored pick theirs up on next use.

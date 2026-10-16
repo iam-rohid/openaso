@@ -31,6 +31,8 @@ export const apps = sqliteTable("apps", {
   updatedDate: timestamp("updated_date"),
   version: text("version"),
   country: text("country").notNull().default("US"),
+  /** Placeholder for an app not on the App Store yet; never looked up from Apple. */
+  isTemporary: integer("is_temporary", { mode: "boolean" }).notNull().default(false),
   fetchedAt: createdAt("fetched_at"),
 });
 

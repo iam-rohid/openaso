@@ -1,11 +1,16 @@
+import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
-import { asc, count, eq, sql } from "drizzle-orm";
+import { and, asc, count, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { searchApps } from "@main/apple/itunes";
 import { apps, appKeywords, keywords, trackedApps } from "@main/db/schema";
 import { createTRPCRouter, publicProcedure } from "@main/api/trpc";
 import { appIdInput, countryInput, folderIdInput } from "@main/api/inputs";
 import { ensureApps, upsertApps } from "@main/services/apps";
+import { isTemporaryAppId, TEMPORARY_APP_NAME_MAX, TEMPORARY_APP_PREFIX } from "@shared/apps";
+
+const temporaryNameInput = z.string().trim().min(1).max(TEMPORARY_APP_NAME_MAX);
+const temporaryAppIdInput = appIdInput.refine(isTemporaryAppId, "Not a temporary app");
 
 /** Accepts "123", "id123" or a full apps.apple.com URL. */
 function parseAppId(query: string): string | null {
@@ -25,6 +30,7 @@ export const appsRouter = createTRPCRouter({
         genre: apps.genre,
         rating: apps.rating,
         ratingCount: apps.ratingCount,
+        isTemporary: apps.isTemporary,
         folderId: trackedApps.folderId,
         createdAt: trackedApps.createdAt,
         keywordCount: sql<number>`(
@@ -79,6 +85,93 @@ export const appsRouter = createTRPCRouter({
       return app;
     }),
 
+  /** Creates and tracks a placeholder for an app that isn't on the App Store yet. */
+  createTemporary: publicProcedure
+    .input(z.object({ name: temporaryNameInput, country: countryInput, folderId: folderIdInput.optional() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.transaction((tx) => {
+        const app = tx
+          .insert(apps)
+          .values({
+            id: `${TEMPORARY_APP_PREFIX}${randomUUID().replaceAll("-", "")}`,
+            name: input.name,
+            subtitle: "",
+            country: input.country,
+            isTemporary: true,
+          })
+          .returning()
+          .get();
+        const { max } = tx
+          .select({ max: sql<number>`coalesce(max(${trackedApps.sortOrder}), 0)` })
+          .from(trackedApps)
+          .get()!;
+        tx.insert(trackedApps)
+          .values({ appId: app.id, folderId: input.folderId, defaultCountry: input.country, sortOrder: max + 1 })
+          .run();
+        return app;
+      });
+    }),
+
+  renameTemporary: publicProcedure
+    .input(z.object({ id: temporaryAppIdInput, name: temporaryNameInput }))
+    .mutation(async ({ ctx, input }) => {
+      const [app] = await ctx.db
+        .update(apps)
+        .set({ name: input.name })
+        .where(and(eq(apps.id, input.id), eq(apps.isTemporary, true)))
+        .returning();
+      if (!app) throw new TRPCError({ code: "NOT_FOUND", message: "App not found" });
+      return app;
+    }),
+
+  /**
+   * Replaces a temporary app with its real App Store listing: its keywords and notes
+   * move to the real app (merging if that's already tracked) and the placeholder is deleted.
+   */
+  linkTemporary: publicProcedure
+    .input(z.object({ id: temporaryAppIdInput, targetId: appIdInput, country: countryInput }))
+    .mutation(async ({ ctx, input }) => {
+      if (isTemporaryAppId(input.targetId)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Pick an App Store app to link to" });
+      }
+      const target = (await ensureApps([input.targetId], input.country, { requireFull: true })).get(input.targetId);
+      if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "App not found in this storefront" });
+
+      return ctx.db.transaction((tx) => {
+        const placeholder = tx.select().from(trackedApps).where(eq(trackedApps.appId, input.id)).get();
+        if (!placeholder) throw new TRPCError({ code: "NOT_FOUND", message: "App not found" });
+
+        // An already tracked target keeps its own folder and position.
+        const merged = !!tx.select().from(trackedApps).where(eq(trackedApps.appId, target.id)).get();
+        if (!merged) {
+          tx.insert(trackedApps)
+            .values({
+              appId: target.id,
+              folderId: placeholder.folderId,
+              defaultCountry: placeholder.defaultCountry,
+              sortOrder: placeholder.sortOrder,
+            })
+            .run();
+        }
+
+        const { moved } = tx
+          .select({ moved: count() })
+          .from(appKeywords)
+          .where(eq(appKeywords.appId, input.id))
+          .get()!;
+        // Keywords both apps follow keep the real app's note unless it's empty.
+        tx.run(sql`
+          insert into ${appKeywords} (app_id, keyword_id, notes, created_at)
+          select ${target.id}, keyword_id, notes, created_at from ${appKeywords} where app_id = ${input.id}
+          on conflict (app_id, keyword_id) do update
+          set notes = coalesce(nullif(${appKeywords.notes}, ''), excluded.notes)
+        `);
+        // Cascades to the placeholder's tracked row and keyword links.
+        tx.delete(apps).where(eq(apps.id, input.id)).run();
+        return { app: target, moved, merged };
+      });
+    }),
+
   /** Moves a tracked app into a folder (or back to the top level with `null`), placing it last. */
   moveToFolder: publicProcedure
     .input(z.object({ id: appIdInput, folderId: folderIdInput.nullable() }))
@@ -93,7 +186,9 @@ export const appsRouter = createTRPCRouter({
     }),
 
   untrack: publicProcedure.input(z.object({ id: appIdInput })).mutation(async ({ ctx, input }) => {
-    await ctx.db.delete(trackedApps).where(eq(trackedApps.appId, input.id));
+    // Temporary apps can't be found again once untracked, so drop the app itself.
+    if (isTemporaryAppId(input.id)) await ctx.db.delete(apps).where(eq(apps.id, input.id));
+    else await ctx.db.delete(trackedApps).where(eq(trackedApps.appId, input.id));
   }),
 
   refresh: publicProcedure
