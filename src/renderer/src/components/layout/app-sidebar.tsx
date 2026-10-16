@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ChartNoAxesColumnIncreasingIcon,
   CheckIcon,
   ChevronRightIcon,
   CompassIcon,
@@ -104,23 +103,8 @@ export function AppSidebar() {
   return (
     <>
       <Sidebar collapsible="offcanvas">
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
-                <Link to="/">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-white">
-                    <ChartNoAxesColumnIncreasingIcon className="size-4" strokeWidth={3} />
-                  </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">OpenASO</span>
-                    <span className="text-muted-foreground truncate text-xs">ASO toolkit</span>
-                  </div>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
+        {/* Empty on purpose: on macOS it clears the traffic lights and drags the window. */}
+        <SidebarHeader />
 
         <SidebarContent>
           <SidebarGroup>
