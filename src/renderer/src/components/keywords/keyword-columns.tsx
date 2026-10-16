@@ -238,6 +238,10 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
     id: "apps",
     meta: { label: "Apps in Ranking" },
     size: 230,
+    // Fixed width: clamping min/max also overrides any previously saved width.
+    minSize: 230,
+    maxSize: 230,
+    enableResizing: false,
     enableSorting: false,
     header: "Apps in Ranking",
     cell: ({ row, table }) => {
