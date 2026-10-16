@@ -63,6 +63,8 @@ export function AppKeywordsView({ appId }: { appId: string }) {
   const [pendingRemoval, setPendingRemoval] = useState<KeywordRow[] | null>(null);
   const [refreshingIds, setRefreshingIds] = useState<Set<number>>(new Set());
   const [filter, setFilter] = useState("");
+  // While the search box is open, header buttons shrink to icons to make room for it.
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const app = useQuery(trpc.apps.get.queryOptions({ id: appId, country }));
   // Only apps in My Apps get this page; competitors are explored from the ranking views.
@@ -197,7 +199,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" disabled={refreshing || !keywords.data?.length}>
                       <RefreshCwIcon className={cn(refreshing && "animate-spin")} />
-                      <span className="hidden lg:inline">Refresh</span>
+                      <span className={cn("hidden", !searchOpen && "lg:inline")}>Refresh</span>
                       {staleCount > 0 && (
                         <span className="rounded-full bg-amber-400/20 px-1.5 text-xs text-amber-500">
                           {staleCount}
@@ -223,24 +225,30 @@ export function AppKeywordsView({ appId }: { appId: string }) {
             </DropdownMenu>
           )}
 
-          <CountrySelect />
+          <CountrySelect compact={searchOpen} />
 
           {isTracked && (
             <>
-              <Button className="bg-indigo-600 text-white hover:bg-indigo-500" onClick={() => setAddOpen(true)}>
-                <span className="hidden sm:inline">Add Keywords</span> <PlusIcon />
+              <Button
+                size={searchOpen ? "icon" : "default"}
+                className="bg-indigo-600 text-white hover:bg-indigo-500"
+                onClick={() => setAddOpen(true)}
+              >
+                <span className={cn(searchOpen ? "sr-only" : "hidden sm:inline")}>Add Keywords</span> <PlusIcon />
               </Button>
               <Button
+                size={searchOpen ? "icon" : "default"}
                 className="bg-orange-500 text-white hover:bg-orange-400"
                 onClick={() => setSuggest({ open: true })}
               >
-                <span className="hidden sm:inline">Get Suggestions</span> <LightbulbIcon />
+                <span className={cn(searchOpen ? "sr-only" : "hidden sm:inline")}>Get Suggestions</span>{" "}
+                <LightbulbIcon />
               </Button>
             </>
           )}
           <KeywordColumnsMenu />
           <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" variant="outline" />
-          <KeywordSearch value={filter} onChange={setFilter} />
+          <KeywordSearch value={filter} onChange={setFilter} onOpenChange={setSearchOpen} />
         </div>
       </PageHeader>
 

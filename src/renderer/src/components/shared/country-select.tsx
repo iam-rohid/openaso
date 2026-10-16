@@ -14,17 +14,18 @@ import { useCountry } from "@/hooks/use-country";
 import { COUNTRIES, countryFlag } from "@shared/countries";
 import { cn } from "@/lib/utils";
 
-export function CountrySelect({ className }: { className?: string }) {
+/** `compact` shows just the flag, for headers short on space. */
+export function CountrySelect({ className, compact = false }: { className?: string; compact?: boolean }) {
   const [country, setCountry] = useCountry();
   const [open, setOpen] = useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className={cn("min-w-24 justify-between gap-2", className)}>
+        <Button variant="outline" className={cn("justify-between gap-2", !compact && "min-w-24", className)}>
           <span className="flex items-center gap-2">
             <span className="text-base leading-none">{countryFlag(country)}</span>
-            {country}
+            <span className={cn(compact && "sr-only")}>{country}</span>
           </span>
           <ChevronDownIcon className="text-muted-foreground size-4" />
         </Button>

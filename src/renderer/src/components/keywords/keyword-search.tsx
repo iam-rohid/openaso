@@ -7,10 +7,20 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "
  * Keyword filter for the page header. Starts as an icon; clicking it (or ⌘F) opens a
  * focused input. Esc clears and closes it, and an empty input closes on blur.
  */
-export function KeywordSearch({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function KeywordSearch({
+  value,
+  onChange,
+  onOpenChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [expanded, setExpanded] = useState(false);
   const open = expanded || value.length > 0;
+
+  useEffect(() => onOpenChange?.(open), [open, onOpenChange]);
 
   const focus = () => {
     setExpanded(true);
