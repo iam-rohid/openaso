@@ -3,27 +3,13 @@ import { CopyIcon, RefreshCwIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { KeywordActionsMenuItems } from "./keyword-actions-menu";
 import { keywordColumns } from "./keyword-columns";
-import {
-  useKeywordColumnSizing,
-  useKeywordColumnVisibility,
-  useKeywordSorting,
-} from "./keyword-table-prefs";
+import { useKeywordColumnSizing, useKeywordColumnVisibility, useKeywordSorting } from "./keyword-table-prefs";
 import {
   keywordTableFeatures,
   type KeywordRow,
@@ -32,8 +18,8 @@ import {
 
 const EMPTY: KeywordRow[] = [];
 
-/** The actions column has no fixed width so it absorbs leftover space and the other columns keep their sizes. */
-const FILL_COLUMN = "actions";
+/** The filler column has no fixed width so it absorbs leftover space and the other columns keep their sizes. */
+const FILL_COLUMN = "filler";
 
 export function KeywordTable({
   data,
@@ -76,10 +62,7 @@ export function KeywordTable({
     getColumnCanGlobalFilter: (column) => column.id === "term",
     globalFilterFn: (row, _columnId, filter: string) => {
       const q = filter.toLowerCase();
-      return (
-        row.original.term.includes(q) ||
-        (row.original.notes ?? "").toLowerCase().includes(q)
-      );
+      return row.original.term.includes(q) || (row.original.notes ?? "").toLowerCase().includes(q);
     },
     meta: { actions },
   });
@@ -91,12 +74,7 @@ export function KeywordTable({
     <div className="relative flex min-h-0 flex-1 flex-col">
       {/* One scroll container for both axes, so the horizontal scrollbar sits at the bottom of the view however few rows there are. */}
       {/* `relative` so absolutely positioned bits inside cells (e.g. Radix's hidden checkbox inputs) are clipped here instead of widening the page. */}
-      <div
-        className={cn(
-          "relative min-h-0 flex-1 overflow-auto",
-          selected.length > 0 && "pb-16",
-        )}
-      >
+      <div className={cn("relative min-h-0 flex-1 overflow-auto", selected.length > 0 && "pb-16")}>
         {/* Plain <table>: the ui Table wraps itself in its own overflow container, which would break the sticky header. */}
         <table
           data-slot="table"
@@ -106,24 +84,16 @@ export function KeywordTable({
           {/* Borders don't stick with border-collapse, so the header's bottom edge is an inset shadow. */}
           <TableHeader className="bg-background sticky top-0 z-10 [&_tr]:border-b-0">
             {table.getHeaderGroups().map((group) => (
-              <TableRow
-                key={group.id}
-                className="bg-muted/40 hover:bg-muted/40"
-              >
+              <TableRow key={group.id} className="bg-muted/40 hover:bg-muted/40">
                 {group.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     style={{
-                      width:
-                        header.column.id === FILL_COLUMN
-                          ? undefined
-                          : header.getSize(),
+                      width: header.column.id === FILL_COLUMN ? undefined : header.getSize(),
                     }}
                     className="text-muted-foreground relative h-10 text-xs font-medium shadow-[inset_0_-1px_0_var(--color-border)] first:pl-4 last:pr-4"
                   >
-                    {header.isPlaceholder ? null : (
-                      <table.FlexRender header={header} />
-                    )}
+                    {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                     {header.column.getCanResize() && (
                       <div
                         role="separator"
@@ -162,29 +132,18 @@ export function KeywordTable({
                       data-state={row.getIsSelected() ? "selected" : undefined}
                       className={cn(
                         "group/row select-auto",
-                        actions.refreshingIds.has(row.original.id) &&
-                          "animate-pulse",
+                        actions.refreshingIds.has(row.original.id) && "animate-pulse",
                       )}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className={cn(
-                            "h-12 overflow-hidden first:pl-4 last:pr-4",
-                            cell.column.id === FILL_COLUMN && "text-right",
-                          )}
-                        >
+                        <TableCell key={cell.id} className="h-12 overflow-hidden first:pl-4 last:pr-4">
                           <table.FlexRender cell={cell} />
                         </TableCell>
                       ))}
                     </TableRow>
                   </ContextMenuTrigger>
                   <ContextMenuContent className="min-w-48">
-                    <KeywordActionsMenuItems
-                      keyword={row.original}
-                      actions={actions}
-                      menu="context"
-                    />
+                    <KeywordActionsMenuItems keyword={row.original} actions={actions} />
                   </ContextMenuContent>
                 </ContextMenu>
               ))}
@@ -195,9 +154,7 @@ export function KeywordTable({
         {!isLoading && rows.length === 0 && (
           <div className="sticky left-0">
             {globalFilter ? (
-              <p className="text-muted-foreground py-16 text-center text-sm">
-                No keywords match “{globalFilter}”.
-              </p>
+              <p className="text-muted-foreground py-16 text-center text-sm">No keywords match “{globalFilter}”.</p>
             ) : (
               emptyState
             )}
@@ -208,23 +165,15 @@ export function KeywordTable({
       {selected.length > 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
           <div className="bg-popover pointer-events-auto flex items-center gap-1 rounded-lg border px-2 py-1 text-sm shadow-lg">
-            <span className="px-1 font-medium tabular-nums">
-              {selected.length} selected
-            </span>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => actions.onRefresh(selected.map((k) => k.id))}
-            >
+            <span className="px-1 font-medium tabular-nums">{selected.length} selected</span>
+            <Button size="sm" variant="ghost" onClick={() => actions.onRefresh(selected.map((k) => k.id))}>
               <RefreshCwIcon /> Refresh
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => {
-                void navigator.clipboard.writeText(
-                  selected.map((k) => k.term).join(", "),
-                );
+                void navigator.clipboard.writeText(selected.map((k) => k.term).join(", "));
                 toast.success(`Copied ${selected.length} keywords`);
               }}
             >
@@ -243,11 +192,7 @@ export function KeywordTable({
                 <Trash2Icon /> Remove
               </Button>
             )}
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={() => setRowSelection({})}
-            >
+            <Button size="icon-sm" variant="ghost" onClick={() => setRowSelection({})}>
               <XIcon />
               <span className="sr-only">Clear selection</span>
             </Button>

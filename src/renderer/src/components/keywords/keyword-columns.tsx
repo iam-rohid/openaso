@@ -1,23 +1,15 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  ArrowDownIcon,
-  ArrowUpDownIcon,
-  ArrowUpIcon,
-  MoreHorizontalIcon,
-  RefreshCwIcon,
-} from "lucide-react";
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, RefreshCwIcon } from "lucide-react";
 import { AppIcon } from "@/components/shared/app-icon";
 import { ChangeBadge } from "@/components/shared/change-badge";
 import { ScoreBar } from "@/components/shared/score-bar";
 import { Sparkline } from "@/components/shared/sparkline";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { countryFlag } from "@shared/countries";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { copyKeyword, KeywordActionsMenuItems } from "./keyword-actions-menu";
+import { copyKeyword } from "./keyword-actions-menu";
 import { NotesCell } from "./notes-cell";
 import type { KeywordRow, KeywordTableActions, KeywordTableFeatures } from "./keyword-table-features";
 
@@ -276,27 +268,15 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
     },
   },
   {
-    id: "actions",
-    size: 44,
+    // Empty, unsized column that absorbs leftover width so the other columns keep their sizes.
+    id: "filler",
+    // Counted as zero in the table's min width, so narrow windows don't scroll to reveal empty space.
+    size: 0,
+    minSize: 0,
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    cell: ({ row, table }) => {
-      const actions = table.options.meta!.actions;
-      const k = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="opacity-60 group-hover/row:opacity-100">
-              <MoreHorizontalIcon />
-              <span className="sr-only">Keyword actions</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-48">
-            <KeywordActionsMenuItems keyword={k} actions={actions} menu="dropdown" />
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    header: () => null,
+    cell: () => null,
   },
 ];
