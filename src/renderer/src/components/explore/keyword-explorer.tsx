@@ -25,10 +25,10 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useCountry } from "@/hooks/use-country";
+import { useStoredCountry } from "@/hooks/use-country";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { countryFlag } from "@shared/countries";
-import { timeAgo } from "@/lib/format";
+import { timeAgo, storefrontSuffix } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
 
@@ -37,7 +37,7 @@ const route = getRouteApi("/explore");
 export function KeywordExplorer() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [country] = useCountry();
+  const [country, setCountry] = useStoredCountry("openaso:explorer-country");
   const term = route.useSearch({ select: (s) => s.q ?? "" });
   const navigate = route.useNavigate();
   const setTerm = (q: string) => navigate({ search: (prev) => ({ ...prev, q: q || undefined }), replace: true });
@@ -67,7 +67,7 @@ export function KeywordExplorer() {
     enabled: !!keyword.data,
   });
   const recent = useQuery(trpc.keywords.recent.queryOptions({ country }));
-  const tracked = useQuery(trpc.apps.tracked.queryOptions({ country }));
+  const tracked = useQuery(trpc.apps.tracked.queryOptions());
   const trackedIds = new Set(tracked.data?.map((a) => a.id));
 
   const refresh = useMutation(
@@ -85,7 +85,7 @@ export function KeywordExplorer() {
         await queryClient.invalidateQueries(trpc.keywords.pathFilter());
         await queryClient.invalidateQueries(trpc.apps.tracked.pathFilter());
         const app = tracked.data?.find((a) => a.id === appId);
-        toast.success(`Now tracking “${term}” for ${app?.name ?? "app"}`);
+        toast.success(`Now tracking “${term}” for ${app?.name ?? "app"}${storefrontSuffix(app?.country, country)}`);
       },
       onError: (err) => toast.error(err.message),
     }),
@@ -111,7 +111,7 @@ export function KeywordExplorer() {
       <PageHeader>
         <h1 className="text-sm font-semibold">Keyword Explorer</h1>
         <div className="ml-auto">
-          <CountrySelect />
+          <CountrySelect value={country} onChange={setCountry} />
         </div>
       </PageHeader>
 
@@ -201,7 +201,10 @@ export function KeywordExplorer() {
                         onClick={() => add.mutate({ appId: app.id, country, terms: [term] })}
                       >
                         <AppIcon src={app.iconUrl} name={app.name} size={20} />
-                        <span className="truncate">{app.name}</span>
+                        <span className="flex-1 truncate">{app.name}</span>
+                        <span className="text-xs" title={`${app.country} storefront`}>
+                          {countryFlag(app.country)}
+                        </span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>

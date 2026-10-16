@@ -55,7 +55,7 @@ export function RankingSheet({
     }),
     enabled: !!target,
   });
-  const tracked = useQuery(trpc.apps.tracked.queryOptions({ country: (target?.country ?? "US") as CountryCode }));
+  const tracked = useQuery(trpc.apps.tracked.queryOptions());
   const trackedIds = new Set(tracked.data?.map((a) => a.id));
 
   const refresh = useMutation(

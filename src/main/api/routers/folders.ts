@@ -3,7 +3,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { appFolders, trackedApps } from "@main/db/schema";
 import { createTRPCRouter, publicProcedure } from "@main/api/trpc";
-import { appIdInput, countryInput, folderIdInput } from "@main/api/inputs";
+import { appIdInput, folderIdInput } from "@main/api/inputs";
 import { FOLDER_COLORS, FOLDER_NAME_MAX } from "@shared/folders";
 
 const folderFields = z.object({
@@ -12,8 +12,8 @@ const folderFields = z.object({
 });
 
 export const foldersRouter = createTRPCRouter({
-  /** Folders in sidebar order, with app/keyword counts for the active storefront and a few icons for previews. */
-  list: publicProcedure.input(z.object({ country: countryInput })).query(async ({ ctx, input }) => {
+  /** Folders in sidebar order, with app/keyword counts (each app in its own storefront) and a few icons for previews. */
+  list: publicProcedure.query(async ({ ctx }) => {
     return ctx.db
       .select({
         id: appFolders.id,
@@ -25,7 +25,7 @@ export const foldersRouter = createTRPCRouter({
           select count(*) from app_keywords ak
           join tracked_apps ta on ta.app_id = ak.app_id
           join keywords k on k.id = ak.keyword_id
-          where ta.folder_id = ${appFolders}.id and k.country = ${input.country}
+          where ta.folder_id = ${appFolders}.id and k.country = ta.default_country
         )`,
         previewIcons: sql<string>`(
           select json_group_array(t.icon_url) from (

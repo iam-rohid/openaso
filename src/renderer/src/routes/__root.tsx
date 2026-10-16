@@ -1,18 +1,12 @@
-import { createRootRoute, HeadContent, Link, Outlet, retainSearchParams } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Link, Outlet } from "@tanstack/react-router";
 import { CompassIcon } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Providers } from "@/components/providers";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { SIDEBAR_STORAGE_KEY, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { parseCountry } from "@/hooks/use-country";
-import type { CountryCode } from "@shared/countries";
 
 export const Route = createRootRoute({
-  validateSearch: (search: Record<string, unknown>): { country?: CountryCode } => ({
-    country: parseCountry(search.country),
-  }),
-  search: { middlewares: [retainSearchParams(["country"])] },
   head: () => ({ meta: [{ title: "OpenASO" }] }),
   component: RootLayout,
   notFoundComponent: NotFound,

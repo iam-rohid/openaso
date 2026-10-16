@@ -64,7 +64,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useCountry } from "@/hooks/use-country";
 import { useAfterMenuClose } from "@/hooks/use-after-menu-close";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { cn } from "@/lib/utils";
@@ -83,7 +82,6 @@ export function AppSidebar() {
   const trpc = useTRPC();
   const pathname = useLocation({ select: (l) => l.pathname });
   const params = useParams({ strict: false });
-  const [country] = useCountry();
   const [addOpen, setAddOpen] = useState(false);
   const [folderDialog, setFolderDialog] = useState<{ open: boolean; target: FolderDialogTarget }>({
     open: false,
@@ -91,8 +89,8 @@ export function AppSidebar() {
   });
   const openFolderDialog = (target: FolderDialogTarget) => setFolderDialog({ open: true, target });
 
-  const tracked = useQuery(trpc.apps.tracked.queryOptions({ country }));
-  const folders = useQuery(trpc.folders.list.queryOptions({ country }));
+  const tracked = useQuery(trpc.apps.tracked.queryOptions());
+  const folders = useQuery(trpc.folders.list.queryOptions());
   const looseApps = tracked.data?.filter((app) => app.folderId == null) ?? [];
   const isEmpty = tracked.data?.length === 0 && folders.data?.length === 0;
 
@@ -290,7 +288,6 @@ function AppRow({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const params = useParams({ strict: false });
-  const [country] = useCountry();
   const menu = useAfterMenuClose();
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -354,7 +351,7 @@ function AppRow({
             </>
           ) : (
             <DropdownMenuItem asChild>
-              <a href={`https://apps.apple.com/${country.toLowerCase()}/app/id${app.id}`} target="_blank" rel="noreferrer">
+              <a href={`https://apps.apple.com/${app.country.toLowerCase()}/app/id${app.id}`} target="_blank" rel="noreferrer">
                 <ExternalLinkIcon /> View on App Store
               </a>
             </DropdownMenuItem>

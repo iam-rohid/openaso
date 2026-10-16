@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { countryFlag, type CountryCode } from "@shared/countries";
 import { cn } from "@/lib/utils";
+import { storefrontSuffix } from "@/lib/format";
 import { useTRPC } from "@/trpc/react";
 
 export type CompetitorApp = { id: string; name: string; iconUrl: string | null };
@@ -77,7 +78,7 @@ export function CompetitorKeywordsDialog({
     setAddedNow(new Set());
   }
 
-  const trackedApps = useQuery({ ...trpc.apps.tracked.queryOptions({ country }), enabled: open });
+  const trackedApps = useQuery({ ...trpc.apps.tracked.queryOptions(), enabled: open });
   const targets = (trackedApps.data ?? []).filter((a) => a.id !== competitor?.id);
   const targetId =
     pickedTarget ?? (targets.some((a) => a.id === defaultTargetAppId) ? defaultTargetAppId : undefined);
@@ -111,7 +112,7 @@ export function CompetitorKeywordsDialog({
         setSelected(new Set());
         await queryClient.invalidateQueries(trpc.keywords.pathFilter());
         await queryClient.invalidateQueries(trpc.apps.tracked.pathFilter());
-        const to = target ? ` to ${target.name}` : "";
+        const to = target ? ` to ${target.name}${storefrontSuffix(target.country, country)}` : "";
         if (failed.length) toast.warning(`Added ${added}${to}; failed: ${failed.join(", ")}`);
         else toast.success(`Added ${added} keyword${added === 1 ? "" : "s"}${to}`);
       },

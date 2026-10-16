@@ -6,19 +6,16 @@ import { AddAppDialog } from "@/components/apps/add-app-dialog";
 import { AppCard } from "@/components/apps/app-card";
 import { FolderCard } from "@/components/folders/folder-card";
 import { PageHeader } from "@/components/layout/page-header";
-import { CountrySelect } from "@/components/shared/country-select";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCountry } from "@/hooks/use-country";
 import { useTRPC } from "@/trpc/react";
 
 export function HomeView() {
   const trpc = useTRPC();
-  const [country] = useCountry();
   const [addOpen, setAddOpen] = useState(false);
-  const tracked = useQuery(trpc.apps.tracked.queryOptions({ country }));
-  const folders = useQuery(trpc.folders.list.queryOptions({ country }));
+  const tracked = useQuery(trpc.apps.tracked.queryOptions());
+  const folders = useQuery(trpc.folders.list.queryOptions());
   const looseApps = tracked.data?.filter((app) => app.folderId == null) ?? [];
   const isEmpty = tracked.data?.length === 0 && folders.data?.length === 0;
 
@@ -27,7 +24,6 @@ export function HomeView() {
       <PageHeader>
         <h1 className="text-sm font-semibold">Home</h1>
         <div className="ml-auto flex items-center gap-2">
-          <CountrySelect />
           <Button asChild variant="outline">
             <Link to="/explore">
               <CompassIcon /> Explore keywords

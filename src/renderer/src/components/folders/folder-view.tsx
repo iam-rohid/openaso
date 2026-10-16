@@ -5,7 +5,6 @@ import { useState } from "react";
 import { AddAppDialog } from "@/components/apps/add-app-dialog";
 import { AppCard } from "@/components/apps/app-card";
 import { PageHeader } from "@/components/layout/page-header";
-import { CountrySelect } from "@/components/shared/country-select";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,7 +24,6 @@ import {
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAfterMenuClose } from "@/hooks/use-after-menu-close";
-import { useCountry } from "@/hooks/use-country";
 import { useTRPC } from "@/trpc/react";
 import { FolderDialog } from "./folder-dialog";
 import { FolderGlyph } from "./folder-glyph";
@@ -33,11 +31,10 @@ import { useDeleteFolder } from "./use-delete-folder";
 
 export function FolderView({ folderId }: { folderId: number }) {
   const trpc = useTRPC();
-  const [country] = useCountry();
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const folder = useQuery({ ...trpc.folders.get.queryOptions({ id: folderId }), retry: false });
-  const tracked = useQuery(trpc.apps.tracked.queryOptions({ country }));
+  const tracked = useQuery(trpc.apps.tracked.queryOptions());
   const deleteFolder = useDeleteFolder();
   const menu = useAfterMenuClose();
   const folderApps = tracked.data?.filter((app) => app.folderId === folderId) ?? [];
@@ -94,7 +91,6 @@ export function FolderView({ folderId }: { folderId: number }) {
           </BreadcrumbList>
         </Breadcrumb>
         <div className="ml-auto flex items-center gap-2">
-          <CountrySelect />
           <Button className="bg-indigo-600 text-white hover:bg-indigo-500" onClick={() => setAddOpen(true)}>
             Add App <PlusIcon />
           </Button>

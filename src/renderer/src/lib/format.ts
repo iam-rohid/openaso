@@ -1,3 +1,4 @@
+import { countryFlag } from "@shared/countries";
 import { formatDistanceToNowStrict } from "date-fns";
 
 export function timeAgo(date: Date | string | null | undefined) {
@@ -29,4 +30,9 @@ export function scoreTone(value: number, inverse = false) {
   if (value >= 20) return "bg-amber-400";
   if (value >= 10) return "bg-orange-500";
   return "bg-rose-500";
+}
+
+/** " (🇬🇧 GB)" when keywords are added in a storefront other than the app's own, else "". */
+export function storefrontSuffix(appCountry: string | undefined, country: string) {
+  return appCountry && appCountry !== country ? ` (${countryFlag(country)} ${country})` : "";
 }

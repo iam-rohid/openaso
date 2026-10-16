@@ -4,6 +4,7 @@ import { AppIcon } from "@/components/shared/app-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { compactNumber } from "@/lib/format";
+import { countryFlag } from "@shared/countries";
 
 /** Grid card for a tracked app, used on the home and folder pages. */
 export function AppCard({
@@ -18,6 +19,7 @@ export function AppCard({
     rating: number | null;
     ratingCount: number | null;
     isTemporary: boolean;
+    country: string;
   };
 }) {
   return (
@@ -37,6 +39,9 @@ export function AppCard({
             <div className="text-muted-foreground flex items-center gap-3 text-xs">
               <span className="inline-flex items-center gap-1">
                 <KeyRoundIcon className="size-3" /> {app.keywordCount} keywords
+              </span>
+              <span title={`${app.country} storefront`}>
+                {countryFlag(app.country)} {app.country}
               </span>
               {app.rating != null && (
                 <span className="inline-flex items-center gap-1">

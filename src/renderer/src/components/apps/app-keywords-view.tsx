@@ -49,15 +49,14 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useCountry } from "@/hooks/use-country";
 import { compactNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
+import { DEFAULT_COUNTRY, type CountryCode } from "@shared/countries";
 
 export function AppKeywordsView({ appId }: { appId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [country] = useCountry();
 
   const [addOpen, setAddOpen] = useState(false);
   const [suggest, setSuggest] = useState<{ open: boolean; seed?: string }>({ open: false });
@@ -69,7 +68,25 @@ export function AppKeywordsView({ appId }: { appId: string }) {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchOpen = searchExpanded || filter.length > 0;
 
-  const app = useQuery(trpc.apps.get.queryOptions({ id: appId, country }));
+  const appQuery = trpc.apps.get.queryOptions({ id: appId });
+  const app = useQuery(appQuery);
+  // Each app is viewed in its own storefront, saved with the app.
+  const country = app.data?.storefront ?? DEFAULT_COUNTRY;
+  const setCountry = useMutation(
+    trpc.apps.setCountry.mutationOptions({
+      // Switch immediately; the app's metadata refetches for the new storefront below.
+      onMutate: ({ country }) => {
+        queryClient.setQueryData(appQuery.queryKey, (prev) => prev && { ...prev, storefront: country });
+      },
+      onSettled: () =>
+        Promise.all([
+          queryClient.invalidateQueries(trpc.apps.pathFilter()),
+          queryClient.invalidateQueries(trpc.folders.pathFilter()),
+        ]),
+      onError: (err) => toast.error(err.message),
+    }),
+  );
+  const onCountryChange = (code: CountryCode) => setCountry.mutate({ id: appId, country: code });
   // Only apps in My Apps get this page; competitors are explored from the ranking views.
   const isTracked = app.data?.isTracked ?? false;
   // Not on the App Store yet, so there's nothing to rank or link to.
@@ -151,7 +168,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
     return (
       <>
         <PageHeader>
-          <CountrySelect />
+          <CountrySelect value={country} onChange={onCountryChange} />
         </PageHeader>
         <Empty className="m-6 border">
           <EmptyHeader>
@@ -236,7 +253,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
             </DropdownMenu>
           )}
 
-          <CountrySelect compact={searchOpen} />
+          <CountrySelect value={country} onChange={onCountryChange} compact={searchOpen} />
 
           {isTracked && (
             <>

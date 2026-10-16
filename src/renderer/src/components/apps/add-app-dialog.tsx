@@ -16,7 +16,7 @@ import {
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { useCountry } from "@/hooks/use-country";
+import { useStoredCountry } from "@/hooks/use-country";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { countryFlag } from "@shared/countries";
 import { compactNumber } from "@/lib/format";
@@ -38,12 +38,12 @@ export function AddAppDialog({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [country] = useCountry();
+  const [country] = useStoredCountry("openaso:add-country");
   const [query, setQuery] = useState("");
   const [step, setStep] = useState<"search" | "temporary">("search");
   const debounced = useDebouncedValue(query.trim(), 350);
 
-  const tracked = useQuery(trpc.apps.tracked.queryOptions({ country }));
+  const tracked = useQuery(trpc.apps.tracked.queryOptions());
   const trackedIds = new Set(tracked.data?.map((a) => a.id));
   const search = useQuery({
     ...trpc.apps.search.queryOptions({ query: debounced, country }),

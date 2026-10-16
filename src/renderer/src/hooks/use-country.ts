@@ -1,46 +1,27 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useCallback } from "react";
 import { COUNTRY_CODES, DEFAULT_COUNTRY, type CountryCode } from "@shared/countries";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 
-const STORAGE_KEY = "openaso:country";
+/** Where the single app-wide storefront used to be saved; it seeds the per-view defaults. */
+const LEGACY_KEY = "openaso:country";
 
 export function parseCountry(value: unknown): CountryCode | undefined {
   return COUNTRY_CODES.includes(value as CountryCode) ? (value as CountryCode) : undefined;
 }
 
-/** The storefront the app was last left on, used to restore it at launch. */
-export function savedCountry() {
+function legacyCountry() {
   try {
-    return parseCountry(localStorage.getItem(STORAGE_KEY));
+    return parseCountry(localStorage.getItem(LEGACY_KEY));
   } catch {
     return undefined;
   }
 }
 
 /**
- * Active storefront, kept in the URL (`?country=GB`) so it survives back/forward and
- * carries across links (see `retainSearchParams` on the root route), and remembered
- * in localStorage for the next launch.
+ * A storefront remembered per view (e.g. the keyword explorer) in localStorage. Apps
+ * keep their own storefront in the database instead; there is no app-wide country.
  */
-export function useCountry() {
-  const country = useSearch({ strict: false, select: (s) => s.country }) ?? DEFAULT_COUNTRY;
-  const navigate = useNavigate();
-
-  const setCountry = useCallback(
-    (code: CountryCode) => {
-      try {
-        localStorage.setItem(STORAGE_KEY, code);
-      } catch {
-        // Storage may be unavailable; the choice just won't persist.
-      }
-      void navigate({
-        to: ".",
-        search: (prev) => ({ ...prev, country: code === DEFAULT_COUNTRY ? undefined : code }),
-        replace: true,
-      });
-    },
-    [navigate],
-  );
-
-  return [country, setCountry] as const;
+export function useStoredCountry(key: string) {
+  const [stored, setStored] = useLocalStorageState<string | null>(key, null);
+  const country = parseCountry(stored) ?? legacyCountry() ?? DEFAULT_COUNTRY;
+  return [country, setStored as (code: CountryCode) => void] as const;
 }

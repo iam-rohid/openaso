@@ -7,6 +7,7 @@ import { apps, appKeywords, keywords, trackedApps } from "@main/db/schema";
 import { createTRPCRouter, publicProcedure } from "@main/api/trpc";
 import { appIdInput, countryInput, folderIdInput } from "@main/api/inputs";
 import { ensureApps, upsertApps } from "@main/services/apps";
+import { DEFAULT_COUNTRY, type CountryCode } from "@shared/countries";
 import { isTemporaryAppId, TEMPORARY_APP_NAME_MAX, TEMPORARY_APP_PREFIX } from "@shared/apps";
 
 const temporaryNameInput = z.string().trim().min(1).max(TEMPORARY_APP_NAME_MAX);
@@ -19,8 +20,8 @@ function parseAppId(query: string): string | null {
 }
 
 export const appsRouter = createTRPCRouter({
-  /** Sidebar list of tracked apps with keyword counts for the active storefront. */
-  tracked: publicProcedure.input(z.object({ country: countryInput })).query(async ({ ctx, input }) => {
+  /** Sidebar list of tracked apps, each with its storefront and keyword count there. */
+  tracked: publicProcedure.query(async ({ ctx }) => {
     return ctx.db
       .select({
         id: apps.id,
@@ -31,12 +32,13 @@ export const appsRouter = createTRPCRouter({
         rating: apps.rating,
         ratingCount: apps.ratingCount,
         isTemporary: apps.isTemporary,
+        country: trackedApps.defaultCountry,
         folderId: trackedApps.folderId,
         createdAt: trackedApps.createdAt,
         keywordCount: sql<number>`(
           select count(*) from ${appKeywords}
           join ${keywords} on ${keywords.id} = ${appKeywords.keywordId}
-          where ${appKeywords.appId} = ${apps.id} and ${keywords.country} = ${input.country}
+          where ${appKeywords.appId} = ${apps.id} and ${keywords.country} = ${trackedApps.defaultCountry}
         )`,
       })
       .from(trackedApps)
@@ -58,16 +60,28 @@ export const appsRouter = createTRPCRouter({
       return results;
     }),
 
+  /** An app in its own storefront (or `country`, for apps that aren't tracked). */
   get: publicProcedure
-    .input(z.object({ id: appIdInput, country: countryInput }))
+    .input(z.object({ id: appIdInput, country: countryInput.optional() }))
     .query(async ({ ctx, input }) => {
-      const app = (await ensureApps([input.id], input.country, { requireFull: true })).get(input.id);
-      if (!app) throw new TRPCError({ code: "NOT_FOUND", message: "App not found in this storefront" });
       const [tracked] = await ctx.db
-        .select({ n: count() })
+        .select({ country: trackedApps.defaultCountry })
         .from(trackedApps)
         .where(eq(trackedApps.appId, input.id));
-      return { ...app, isTracked: tracked.n > 0 };
+      const storefront = (tracked?.country ?? input.country ?? DEFAULT_COUNTRY) as CountryCode;
+      const app = (await ensureApps([input.id], storefront, { requireFull: true })).get(input.id);
+      if (!app) throw new TRPCError({ code: "NOT_FOUND", message: "App not found in this storefront" });
+      return { ...app, isTracked: !!tracked, storefront };
+    }),
+
+  /** Switches the storefront a tracked app is viewed in. */
+  setCountry: publicProcedure
+    .input(z.object({ id: appIdInput, country: countryInput }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(trackedApps)
+        .set({ defaultCountry: input.country })
+        .where(eq(trackedApps.appId, input.id));
     }),
 
   track: publicProcedure

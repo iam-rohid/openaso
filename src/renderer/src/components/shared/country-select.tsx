@@ -10,19 +10,29 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useCountry } from "@/hooks/use-country";
-import { COUNTRIES, countryFlag } from "@shared/countries";
+import { COUNTRIES, countryFlag, type CountryCode } from "@shared/countries";
 import { cn } from "@/lib/utils";
 
-/** `compact` shows just the flag, for headers short on space. */
-export function CountrySelect({ className, compact = false }: { className?: string; compact?: boolean }) {
-  const [country, setCountry] = useCountry();
+/** Storefront picker. `compact` shows just the flag, for headers short on space. */
+export function CountrySelect({
+  value: country,
+  onChange: setCountry,
+  className,
+  compact = false,
+  variant = "outline",
+}: {
+  value: CountryCode;
+  onChange: (country: CountryCode) => void;
+  className?: string;
+  compact?: boolean;
+  variant?: "outline" | "ghost";
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className={cn("justify-between gap-2", !compact && "min-w-24", className)}>
+        <Button variant={variant} className={cn("justify-between gap-2", !compact && "min-w-24", className)}>
           <span className="flex items-center gap-2">
             <span className="text-base leading-none">{countryFlag(country)}</span>
             <span className={cn(compact && "sr-only")}>{country}</span>
