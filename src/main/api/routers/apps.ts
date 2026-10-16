@@ -10,6 +10,7 @@ import { ensureApps, upsertApps } from "@main/services/apps";
 import { DEFAULT_COUNTRY, type CountryCode } from "@shared/countries";
 import { isTemporaryAppId, TEMPORARY_APP_NAME_MAX, TEMPORARY_APP_PREFIX } from "@shared/apps";
 
+const DEFAULT_TEMPORARY_NAME = "Temporary App";
 const temporaryNameInput = z.string().trim().min(1).max(TEMPORARY_APP_NAME_MAX);
 const temporaryAppIdInput = appIdInput.refine(isTemporaryAppId, "Not a temporary app");
 
@@ -99,16 +100,32 @@ export const appsRouter = createTRPCRouter({
       return app;
     }),
 
-  /** Creates and tracks a placeholder for an app that isn't on the App Store yet. */
+  /**
+   * Creates and tracks a placeholder for an app that isn't on the App Store yet. Without a
+   * name it's called "Temporary App N", numbered past any existing ones; rename it later.
+   */
   createTemporary: publicProcedure
-    .input(z.object({ name: temporaryNameInput, country: countryInput, folderId: folderIdInput.optional() }))
+    .input(
+      z.object({ name: temporaryNameInput.optional(), country: countryInput, folderId: folderIdInput.optional() }),
+    )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.transaction((tx) => {
+        let name = input.name;
+        if (!name) {
+          const { last } = tx
+            .select({
+              last: sql<number>`coalesce(max(cast(substr(${apps.name}, ${DEFAULT_TEMPORARY_NAME.length + 2}) as integer)), 0)`,
+            })
+            .from(apps)
+            .where(and(eq(apps.isTemporary, true), sql`${apps.name} glob ${`${DEFAULT_TEMPORARY_NAME} [0-9]*`}`))
+            .get()!;
+          name = `${DEFAULT_TEMPORARY_NAME} ${last + 1}`;
+        }
         const app = tx
           .insert(apps)
           .values({
             id: `${TEMPORARY_APP_PREFIX}${randomUUID().replaceAll("-", "")}`,
-            name: input.name,
+            name,
             subtitle: "",
             country: input.country,
             isTemporary: true,

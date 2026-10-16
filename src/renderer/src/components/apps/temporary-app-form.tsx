@@ -15,13 +15,12 @@ import { Spinner } from "@/components/ui/spinner";
 import { TEMPORARY_APP_NAME_MAX } from "@shared/apps";
 import { useTRPC } from "@/trpc/react";
 
-/** Name form shared by creating and renaming a temporary app. */
+/** Name form for renaming a temporary app. */
 export function TemporaryAppForm({
   title,
   description,
   initialName,
   submitLabel,
-  cancelLabel = "Cancel",
   isPending,
   onSubmit,
   onCancel,
@@ -30,7 +29,6 @@ export function TemporaryAppForm({
   description: string;
   initialName: string;
   submitLabel: string;
-  cancelLabel?: string;
   isPending: boolean;
   onSubmit: (name: string) => void;
   onCancel: () => void;
@@ -59,7 +57,7 @@ export function TemporaryAppForm({
       />
       <DialogFooter>
         <Button type="button" variant="secondary" onClick={onCancel}>
-          {cancelLabel}
+          Cancel
         </Button>
         <Button type="submit" disabled={!trimmed || isPending}>
           {isPending && <Spinner />} {submitLabel}

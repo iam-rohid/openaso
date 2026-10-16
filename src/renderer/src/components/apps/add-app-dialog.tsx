@@ -4,7 +4,6 @@ import { CheckIcon, CornerDownLeftIcon, LinkIcon, PlusIcon, SearchIcon, StarIcon
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { TemporaryAppForm } from "@/components/apps/temporary-app-form";
 import { AppIcon } from "@/components/shared/app-icon";
 import { CountrySelect } from "@/components/shared/country-select";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { compactNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
+import { TEMPORARY_APP_NAME_MAX } from "@shared/apps";
 import type { CountryCode } from "@shared/countries";
 
 type SearchResult = { id: string; name: string };
@@ -48,7 +48,6 @@ export function AddAppDialog({
   const setCountry = linkFrom ? setLinkCountry : setSavedCountry;
 
   const [query, setQuery] = useState("");
-  const [step, setStep] = useState<"search" | "temporary">("search");
   const debounced = useDebouncedValue(query.trim(), 350);
 
   const tracked = useQuery(trpc.apps.tracked.queryOptions());
@@ -62,7 +61,6 @@ export function AddAppDialog({
   const setOpen = (next: boolean) => {
     onOpenChange(next);
     if (!next) {
-      setStep("search");
       setQuery("");
       setLinkCountry(null);
     }
@@ -107,7 +105,7 @@ export function AddAppDialog({
     } else track.mutate({ id: app.id, country, folderId });
   };
 
-  const showResults = step === "search" && debounced.length > 1;
+  const showResults = debounced.length > 1;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -119,7 +117,7 @@ export function AddAppDialog({
         )}
         // Esc clears the query first, like Spotlight; a second Esc closes.
         onEscapeKeyDown={(e) => {
-          if (step === "search" && query) {
+          if (query) {
             e.preventDefault();
             setQuery("");
           }
@@ -130,119 +128,115 @@ export function AddAppDialog({
           Search the App Store by app or developer name, or paste an App Store link.
         </DialogDescription>
 
-        {step === "temporary" ? (
-          <div className="p-5">
-            <TemporaryAppForm
-              title="Add Temporary App"
-              description="Research keywords for an app that isn’t on the App Store yet. Link it to the real listing once it launches."
-              initialName={query.trim()}
-              submitLabel="Create"
-              cancelLabel="Back"
-              isPending={createTemporary.isPending}
-              onSubmit={(name) => createTemporary.mutate({ name, country, folderId })}
-              onCancel={() => setStep("search")}
-            />
-          </div>
-        ) : (
-          <CommandPrimitive shouldFilter={false} loop className="flex flex-col">
-            <div className="flex h-16 items-center gap-3 pr-3 pl-5">
-              {search.isFetching ? (
-                <Spinner className="text-muted-foreground size-5" />
-              ) : (
-                <SearchIcon className="text-muted-foreground size-5 shrink-0" />
-              )}
-              <CommandPrimitive.Input
-                autoFocus
-                value={query}
-                onValueChange={setQuery}
-                placeholder={
-                  linkFrom
-                    ? `Find the App Store listing for “${linkFrom.name}”…`
-                    : "App name, developer or App Store URL"
-                }
-                className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-lg outline-none"
-              />
-              {!linkFrom && (
-                <Button size="sm" variant="secondary" className="shrink-0" onClick={() => setStep("temporary")}>
-                  Add Temporary App
-                </Button>
-              )}
-              <CountrySelect value={country} onChange={setCountry} variant="ghost" className="min-w-0 shrink-0" />
-            </div>
-
-            {showResults && (
-              <CommandPrimitive.List className="max-h-[min(440px,60vh)] scroll-py-2 overflow-y-auto border-t p-2">
-                {search.isLoading &&
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2">
-                      <Skeleton className="size-11 rounded-xl" />
-                      <div className="flex-1 space-y-1.5">
-                        <Skeleton className="h-4 w-1/2" />
-                        <Skeleton className="h-3 w-1/3" />
-                      </div>
-                    </div>
-                  ))}
-                {search.isError && <p className="text-destructive p-4 text-sm">{search.error.message}</p>}
-                {search.data?.length === 0 && (
-                  <div className="text-muted-foreground flex flex-col items-center gap-3 p-8 text-center text-sm">
-                    <p>No apps found.</p>
-                    {!linkFrom && (
-                      <Button size="sm" variant="secondary" onClick={() => setStep("temporary")}>
-                        <PlusIcon /> Add “{debounced.slice(0, 30)}” as a temporary app
-                      </Button>
-                    )}
-                  </div>
-                )}
-                {search.data?.map((app) => {
-                  const isTracked = trackedIds.has(app.id);
-                  const isRowPending = pendingId === app.id;
-                  return (
-                    <CommandPrimitive.Item
-                      key={app.id}
-                      value={app.id}
-                      onSelect={() => choose(app)}
-                      className="group data-[selected=true]:bg-muted flex cursor-default items-center gap-3 rounded-lg p-2 outline-none"
-                    >
-                      <AppIcon src={app.iconUrl} name={app.name} size={44} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{app.name}</p>
-                        <p className="text-muted-foreground flex items-center gap-1.5 truncate text-xs">
-                          <span className="truncate">{app.developer}</span>
-                          {app.rating != null && !!app.ratingCount && (
-                            <>
-                              <span>·</span>
-                              <StarIcon className="size-3 fill-current" />
-                              {app.rating.toFixed(1)} ({compactNumber(app.ratingCount)})
-                            </>
-                          )}
-                          {app.genre && <span className="hidden sm:inline">· {app.genre}</span>}
-                        </p>
-                      </div>
-                      {/* The whole row is the action; this just labels it. */}
-                      <span
-                        className={cn(
-                          "text-muted-foreground group-data-[selected=true]:text-foreground flex shrink-0 items-center gap-1.5 text-xs font-medium",
-                        )}
-                      >
-                        {isRowPending ? (
-                          <Spinner />
-                        ) : linkFrom ? (
-                          <LinkIcon className="size-3.5" />
-                        ) : isTracked ? (
-                          <CheckIcon className="size-3.5" />
-                        ) : (
-                          <PlusIcon className="size-3.5" />
-                        )}
-                        {linkFrom ? (isTracked ? "Merge into" : "Link") : isTracked ? "Open" : "Add"}
-                        <CornerDownLeftIcon className="hidden size-3.5 opacity-60 group-data-[selected=true]:block" />
-                      </span>
-                    </CommandPrimitive.Item>
-                  );
-                })}
-              </CommandPrimitive.List>
+        <CommandPrimitive shouldFilter={false} loop className="flex flex-col">
+          <div className="flex h-16 items-center gap-3 pr-3 pl-5">
+            {search.isFetching ? (
+              <Spinner className="text-muted-foreground size-5" />
+            ) : (
+              <SearchIcon className="text-muted-foreground size-5 shrink-0" />
             )}
-          </CommandPrimitive>
-        )}
+            <CommandPrimitive.Input
+              autoFocus
+              value={query}
+              onValueChange={setQuery}
+              placeholder={
+                linkFrom
+                  ? `Find the App Store listing for “${linkFrom.name}”…`
+                  : "App name, developer or App Store URL"
+              }
+              className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-lg outline-none"
+            />
+            {!linkFrom && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="shrink-0"
+                disabled={createTemporary.isPending}
+                onClick={() => createTemporary.mutate({ country, folderId })}
+              >
+                {createTemporary.isPending && <Spinner />} Add Temporary App
+              </Button>
+            )}
+            <CountrySelect value={country} onChange={setCountry} variant="ghost" className="min-w-0 shrink-0" />
+          </div>
+
+          {showResults && (
+            <CommandPrimitive.List className="max-h-[min(440px,60vh)] scroll-py-2 overflow-y-auto border-t p-2">
+              {search.isLoading &&
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2">
+                    <Skeleton className="size-11 rounded-xl" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-3 w-1/3" />
+                    </div>
+                  </div>
+                ))}
+              {search.isError && <p className="text-destructive p-4 text-sm">{search.error.message}</p>}
+              {search.data?.length === 0 && (
+                <div className="text-muted-foreground flex flex-col items-center gap-3 p-8 text-center text-sm">
+                  <p>No apps found.</p>
+                  {!linkFrom && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={createTemporary.isPending}
+                      onClick={() => createTemporary.mutate({ name: debounced.slice(0, TEMPORARY_APP_NAME_MAX), country, folderId })}
+                    >
+                      <PlusIcon /> Add “{debounced.slice(0, TEMPORARY_APP_NAME_MAX)}” as a temporary app
+                    </Button>
+                  )}
+                </div>
+              )}
+              {search.data?.map((app) => {
+                const isTracked = trackedIds.has(app.id);
+                const isRowPending = pendingId === app.id;
+                return (
+                  <CommandPrimitive.Item
+                    key={app.id}
+                    value={app.id}
+                    onSelect={() => choose(app)}
+                    className="group data-[selected=true]:bg-muted flex cursor-default items-center gap-3 rounded-lg p-2 outline-none"
+                  >
+                    <AppIcon src={app.iconUrl} name={app.name} size={44} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{app.name}</p>
+                      <p className="text-muted-foreground flex items-center gap-1.5 truncate text-xs">
+                        <span className="truncate">{app.developer}</span>
+                        {app.rating != null && !!app.ratingCount && (
+                          <>
+                            <span>·</span>
+                            <StarIcon className="size-3 fill-current" />
+                            {app.rating.toFixed(1)} ({compactNumber(app.ratingCount)})
+                          </>
+                        )}
+                        {app.genre && <span className="hidden sm:inline">· {app.genre}</span>}
+                      </p>
+                    </div>
+                    {/* The whole row is the action; this just labels it. */}
+                    <span
+                      className={cn(
+                        "text-muted-foreground group-data-[selected=true]:text-foreground flex shrink-0 items-center gap-1.5 text-xs font-medium",
+                      )}
+                    >
+                      {isRowPending ? (
+                        <Spinner />
+                      ) : linkFrom ? (
+                        <LinkIcon className="size-3.5" />
+                      ) : isTracked ? (
+                        <CheckIcon className="size-3.5" />
+                      ) : (
+                        <PlusIcon className="size-3.5" />
+                      )}
+                      {linkFrom ? (isTracked ? "Merge into" : "Link") : isTracked ? "Open" : "Add"}
+                      <CornerDownLeftIcon className="hidden size-3.5 opacity-60 group-data-[selected=true]:block" />
+                    </span>
+                  </CommandPrimitive.Item>
+                );
+              })}
+            </CommandPrimitive.List>
+          )}
+        </CommandPrimitive>
       </DialogContent>
     </Dialog>
   );
