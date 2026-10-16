@@ -1,6 +1,7 @@
 import { KeyRoundIcon, StarIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppIcon } from "@/components/shared/app-icon";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { compactNumber } from "@/lib/format";
 
@@ -16,6 +17,7 @@ export function AppCard({
     keywordCount: number;
     rating: number | null;
     ratingCount: number | null;
+    isTemporary: boolean;
   };
 }) {
   return (
@@ -25,7 +27,13 @@ export function AppCard({
           <AppIcon src={app.iconUrl} name={app.name} size={56} />
           <div className="min-w-0 flex-1 space-y-1">
             <p className="truncate font-semibold">{app.name}</p>
-            <p className="text-muted-foreground truncate text-xs">{app.developer}</p>
+            {app.isTemporary ? (
+              <Badge variant="outline" className="text-muted-foreground h-4 px-1.5 text-[10px]">
+                Temporary
+              </Badge>
+            ) : (
+              <p className="text-muted-foreground truncate text-xs">{app.developer}</p>
+            )}
             <div className="text-muted-foreground flex items-center gap-3 text-xs">
               <span className="inline-flex items-center gap-1">
                 <KeyRoundIcon className="size-3" /> {app.keywordCount} keywords

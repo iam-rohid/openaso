@@ -9,6 +9,7 @@ import {
   FolderOutputIcon,
   FolderPlusIcon,
   HomeIcon,
+  LinkIcon,
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
@@ -19,6 +20,7 @@ import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AddAppDialog } from "@/components/apps/add-app-dialog";
+import { RenameTemporaryAppDialog } from "@/components/apps/temporary-app-form";
 import { FolderDialog, type FolderDialogTarget } from "@/components/folders/folder-dialog";
 import { FolderGlyph } from "@/components/folders/folder-glyph";
 import { useDeleteFolder } from "@/components/folders/use-delete-folder";
@@ -291,6 +293,8 @@ function AppRow({
   const [country] = useCountry();
   const menu = useAfterMenuClose();
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
 
   const invalidate = () =>
     Promise.all([
@@ -324,7 +328,9 @@ function AppRow({
           <AppIcon src={app.iconUrl} name={app.name} size={32} />
           <div className="grid min-w-0 flex-1 text-left leading-tight">
             <span className="truncate text-sm font-medium">{app.name}</span>
-            <span className="text-muted-foreground truncate text-xs">{app.developer}</span>
+            <span className="text-muted-foreground truncate text-xs">
+              {app.isTemporary ? "Temporary" : app.developer}
+            </span>
           </div>
         </Link>
       </SidebarMenuButton>
@@ -337,11 +343,22 @@ function AppRow({
           </SidebarMenuAction>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="right" align="start" className="min-w-48" onCloseAutoFocus={menu.onCloseAutoFocus}>
-          <DropdownMenuItem asChild>
-            <a href={`https://apps.apple.com/${country.toLowerCase()}/app/id${app.id}`} target="_blank" rel="noreferrer">
-              <ExternalLinkIcon /> View on App Store
-            </a>
-          </DropdownMenuItem>
+          {app.isTemporary ? (
+            <>
+              <DropdownMenuItem onSelect={() => menu.defer(() => setRenameOpen(true))}>
+                <PencilIcon /> Rename…
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => menu.defer(() => setLinkOpen(true))}>
+                <LinkIcon /> Link to App Store app…
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <DropdownMenuItem asChild>
+              <a href={`https://apps.apple.com/${country.toLowerCase()}/app/id${app.id}`} target="_blank" rel="noreferrer">
+                <ExternalLinkIcon /> View on App Store
+              </a>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <FolderInputIcon /> Move to folder
@@ -380,7 +397,9 @@ function AppRow({
           <AlertDialogHeader>
             <AlertDialogTitle>Remove “{app.name}”?</AlertDialogTitle>
             <AlertDialogDescription>
-              It’ll stop being tracked, and its keyword list and notes will be deleted. This can’t be undone.
+              {app.isTemporary
+                ? "This temporary app will be deleted along with its keyword list and notes. This can’t be undone."
+                : "It’ll stop being tracked, and its keyword list and notes will be deleted. This can’t be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -391,6 +410,12 @@ function AppRow({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {app.isTemporary && (
+        <>
+          <RenameTemporaryAppDialog app={app} open={renameOpen} onOpenChange={setRenameOpen} />
+          <AddAppDialog open={linkOpen} onOpenChange={setLinkOpen} linkFrom={app} />
+        </>
+      )}
     </SidebarMenuItem>
   );
 }

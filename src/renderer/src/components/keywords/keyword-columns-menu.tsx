@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { keywordColumns } from "./keyword-columns";
+import { keywordColumns, RANK_COLUMN_IDS } from "./keyword-columns";
 import { useKeywordColumnSizing, useKeywordColumnVisibility } from "./keyword-table-prefs";
 
 const hideableColumns = keywordColumns
@@ -20,7 +20,7 @@ const hideableColumns = keywordColumns
   }));
 
 /** Toggles keyword table columns; shares persisted state with every keyword table. */
-export function KeywordColumnsMenu() {
+export function KeywordColumnsMenu({ hideRankColumns = false }: { hideRankColumns?: boolean }) {
   const [visibility, setVisibility] = useKeywordColumnVisibility();
   const [sizing, setSizing] = useKeywordColumnSizing();
 
@@ -35,16 +35,18 @@ export function KeywordColumnsMenu() {
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {hideableColumns.map((column) => (
-          <DropdownMenuCheckboxItem
-            key={column.id}
-            checked={visibility[column.id] !== false}
-            onCheckedChange={(v) => setVisibility((prev) => ({ ...prev, [column.id]: !!v }))}
-            onSelect={(e) => e.preventDefault()}
-          >
-            {column.label ?? column.id}
-          </DropdownMenuCheckboxItem>
-        ))}
+        {hideableColumns
+          .filter((column) => !hideRankColumns || !RANK_COLUMN_IDS.includes(column.id))
+          .map((column) => (
+            <DropdownMenuCheckboxItem
+              key={column.id}
+              checked={visibility[column.id] !== false}
+              onCheckedChange={(v) => setVisibility((prev) => ({ ...prev, [column.id]: !!v }))}
+              onSelect={(e) => e.preventDefault()}
+            >
+              {column.label ?? column.id}
+            </DropdownMenuCheckboxItem>
+          ))}
         {Object.keys(sizing).length > 0 && (
           <>
             <DropdownMenuSeparator />

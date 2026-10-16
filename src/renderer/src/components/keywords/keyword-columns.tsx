@@ -44,6 +44,9 @@ function SortHeader({
 
 const nullsLast = { sortUndefined: "last" as const };
 
+/** Columns about the app's own ranking; meaningless for temporary apps, which aren't on the App Store. */
+export const RANK_COLUMN_IDS = ["position", "trend"];
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous column values
 export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] = [
   {

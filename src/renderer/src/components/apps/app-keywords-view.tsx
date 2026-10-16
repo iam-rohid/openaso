@@ -9,6 +9,7 @@ import {
 import { Navigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { TemporaryAppMenu } from "@/components/apps/temporary-app-menu";
 import { AddKeywordsDialog } from "@/components/keywords/add-keywords-dialog";
 import { KeywordColumnsMenu } from "@/components/keywords/keyword-columns-menu";
 import { KeywordSearch } from "@/components/keywords/keyword-search";
@@ -30,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -70,6 +72,8 @@ export function AppKeywordsView({ appId }: { appId: string }) {
   const app = useQuery(trpc.apps.get.queryOptions({ id: appId, country }));
   // Only apps in My Apps get this page; competitors are explored from the ranking views.
   const isTracked = app.data?.isTracked ?? false;
+  // Not on the App Store yet, so there's nothing to rank or link to.
+  const isTemporary = app.data?.isTemporary ?? false;
 
   const keywords = useQuery({
     ...trpc.keywords.list.queryOptions({ appId, country, scope: "tracked" }),
@@ -168,13 +172,18 @@ export function AppKeywordsView({ appId }: { appId: string }) {
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold">{app.data.name}</p>
               <p className="text-muted-foreground flex items-center gap-1 truncate text-xs tabular-nums">
+                {app.data.isTemporary && (
+                  <Badge variant="outline" className="text-muted-foreground h-4 px-1.5 text-[10px]">
+                    Temporary
+                  </Badge>
+                )}
                 {app.data.rating != null && (
                   <>
                     <StarIcon className="size-3 shrink-0 fill-current" /> {app.data.rating.toFixed(1)} (
                     {compactNumber(app.data.ratingCount)})
                   </>
                 )}
-                {keywords.data ? (
+                {app.data.isTemporary ? null : keywords.data ? (
                   keywords.data.length > 0 && (
                     <span className="truncate">
                       {app.data.rating != null && "· "}Ranked in {ranked} · Top 10 in {top10}
@@ -248,8 +257,12 @@ export function AppKeywordsView({ appId }: { appId: string }) {
               </Button>
             </>
           )}
-          <KeywordColumnsMenu />
-          <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" variant="outline" />
+          <KeywordColumnsMenu hideRankColumns={isTemporary} />
+          {app.data?.isTemporary ? (
+            <TemporaryAppMenu app={app.data} />
+          ) : (
+            <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" variant="outline" />
+          )}
           <KeywordSearch
             value={filter}
             onChange={setFilter}
@@ -266,6 +279,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
         isLoading={app.isLoading || keywords.isLoading}
         actions={actions}
         globalFilter={filter}
+        hideRankColumns={isTemporary}
         emptyState={
           <Empty className="py-16">
             <EmptyHeader>

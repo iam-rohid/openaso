@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { KeywordActionsMenuItems } from "./keyword-actions-menu";
-import { keywordColumns } from "./keyword-columns";
+import { keywordColumns, RANK_COLUMN_IDS } from "./keyword-columns";
 import { useKeywordColumnSizing, useKeywordColumnVisibility, useKeywordSorting } from "./keyword-table-prefs";
 import {
   keywordTableFeatures,
@@ -27,6 +27,7 @@ export function KeywordTable({
   actions,
   emptyState,
   globalFilter,
+  hideRankColumns = false,
 }: {
   data: KeywordRow[] | undefined;
   isLoading: boolean;
@@ -34,6 +35,8 @@ export function KeywordTable({
   emptyState: React.ReactNode;
   /** Text filter over keyword terms and notes, controlled by the page. */
   globalFilter: string;
+  /** Hide position/trend regardless of the saved column choice. */
+  hideRankColumns?: boolean;
 }) {
   const [sorting, setSorting] = useKeywordSorting();
   const [columnVisibility, setColumnVisibility] = useKeywordColumnVisibility();
@@ -46,7 +49,9 @@ export function KeywordTable({
     columns: keywordColumns,
     state: {
       sorting,
-      columnVisibility,
+      columnVisibility: hideRankColumns
+        ? { ...columnVisibility, ...Object.fromEntries(RANK_COLUMN_IDS.map((id) => [id, false])) }
+        : columnVisibility,
       columnSizing,
       globalFilter,
       rowSelection,
