@@ -3,31 +3,21 @@ import {
   ArrowDownIcon,
   ArrowUpDownIcon,
   ArrowUpIcon,
-  CopyIcon,
-  ListOrderedIcon,
   MoreHorizontalIcon,
   RefreshCwIcon,
-  SparklesIcon,
-  Trash2Icon,
 } from "lucide-react";
-import { toast } from "sonner";
 import { AppIcon } from "@/components/shared/app-icon";
 import { ChangeBadge } from "@/components/shared/change-badge";
 import { ScoreBar } from "@/components/shared/score-bar";
 import { Sparkline } from "@/components/shared/sparkline";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { countryFlag } from "@shared/countries";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { copyKeyword, KeywordActionsMenuItems } from "./keyword-actions-menu";
 import { NotesCell } from "./notes-cell";
 import type { KeywordRow, KeywordTableActions, KeywordTableFeatures } from "./keyword-table-features";
 
@@ -92,7 +82,18 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
     header: ({ column }) => <SortHeader label="Keyword" column={column} />,
     cell: ({ row, table }) => (
       <div className="flex min-w-0 items-center gap-2">
-        <span className="truncate font-medium">{row.original.term}</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="hover:text-primary min-w-0 cursor-copy truncate text-left font-medium"
+              onClick={() => copyKeyword(row.original.term)}
+            >
+              {row.original.term}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Click to copy</TooltipContent>
+        </Tooltip>
         {!row.original.tracked && table.options.meta?.actions.editable && (
           <span className="text-muted-foreground border-border rounded border px-1 text-[10px] uppercase">
             untracked
@@ -290,33 +291,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-48">
-            <DropdownMenuItem onClick={() => actions.onOpenRanking(k)}>
-              <ListOrderedIcon /> View ranking
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => actions.onRefresh([k.id])}>
-              <RefreshCwIcon /> Refresh data
-            </DropdownMenuItem>
-            {actions.editable && (
-              <DropdownMenuItem onClick={() => actions.onSuggest(k.term)}>
-                <SparklesIcon /> Similar keywords
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              onClick={() => {
-                void navigator.clipboard.writeText(k.term);
-                toast.success("Copied to clipboard");
-              }}
-            >
-              <CopyIcon /> Copy keyword
-            </DropdownMenuItem>
-            {actions.editable && k.tracked && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={() => actions.onRemove([k])}>
-                  <Trash2Icon /> Remove
-                </DropdownMenuItem>
-              </>
-            )}
+            <KeywordActionsMenuItems keyword={k} actions={actions} menu="dropdown" />
           </DropdownMenuContent>
         </DropdownMenu>
       );

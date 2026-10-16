@@ -8,6 +8,7 @@ import { Columns3Icon, CopyIcon, RefreshCwIcon, SearchIcon, Trash2Icon, XIcon } 
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -21,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { cn } from "@/lib/utils";
+import { KeywordActionsMenuItems } from "./keyword-actions-menu";
 import { keywordColumns } from "./keyword-columns";
 import {
   keywordTableFeatures,
@@ -190,20 +192,26 @@ export function KeywordTable({
                 ))}
               {!isLoading &&
                 rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() ? "selected" : undefined}
-                    className={cn(
-                      "group/row",
-                      actions.refreshingIds.has(row.original.id) && "animate-pulse",
-                    )}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="h-12 overflow-hidden">
-                        <table.FlexRender cell={cell} />
-                      </TableCell>
-                    ))}
-                  </TableRow>
+                  <ContextMenu key={row.id}>
+                    <ContextMenuTrigger asChild>
+                      <TableRow
+                        data-state={row.getIsSelected() ? "selected" : undefined}
+                        className={cn(
+                          "group/row select-auto",
+                          actions.refreshingIds.has(row.original.id) && "animate-pulse",
+                        )}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} className="h-12 overflow-hidden">
+                            <table.FlexRender cell={cell} />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="min-w-48">
+                      <KeywordActionsMenuItems keyword={row.original} actions={actions} menu="context" />
+                    </ContextMenuContent>
+                  </ContextMenu>
                 ))}
               {!isLoading && rows.length === 0 && (
                 <TableRow className="hover:bg-transparent">
