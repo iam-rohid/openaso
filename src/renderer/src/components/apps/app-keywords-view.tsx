@@ -15,7 +15,7 @@ import { KeywordColumnsMenu } from "@/components/keywords/keyword-columns-menu";
 import { KeywordSearch } from "@/components/keywords/keyword-search";
 import { KeywordTable } from "@/components/keywords/keyword-table";
 import type { KeywordRow, KeywordTableActions } from "@/components/keywords/keyword-table-features";
-import { RankingSheet, type RankingTarget } from "@/components/keywords/ranking-sheet";
+import { RankingDialog, type RankingTarget } from "@/components/keywords/ranking-dialog";
 import { SuggestionsDialog } from "@/components/keywords/suggestions-dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { AppIcon } from "@/components/shared/app-icon";
@@ -354,7 +354,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
         </>
       )}
 
-      <RankingSheet target={ranking} highlightAppId={appId} onOpenChange={(o) => !o && setRanking(null)} />
+      <RankingDialog target={ranking} highlightAppId={appId} onOpenChange={(o) => !o && setRanking(null)} />
 
       <AlertDialog open={!!pendingRemoval} onOpenChange={(o) => !o && setPendingRemoval(null)}>
         <AlertDialogContent>

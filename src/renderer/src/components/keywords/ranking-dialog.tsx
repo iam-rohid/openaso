@@ -8,7 +8,7 @@ import { CompetitorKeywordsDialog, type CompetitorApp } from "./competitor-keywo
 import { RankedAppRow } from "./ranked-app-row";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { countryFlag, type CountryCode } from "@shared/countries";
@@ -22,7 +22,7 @@ export type RankingTarget = { keywordId: number; term: string; country: string }
  * Full App Store ranking for a keyword. Any app's ranked keywords can be opened
  * as suggestions to add to a tracked app, which is how you dig into competitors.
  */
-export function RankingSheet({
+export function RankingDialog({
   target,
   highlightAppId,
   onOpenChange,
@@ -87,24 +87,24 @@ export function RankingSheet({
   const country = (target?.country ?? "US") as CountryCode;
 
   return (
-    <Sheet
+    <Dialog
       open={!!target}
       onOpenChange={(open) => {
         if (!open) setFilter("");
         onOpenChange(open);
       }}
     >
-      <SheetContent className="flex w-full flex-col gap-0 p-0 data-[side=right]:sm:max-w-lg">
-        <SheetHeader className="border-b p-4 pr-12">
-          <SheetTitle className="flex items-center gap-2 text-lg">
+      <DialogContent className="flex h-[85svh] flex-col gap-0 p-0 sm:max-w-2xl">
+        <DialogHeader className="border-b p-4 pr-12">
+          <DialogTitle className="flex items-center gap-2 text-lg">
             <span className="truncate">{target?.term}</span>
             <span className="text-muted-foreground text-sm font-normal">
               {target && countryFlag(target.country)} {target?.country}
             </span>
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription>
             App Store search results · updated {timeAgo(keyword?.lastFetchedAt)}
-          </SheetDescription>
+          </DialogDescription>
 
           <div className="mt-2 grid grid-cols-3 gap-3 text-sm">
             <div className="space-y-1">
@@ -158,7 +158,7 @@ export function RankingSheet({
               <RefreshCwIcon className={cn(refresh.isPending && "animate-spin")} /> Refresh
             </Button>
           </div>
-        </SheetHeader>
+        </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="p-2">
@@ -200,7 +200,7 @@ export function RankingSheet({
           defaultTargetAppId={highlightAppId}
           onOpenChange={(open) => !open && setKeywordsOf(null)}
         />
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

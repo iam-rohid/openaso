@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CompetitorKeywordsDialog, type CompetitorApp } from "@/components/keywords/competitor-keywords-dialog";
 import { RankedAppRow } from "@/components/keywords/ranked-app-row";
-import { RankingSheet, type RankingTarget } from "@/components/keywords/ranking-sheet";
+import { RankingDialog, type RankingTarget } from "@/components/keywords/ranking-dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { AppIcon } from "@/components/shared/app-icon";
 import { CountrySelect } from "@/components/shared/country-select";
@@ -325,7 +325,7 @@ export function KeywordExplorer() {
         )}
       </main>
 
-      <RankingSheet target={ranking} onOpenChange={(o) => !o && setRanking(null)} />
+      <RankingDialog target={ranking} onOpenChange={(o) => !o && setRanking(null)} />
       <CompetitorKeywordsDialog
         competitor={keywordsOf}
         country={country}
