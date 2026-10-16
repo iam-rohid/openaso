@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://openaso.byteform.co/sitemap-index.xml

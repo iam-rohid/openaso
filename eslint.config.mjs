@@ -5,7 +5,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["out/**", "dist/**", "src/renderer/src/routeTree.gen.ts"]),
+  globalIgnores(["out/**", "dist/**", "src/renderer/src/routeTree.gen.ts", "www/**"]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
   reactHooks.configs.flat.recommended,

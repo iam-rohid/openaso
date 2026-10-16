@@ -1,0 +1,21 @@
+---
+import { REPO_URL } from "../consts";
+---
+
+<header class="mx-auto flex max-w-5xl items-center justify-between px-4 py-5">
+  <a href="/" class="flex items-center gap-2 font-semibold">
+    <img src="/favicon.png" alt="" width="28" height="28" class="rounded-md" />
+    OpenASO
+  </a>
+  <nav class="flex items-center gap-5 text-sm text-neutral-600 dark:text-neutral-400">
+    <a href="/#features" class="hover:text-neutral-900 dark:hover:text-neutral-100">
+      Features
+    </a>
+    <a href="/#download" class="hover:text-neutral-900 dark:hover:text-neutral-100">
+      Download
+    </a>
+    <a href={REPO_URL} class="hover:text-neutral-900 dark:hover:text-neutral-100">
+      GitHub
+    </a>
+  </nav>
+</header>

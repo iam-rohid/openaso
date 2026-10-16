@@ -1,0 +1,9 @@
+# Makes www/ its own pnpm workspace root, independent of the Electron app's.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+# Astro's prerender step imports some of its own dependencies (e.g. `cookie`) from the project
+# root. Hoist them into www/node_modules so Node doesn't walk up into the Electron app's.
+publicHoistPattern:
+  - cookie

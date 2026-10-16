@@ -1,0 +1,71 @@
+---
+import { LATEST_RELEASE_URL, REPO } from "../consts";
+
+// `match` is tested against the asset names electron-builder produces, e.g.
+// OpenASO-0.3.0-mac-arm64.dmg, OpenASO-0.3.0-windows-setup.exe.
+const downloads = [
+  { id: "mac-arm64", os: "mac", label: "macOS (Apple Silicon)", match: "-mac-arm64\\.dmg$" },
+  { id: "mac-x64", os: "mac", label: "macOS (Intel)", match: "-mac-x64\\.dmg$" },
+  { id: "windows", os: "windows", label: "Windows", match: "-windows-setup\\.exe$" },
+  { id: "appimage", os: "linux", label: "Linux (AppImage)", match: "\\.AppImage$" },
+  { id: "deb", os: "linux", label: "Linux (.deb)", match: "\\.deb$" },
+];
+---
+
+<div data-downloads data-repo={REPO} class="flex flex-col items-center gap-4">
+  <div class="flex flex-wrap justify-center gap-3">
+    {downloads.map((d) => (
+      <a
+        href={LATEST_RELEASE_URL}
+        data-download={d.id}
+        data-os={d.os}
+        data-match={d.match}
+        class="rounded-lg border border-neutral-300 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-neutral-100 data-[primary]:border-neutral-900 data-[primary]:bg-neutral-900 data-[primary]:text-white data-[primary]:hover:bg-neutral-700 dark:border-neutral-700 dark:hover:bg-neutral-900 dark:data-[primary]:border-white dark:data-[primary]:bg-white dark:data-[primary]:text-neutral-900 dark:data-[primary]:hover:bg-neutral-200"
+      >
+        {d.label}
+      </a>
+    ))}
+  </div>
+  <p class="text-sm text-neutral-500">
+    <span data-version>Free</span> ·
+    <a href={LATEST_RELEASE_URL} class="underline underline-offset-2">
+      All downloads
+    </a>
+  </p>
+</div>
+
+<script>
+  // Progressive enhancement: every button already links to the latest release page. Here we
+  // swap in direct links to the installers and highlight the visitor's OS.
+  type Release = { tag_name: string; assets: { name: string; browser_download_url: string }[] };
+
+  function detectOs(): string | undefined {
+    const ua = navigator.userAgent;
+    if (/Mac/i.test(ua) && !/iPhone|iPad/i.test(ua)) return "mac";
+    if (/Windows/i.test(ua)) return "windows";
+    if (/Linux/i.test(ua) && !/Android/i.test(ua)) return "linux";
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-downloads]")) {
+    const buttons = [...root.querySelectorAll<HTMLAnchorElement>("[data-download]")];
+
+    // Highlight the first button for this OS (Apple Silicon for macOS, AppImage for Linux).
+    const os = detectOs();
+    buttons.find((b) => b.dataset.os === os)?.setAttribute("data-primary", "");
+
+    fetch(`https://api.github.com/repos/${root.dataset.repo}/releases/latest`)
+      .then((res) => (res.ok ? (res.json() as Promise<Release>) : Promise.reject(res.status)))
+      .then((release) => {
+        for (const button of buttons) {
+          const match = new RegExp(button.dataset.match ?? "$^");
+          const asset = release.assets.find((a) => match.test(a.name));
+          if (asset) button.href = asset.browser_download_url;
+        }
+        const version = root.querySelector("[data-version]");
+        if (version) version.textContent = `Free · ${release.tag_name}`;
+      })
+      .catch(() => {
+        // Keep the fallback links to the release page.
+      });
+  }
+</script>

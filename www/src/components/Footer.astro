@@ -1,0 +1,17 @@
+---
+import { RELEASES_URL, REPO_URL } from "../consts";
+---
+
+<footer class="border-t border-neutral-200 dark:border-neutral-800">
+  <div class="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-8 text-sm text-neutral-500 sm:flex-row sm:justify-between">
+    <p>OpenASO. Not affiliated with Apple.</p>
+    <div class="flex gap-5">
+      <a href={REPO_URL} class="hover:text-neutral-900 dark:hover:text-neutral-100">
+        GitHub
+      </a>
+      <a href={RELEASES_URL} class="hover:text-neutral-900 dark:hover:text-neutral-100">
+        Releases
+      </a>
+    </div>
+  </div>
+</footer>

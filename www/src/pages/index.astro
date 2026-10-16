@@ -1,0 +1,80 @@
+---
+import DownloadButtons from "../components/DownloadButtons.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import Layout from "../layouts/Layout.astro";
+
+const features = [
+  {
+    title: "Keyword rank tracking",
+    body: "Track positions for your iOS apps per storefront, with the change since the last update and a trend sparkline.",
+  },
+  {
+    title: "Popularity & difficulty",
+    body: "See how often a keyword is searched and how hard it is to rank for, before you spend a metadata slot on it.",
+  },
+  {
+    title: "Keyword suggestions",
+    body: "Ideas from your title and description, App Store autocomplete, and phrases competitors use in their titles.",
+  },
+  {
+    title: "Competitor keywords",
+    body: "Open any app to see every keyword it ranks for, or let Discover keywords check likely ones automatically.",
+  },
+  {
+    title: "Full ranking sheet",
+    body: "The complete ~250-app search ranking for any keyword. Click through to any app's keywords.",
+  },
+  {
+    title: "51 storefronts",
+    body: "Switch countries anywhere in the app. Your choice carries across pages and is remembered between launches.",
+  },
+];
+---
+
+<Layout>
+  <Header />
+  <main>
+    <section class="mx-auto max-w-3xl px-4 pt-20 pb-16 text-center sm:pt-28">
+      <img
+        src="/icon-512.png"
+        alt="OpenASO app icon"
+        width="96"
+        height="96"
+        class="mx-auto mb-8 rounded-2xl"
+      />
+      <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+        App Store keyword research, on your own computer
+      </h1>
+      <p class="mx-auto mt-5 max-w-xl text-lg text-pretty text-neutral-600 dark:text-neutral-400">
+        OpenASO tracks keyword rankings for your iOS apps, scores popularity and difficulty, and
+        uncovers competitors' keywords. Free for macOS, Windows and Linux.
+      </p>
+      <div id="download" class="mt-10 scroll-mt-8">
+        <DownloadButtons />
+      </div>
+    </section>
+
+    <section id="features" class="mx-auto max-w-5xl scroll-mt-8 px-4 py-16">
+      <h2 class="text-center text-2xl font-semibold tracking-tight">Everything you need for ASO</h2>
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {features.map((f) => (
+          <div class="rounded-xl border border-neutral-200 p-6 dark:border-neutral-800">
+            <h3 class="font-medium">{f.title}</h3>
+            <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">{f.body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-3xl px-4 py-16 text-center">
+      <h2 class="text-2xl font-semibold tracking-tight">Local, private, no account</h2>
+      <p class="mt-4 text-pretty text-neutral-600 dark:text-neutral-400">
+        OpenASO uses Apple's free public endpoints and caches results in a SQLite database on your
+        machine. There's no sign-up, no subscription and no server in between: your keywords never
+        leave your computer.
+      </p>
+    </section>
+  </main>
+  <Footer />
+</Layout>
