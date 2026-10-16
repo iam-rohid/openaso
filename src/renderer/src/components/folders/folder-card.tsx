@@ -14,7 +14,7 @@ export function FolderCard({
     color: FolderColor;
     appCount: number;
     keywordCount: number;
-    previewIcons: (string | null)[];
+    previewIcons: { iconUrl: string | null; isTemporary: boolean }[];
   };
 }) {
   return (
@@ -31,8 +31,8 @@ export function FolderCard({
             </p>
             {folder.previewIcons.length > 0 && (
               <div className="flex items-center gap-1">
-                {folder.previewIcons.map((src, i) => (
-                  <AppIcon key={i} src={src} name={folder.name} size={18} />
+                {folder.previewIcons.map((icon, i) => (
+                  <AppIcon key={i} src={icon.iconUrl} name={folder.name} temporary={icon.isTemporary} size={18} />
                 ))}
               </div>
             )}

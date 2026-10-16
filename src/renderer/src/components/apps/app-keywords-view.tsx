@@ -185,7 +185,12 @@ export function AppKeywordsView({ appId }: { appId: string }) {
       <PageHeader>
         {app.data ? (
           <div className="flex min-w-0 items-center gap-2.5">
-            <AppIcon src={app.data.iconUrl} name={app.data.name} size={32} />
+            <AppIcon
+              src={app.data.iconUrl}
+              name={app.data.name}
+              temporary={app.data.isTemporary}
+              size={32}
+            />
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold">{app.data.name}</p>
               <p className="text-muted-foreground flex items-center gap-1 truncate text-xs tabular-nums">

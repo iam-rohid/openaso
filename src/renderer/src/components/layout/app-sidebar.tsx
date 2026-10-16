@@ -325,7 +325,7 @@ function AppRow({
         isActive={params.appId === app.id}
       >
         <Link to="/apps/$appId" params={{ appId: app.id }}>
-          <AppIcon src={app.iconUrl} name={app.name} size={32} />
+          <AppIcon src={app.iconUrl} name={app.name} temporary={app.isTemporary} size={32} />
           <div className="grid min-w-0 flex-1 text-left leading-tight">
             <span className="truncate text-sm font-medium">{app.name}</span>
             <span className="text-muted-foreground truncate text-xs">

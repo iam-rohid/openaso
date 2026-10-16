@@ -28,14 +28,14 @@ export const foldersRouter = createTRPCRouter({
           where ta.folder_id = ${appFolders}.id and k.country = ta.default_country
         )`,
         previewIcons: sql<string>`(
-          select json_group_array(t.icon_url) from (
-            select a.icon_url from tracked_apps ta
+          select json_group_array(json_object('iconUrl', t.icon_url, 'isTemporary', json(iif(t.is_temporary, 'true', 'false')))) from (
+            select a.icon_url, a.is_temporary from tracked_apps ta
             join apps a on a.id = ta.app_id
             where ta.folder_id = ${appFolders}.id
             order by ta.sort_order, ta.created_at
             limit 4
           ) t
-        )`.mapWith((json: string) => JSON.parse(json) as (string | null)[]),
+        )`.mapWith((json: string) => JSON.parse(json) as { iconUrl: string | null; isTemporary: boolean }[]),
       })
       .from(appFolders)
       .orderBy(asc(appFolders.sortOrder), asc(appFolders.createdAt));

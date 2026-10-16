@@ -26,7 +26,7 @@ export function AppCard({
     <Link to="/apps/$appId" params={{ appId: app.id }}>
       <Card className="hover:border-primary/40 hover:bg-muted/30 h-full transition-colors">
         <CardContent className="flex items-center gap-4">
-          <AppIcon src={app.iconUrl} name={app.name} size={56} />
+          <AppIcon src={app.iconUrl} name={app.name} temporary={app.isTemporary} size={56} />
           <div className="min-w-0 flex-1 space-y-1">
             <p className="truncate font-semibold">{app.name}</p>
             {app.isTemporary ? (
