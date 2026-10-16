@@ -25,10 +25,22 @@ export type IpcResponse = {
 export const THEME_CHANNEL = "theme";
 export type ThemeSource = "light" | "dark" | "system";
 
+export const UPDATE_CHANNEL = "update";
+export const UPDATE_INSTALL_CHANNEL = "update:install";
+
+/** A newer version, either downloaded and ready to install, or only announced (macOS, .deb). */
+export type UpdateStatus =
+  | { kind: "ready"; version: string }
+  | { kind: "available"; version: string; url: string };
+
 /** Exposed on `window.openaso` by the preload script. */
 export type PreloadApi = {
   trpc: (request: IpcRequest) => Promise<IpcResponse>;
   /** Keeps native chrome (title bar, menus, dialogs) in the app's theme. */
   setTheme: (theme: ThemeSource) => void;
+  /** Subscribes to update notifications; returns an unsubscribe function. */
+  onUpdate: (callback: (status: UpdateStatus) => void) => () => void;
+  /** Quits and installs a downloaded update. */
+  installUpdate: () => void;
   platform: NodeJS.Platform;
 };

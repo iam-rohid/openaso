@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ChartNoAxesColumnIncreasingIcon,
   CheckIcon,
   ChevronRightIcon,
   CompassIcon,
@@ -113,7 +114,7 @@ export function AppSidebar() {
               <SidebarMenuButton size="lg" asChild>
                 <Link to="/">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-white">
-                    <span className="text-sm font-bold">A</span>
+                    <ChartNoAxesColumnIncreasingIcon className="size-4" strokeWidth={3} />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">OpenASO</span>

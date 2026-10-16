@@ -2,14 +2,37 @@ import { app, Menu, shell, type MenuItemConstructorOptions } from "electron";
 
 const REPO_URL = "https://github.com/iam-rohid/openaso";
 
-export function buildMenu() {
+export function buildMenu({ onCheckForUpdates }: { onCheckForUpdates: () => void }) {
   const isMac = process.platform === "darwin";
   const devItems: MenuItemConstructorOptions[] = app.isPackaged
     ? []
     : [{ role: "reload" }, { role: "forceReload" }, { role: "toggleDevTools" }, { type: "separator" }];
 
+  const checkForUpdates: MenuItemConstructorOptions[] = [
+    { type: "separator" },
+    { label: "Check for Updates…", click: onCheckForUpdates },
+  ];
+
   const template: MenuItemConstructorOptions[] = [
-    ...(isMac ? [{ role: "appMenu" } as const] : []),
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: "about" },
+              { label: "Check for Updates…", click: onCheckForUpdates },
+              { type: "separator" },
+              { role: "services" },
+              { type: "separator" },
+              { role: "hide" },
+              { role: "hideOthers" },
+              { role: "unhide" },
+              { type: "separator" },
+              { role: "quit" },
+            ],
+          } satisfies MenuItemConstructorOptions,
+        ]
+      : []),
     { role: "fileMenu" },
     { role: "editMenu" },
     {
@@ -31,6 +54,8 @@ export function buildMenu() {
         { type: "separator" },
         { label: "View on GitHub", click: () => void shell.openExternal(REPO_URL) },
         { label: "Report an Issue", click: () => void shell.openExternal(`${REPO_URL}/issues`) },
+        // macOS has it in the app menu.
+        ...(isMac ? [] : checkForUpdates),
       ],
     },
   ];

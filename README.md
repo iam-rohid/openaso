@@ -5,6 +5,34 @@ keyword rankings for your iOS apps, research keyword popularity and difficulty, 
 look at competitors' keywords. It all runs on your computer, uses Apple's free public endpoints, and caches
 results in a local SQLite database.
 
+## Install
+
+Download the installer for your system from the
+[latest release](https://github.com/iam-rohid/openaso/releases/latest):
+
+| System                | File                                                 |
+| --------------------- | ---------------------------------------------------- |
+| macOS (Apple Silicon) | `OpenASO-<version>-mac-arm64.dmg`                    |
+| macOS (Intel)         | `OpenASO-<version>-mac-x64.dmg`                      |
+| Windows               | `OpenASO-<version>-windows-setup.exe`                |
+| Linux                 | `OpenASO-<version>-linux-*.AppImage` or `.deb`       |
+
+Nothing else is needed: no Node, Docker or database server. Your data is stored on your computer (Help → Open
+Data Folder shows where).
+
+The app isn't code-signed yet, so your system will warn you the first time:
+
+- **macOS**: open the `.dmg` and drag OpenASO to Applications. If macOS says the app "is damaged" or "can't be
+  opened", run `xattr -cr /Applications/OpenASO.app` in Terminal, then open it again. (Right-click → Open, or
+  System Settings → Privacy & Security → Open Anyway, also works.)
+- **Windows**: if SmartScreen shows "Windows protected your PC", click **More info → Run anyway**.
+- **Linux**: make the AppImage executable (`chmod +x OpenASO-*.AppImage`) and run it, or install the `.deb`
+  with `sudo apt install ./OpenASO-*.deb`.
+
+**Updates**: OpenASO checks for a new version on launch (and from *Check for Updates…* in the menu). On Windows
+and with the AppImage it downloads in the background and offers to restart. On macOS and with the `.deb` it shows
+a link to the new release to download.
+
 ## Features
 
 - **Apps**: search the App Store (or paste an App Store link or id) and add apps to the sidebar.
@@ -50,9 +78,20 @@ It's created, and migrations are applied, on launch. Before an existing database
 | `pnpm dev`         | Run the app with hot reload                         |
 | `pnpm build`       | Build main, preload and renderer into `out/`        |
 | `pnpm preview`     | Run the production build                            |
+| `pnpm dist`        | Build installers for this OS into `dist/`           |
 | `pnpm db:generate` | Generate a migration after editing the schema       |
 | `pnpm typecheck`   | TypeScript check                                    |
 | `pnpm lint`        | ESLint                                              |
+
+### Releasing
+
+1. Bump `version` in `package.json` and commit.
+2. Tag and push: `git tag v0.2.0 && git push origin main v0.2.0`.
+3. The [Release workflow](.github/workflows/release.yml) builds the macOS, Windows and Linux installers and
+   uploads them to a **draft** GitHub Release.
+4. Review the draft and publish it. Installed apps only see published releases.
+
+To try a build locally: `pnpm dist` (installers for this OS in `dist/`) or `pnpm dist:dir` (just the app).
 
 ## How the data works
 
