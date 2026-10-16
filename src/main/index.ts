@@ -22,7 +22,7 @@ function createWindow() {
     height: bounds?.height ?? 820,
     x: bounds?.x,
     y: bounds?.y,
-    minWidth: 900,
+    minWidth: 980,
     minHeight: 600,
     show: false,
     // Matches the page background so there's no flash before the renderer paints.

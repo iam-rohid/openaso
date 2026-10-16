@@ -182,7 +182,8 @@ export function AppKeywordsView({ appId }: { appId: string }) {
 
   return (
     <div className="flex h-svh flex-col">
-      <PageHeader>
+      {/* One row only: the title truncates as the window narrows instead of the toolbar wrapping. */}
+      <PageHeader className="flex-nowrap">
         {app.data ? (
           <div className="flex min-w-0 items-center gap-2.5">
             <AppIcon
@@ -191,7 +192,8 @@ export function AppKeywordsView({ appId }: { appId: string }) {
               temporary={app.data.isTemporary}
               size={32}
             />
-            <div className="min-w-0 leading-tight">
+            {/* Compact header with search open: keep just the icon to make room for the toolbar. */}
+            <div className={cn("min-w-0 leading-tight", searchOpen && "max-xl:hidden")}>
               <p className="truncate text-sm font-semibold">{app.data.name}</p>
               <p className="text-muted-foreground flex items-center gap-1 truncate text-xs tabular-nums">
                 {app.data.isTemporary && (
@@ -224,7 +226,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
           </div>
         )}
 
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {isTracked && (
             <DropdownMenu>
               <Tooltip>
@@ -232,7 +234,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" disabled={refreshing || !keywords.data?.length}>
                       <RefreshCwIcon className={cn(refreshing && "animate-spin")} />
-                      <span className={cn("hidden", !searchOpen && "lg:inline")}>Refresh</span>
+                      <span className={cn("hidden", !searchOpen && "xl:inline")}>Refresh</span>
                       {staleCount > 0 && (
                         <span className="rounded-full bg-amber-400/20 px-1.5 text-xs text-amber-500">
                           {staleCount}
@@ -258,23 +260,25 @@ export function AppKeywordsView({ appId }: { appId: string }) {
             </DropdownMenu>
           )}
 
-          <CountrySelect value={country} onChange={onCountryChange} compact={searchOpen} />
+          <CountrySelect value={country} onChange={onCountryChange} compact={searchOpen || "below-xl"} />
 
           {isTracked && (
             <>
               <Button
                 size={searchOpen ? "icon" : "default"}
-                className="bg-indigo-600 text-white hover:bg-indigo-500"
+                // Below 1280px the header is short on space, so show just the icon.
+                className={cn("bg-indigo-600 text-white hover:bg-indigo-500", !searchOpen && "max-xl:w-8 max-xl:px-0")}
                 onClick={() => setAddOpen(true)}
               >
-                <span className={cn(searchOpen ? "sr-only" : "hidden sm:inline")}>Add Keywords</span> <PlusIcon />
+                <span className={cn(searchOpen ? "sr-only" : "max-xl:sr-only")}>Add Keywords</span> <PlusIcon />
               </Button>
               <Button
                 size={searchOpen ? "icon" : "default"}
-                className="bg-orange-500 text-white hover:bg-orange-400"
+                // Below 1280px the header is short on space, so show just the icon.
+                className={cn("bg-orange-500 text-white hover:bg-orange-400", !searchOpen && "max-xl:w-8 max-xl:px-0")}
                 onClick={() => setSuggest({ open: true })}
               >
-                <span className={cn(searchOpen ? "sr-only" : "hidden sm:inline")}>Get Suggestions</span>{" "}
+                <span className={cn(searchOpen ? "sr-only" : "max-xl:sr-only")}>Get Suggestions</span>{" "}
                 <LightbulbIcon />
               </Button>
             </>

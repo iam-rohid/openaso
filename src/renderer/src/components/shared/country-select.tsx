@@ -13,7 +13,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { COUNTRIES, countryFlag, type CountryCode } from "@shared/countries";
 import { cn } from "@/lib/utils";
 
-/** Storefront picker. `compact` shows just the flag, for headers short on space. */
+/**
+ * Storefront picker. `compact` shows just the flag, for headers short on space;
+ * `"below-xl"` does so only under 1280px.
+ */
 export function CountrySelect({
   value: country,
   onChange: setCountry,
@@ -24,7 +27,7 @@ export function CountrySelect({
   value: CountryCode;
   onChange: (country: CountryCode) => void;
   className?: string;
-  compact?: boolean;
+  compact?: boolean | "below-xl";
   variant?: "outline" | "ghost";
 }) {
   const [open, setOpen] = useState(false);
@@ -32,10 +35,10 @@ export function CountrySelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant={variant} className={cn("justify-between gap-2", !compact && "min-w-24", className)}>
+        <Button variant={variant} className={cn("justify-between gap-2", !compact && "min-w-24", compact === "below-xl" && "xl:min-w-24", className)}>
           <span className="flex items-center gap-2">
             <span className="text-base leading-none">{countryFlag(country)}</span>
-            <span className={cn(compact && "sr-only")}>{country}</span>
+            <span className={cn(compact === true && "sr-only", compact === "below-xl" && "max-xl:sr-only")}>{country}</span>
           </span>
           <ChevronDownIcon className="text-muted-foreground size-4" />
         </Button>
