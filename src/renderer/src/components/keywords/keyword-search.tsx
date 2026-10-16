@@ -1,5 +1,5 @@
 import { SearchIcon, XIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 
@@ -10,26 +10,29 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "
 export function KeywordSearch({
   value,
   onChange,
-  onOpenChange,
+  expanded,
+  onExpandedChange: setExpanded,
 }: {
   value: string;
   onChange: (value: string) => void;
-  onOpenChange?: (open: boolean) => void;
+  /**
+   * Controlled by the page so it can restyle the header in the same render the
+   * input opens; the input is shown while expanded or holding text.
+   */
+  expanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [expanded, setExpanded] = useState(false);
   const open = expanded || value.length > 0;
 
-  useEffect(() => onOpenChange?.(open), [open, onOpenChange]);
-
-  const focus = () => {
+  const focus = useCallback(() => {
     setExpanded(true);
     // Wait a frame so the input is mounted before focusing it.
     requestAnimationFrame(() => {
       inputRef.current?.focus();
       inputRef.current?.select();
     });
-  };
+  }, [setExpanded]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -40,7 +43,7 @@ export function KeywordSearch({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [focus]);
 
   if (!open) {
     return (

@@ -64,7 +64,8 @@ export function AppKeywordsView({ appId }: { appId: string }) {
   const [refreshingIds, setRefreshingIds] = useState<Set<number>>(new Set());
   const [filter, setFilter] = useState("");
   // While the search box is open, header buttons shrink to icons to make room for it.
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchOpen = searchExpanded || filter.length > 0;
 
   const app = useQuery(trpc.apps.get.queryOptions({ id: appId, country }));
   // Only apps in My Apps get this page; competitors are explored from the ranking views.
@@ -248,7 +249,12 @@ export function AppKeywordsView({ appId }: { appId: string }) {
           )}
           <KeywordColumnsMenu />
           <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" variant="outline" />
-          <KeywordSearch value={filter} onChange={setFilter} onOpenChange={setSearchOpen} />
+          <KeywordSearch
+            value={filter}
+            onChange={setFilter}
+            expanded={searchExpanded}
+            onExpandedChange={setSearchExpanded}
+          />
         </div>
       </PageHeader>
 
