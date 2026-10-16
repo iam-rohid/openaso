@@ -1,5 +1,6 @@
 import {
   columnFilteringFeature,
+  columnResizingFeature,
   columnSizingFeature,
   columnVisibilityFeature,
   createFilteredRowModel,
@@ -35,6 +36,7 @@ export const keywordTableFeatures = tableFeatures({
   rowSelectionFeature,
   columnVisibilityFeature,
   columnSizingFeature,
+  columnResizingFeature,
   sortedRowModel: createSortedRowModel(),
   filteredRowModel: createFilteredRowModel(),
   sortFns: { text: sortFn_text, basic: sortFn_basic },

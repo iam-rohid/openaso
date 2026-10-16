@@ -1,10 +1,11 @@
 import {
   useTable,
+  type ColumnSizingState,
   type ColumnVisibilityState,
   type RowSelectionState,
   type SortingState,
 } from "@tanstack/react-table";
-import { Columns3Icon, CopyIcon, RefreshCwIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
+import { Columns3Icon, CopyIcon, RefreshCwIcon, RotateCcwIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -34,6 +36,10 @@ const EMPTY: KeywordRow[] = [];
 
 const DEFAULT_SORT: SortingState = [{ id: "popularity", desc: true }];
 const DEFAULT_VISIBILITY: ColumnVisibilityState = { results: false };
+const DEFAULT_SIZING: ColumnSizingState = {};
+
+/** The actions column has no fixed width so it absorbs leftover space and the other columns keep their sizes. */
+const FILL_COLUMN = "actions";
 
 export function KeywordTable({
   data,
@@ -54,6 +60,11 @@ export function KeywordTable({
     "openaso:kw-columns",
     DEFAULT_VISIBILITY,
   );
+  // Shared by every app's keyword table, so widths stay consistent across apps and restarts.
+  const [columnSizing, setColumnSizing] = useLocalStorageState<ColumnSizingState>(
+    "openaso:kw-sizes",
+    DEFAULT_SIZING,
+  );
   const [globalFilter, setGlobalFilter] = useState("");
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
@@ -61,10 +72,14 @@ export function KeywordTable({
     features: keywordTableFeatures,
     data: data ?? EMPTY,
     columns: keywordColumns,
-    state: { sorting, columnVisibility, globalFilter, rowSelection },
+    state: { sorting, columnVisibility, columnSizing, globalFilter, rowSelection },
+    defaultColumn: { minSize: 60 },
+    enableColumnResizing: true,
+    columnResizeMode: "onChange",
     getRowId: (row) => String(row.id),
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnSizingChange: setColumnSizing,
     onGlobalFilterChange: setGlobalFilter,
     onRowSelectionChange: setRowSelection,
     getColumnCanGlobalFilter: (column) => column.id === "term",
@@ -156,6 +171,14 @@ export function KeywordTable({
                     {column.columnDef.meta?.label ?? column.id}
                   </DropdownMenuCheckboxItem>
                 ))}
+              {Object.keys(columnSizing).length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => table.resetColumnSizing(true)}>
+                    <RotateCcwIcon /> Reset column widths
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -163,17 +186,31 @@ export function KeywordTable({
 
       <div className="min-h-0 flex-1 px-4 pb-4">
         <div className="overflow-hidden rounded-xl border">
-          <Table className="table-fixed">
+          <Table className="table-fixed" style={{ minWidth: table.getTotalSize() }}>
             <TableHeader className="bg-muted/40">
               {table.getHeaderGroups().map((group) => (
                 <TableRow key={group.id} className="hover:bg-transparent">
                   {group.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      style={{ width: header.getSize() }}
-                      className="text-muted-foreground h-10 text-xs font-medium"
+                      style={{ width: header.column.id === FILL_COLUMN ? undefined : header.getSize() }}
+                      className="text-muted-foreground relative h-10 text-xs font-medium"
                     >
                       {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                      {header.column.getCanResize() && (
+                        <div
+                          role="separator"
+                          aria-orientation="vertical"
+                          aria-label={`Resize ${header.column.columnDef.meta?.label ?? header.column.id} column`}
+                          className={cn(
+                            "after:bg-border hover:after:bg-primary absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-2 after:left-1/2 after:w-px",
+                            header.column.getIsResizing() && "after:bg-primary",
+                          )}
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onDoubleClick={() => header.column.resetSize()}
+                        />
+                      )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -202,7 +239,10 @@ export function KeywordTable({
                         )}
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} className="h-12 overflow-hidden">
+                          <TableCell
+                            key={cell.id}
+                            className={cn("h-12 overflow-hidden", cell.column.id === FILL_COLUMN && "text-right")}
+                          >
                             <table.FlexRender cell={cell} />
                           </TableCell>
                         ))}

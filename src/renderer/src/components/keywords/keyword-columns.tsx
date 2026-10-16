@@ -59,6 +59,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
     size: 36,
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
     header: ({ table }) => (
       <Checkbox
         aria-label="Select all"
@@ -279,6 +280,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
     size: 44,
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
     cell: ({ row, table }) => {
       const actions = table.options.meta!.actions;
       const k = row.original;
