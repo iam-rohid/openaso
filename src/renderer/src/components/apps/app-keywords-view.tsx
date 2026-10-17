@@ -55,6 +55,7 @@ import { compactNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
 import { DEFAULT_COUNTRY, type CountryCode } from "@shared/countries";
+import { sparklineDays } from "@shared/trends";
 
 export function AppKeywordsView({ appId }: { appId: string }) {
   const trpc = useTRPC();
@@ -100,7 +101,12 @@ export function AppKeywordsView({ appId }: { appId: string }) {
   });
   const [trendWindow, setTrendWindow] = useTrendWindow();
   const rows = useMemo(
-    () => keywords.data?.map((row) => ({ ...row, trend: row.trends[trendWindow] })),
+    () =>
+      keywords.data?.map((row) => ({
+        ...row,
+        trend: row.trends[trendWindow],
+        sparkline: row.history.slice(-(sparklineDays(trendWindow) + 1)),
+      })),
     [keywords.data, trendWindow],
   );
 

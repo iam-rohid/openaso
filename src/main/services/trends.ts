@@ -101,7 +101,7 @@ export function dailySeries<T extends DayPoint>(days: T[], length: number, now =
   return Array.from({ length }, (_, i) => byDay.get(today - (length - 1 - i)) ?? null);
 }
 
-/** The table's sparkline covers today and the 30 days before it, whichever window is picked. */
+/** Today and the 30 days before it, enough for the table's sparkline at any window; the page trims it. */
 const POSITION_HISTORY_DAYS = TREND_WINDOW_DAYS["30d"] + 1;
 
 export function positionHistory(days: DayPoint[], now = new Date()): DailyPosition[] {

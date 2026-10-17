@@ -201,7 +201,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
     size: 140,
     header: ({ column }) => <SortHeader label="Trend" column={column} />,
     cell: ({ row }) => {
-      const { history, trend } = row.original;
+      const { sparkline, trend } = row.original;
       const rising = trend.state === "up" || trend.state === "new";
       const falling = trend.state === "down" || trend.state === "lost";
       return (
@@ -210,7 +210,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
             <div className="flex items-center gap-2">
               <TrendBadge trend={trend} className="w-8 text-xs" />
               <Sparkline
-                values={history.map((h) => (h ? h.position : undefined))}
+                values={sparkline.map((h) => (h ? h.position : undefined))}
                 variant="rank"
                 className={cn(rising && "text-emerald-500", falling && "text-rose-500")}
               />
@@ -218,7 +218,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
           </TooltipTrigger>
           <TooltipContent>
             {describeTrend(trend)}
-            <span className="block opacity-70">Daily position over the last 30 days</span>
+            <span className="block opacity-70">Daily position over the last {sparkline.length - 1} days</span>
           </TooltipContent>
         </Tooltip>
       );

@@ -4,6 +4,11 @@ export type TrendWindow = (typeof TREND_WINDOWS)[number];
 export const DEFAULT_TREND_WINDOW: TrendWindow = "7d";
 export const TREND_WINDOW_DAYS: Record<TrendWindow, number> = { "1d": 1, "7d": 7, "30d": 30 };
 
+/** Days a table sparkline covers before today: the window, but at least a week so 1d still has a line. */
+export function sparklineDays(window: TrendWindow) {
+  return Math.max(7, TREND_WINDOW_DAYS[window]);
+}
+
 /**
  * A keyword's position change over a window, comparing its latest daily point with
  * the one closest to N days before it.
