@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /** A rank chart spans at least this many positions, so moving one place reads as a small step. */
-const MIN_RANK_SPAN = 20;
+const MIN_RANK_SPAN = 4;
 
 /**
  * Minimal SVG sparkline over evenly spaced points.
