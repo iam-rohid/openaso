@@ -18,6 +18,13 @@ import { useTRPC } from "@/trpc/react";
 
 export type RankingTarget = { keywordId: number; term: string; country: string };
 
+type HistoryMetric = "position" | "popularity" | "difficulty";
+const HISTORY_METRICS: { id: HistoryMetric; label: string }[] = [
+  { id: "position", label: "Position" },
+  { id: "popularity", label: "Popularity" },
+  { id: "difficulty", label: "Difficulty" },
+];
+
 /**
  * Full App Store ranking for a keyword. Any app's ranked keywords can be opened
  * as suggestions to add to a tracked app, which is how you dig into competitors.
@@ -35,6 +42,9 @@ export function RankingDialog({
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("");
   const [keywordsOf, setKeywordsOf] = useState<CompetitorApp | null>(null);
+  const metrics = highlightAppId ? HISTORY_METRICS : HISTORY_METRICS.filter((m) => m.id !== "position");
+  const [metricId, setMetricId] = useState<HistoryMetric>(highlightAppId ? "position" : "popularity");
+  const metric = metrics.find((m) => m.id === metricId) ?? metrics[0];
 
   // The top results come back fast; the full list may need metadata lookups for
   // ~250 apps on first open, so show the preview until it arrives.
@@ -116,23 +126,32 @@ export function RankingDialog({
               {keyword ? <ScoreBar value={keyword.difficulty} inverse /> : <Skeleton className="h-4" />}
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-xs">History</p>
+              <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                <span>History</span>
+                {metrics.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={cn("hover:text-foreground", m.id === metric.id && "text-foreground font-medium")}
+                    onClick={() => setMetricId(m.id)}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div>
                     <Sparkline
-                      width={120}
-                      values={
-                        highlightAppId
-                          ? (history.data ?? []).map((h) => h.position)
-                          : (history.data ?? []).map((h) => h.popularity)
-                      }
-                      invert={!!highlightAppId}
+                      width={160}
+                      values={(history.data ?? []).map((h) => (h ? h[metric.id] : undefined))}
+                      invert={metric.id === "position"}
                     />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {highlightAppId ? "Your position" : "Popularity"} across {history.data?.length ?? 0} updates
+                  {metric.id === "position" ? "Your daily position" : `Daily ${metric.label.toLowerCase()}`} over
+                  the last 90 days
                 </TooltipContent>
               </Tooltip>
             </div>

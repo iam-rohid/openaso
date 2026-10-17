@@ -37,14 +37,17 @@ new release to download instead. If you're on macOS v0.2.0 or earlier, download 
 - **Apps**: search the App Store (or paste an App Store link or id) and add apps to the sidebar.
 - **Keyword table**, per app and storefront, with these columns:
   - Popularity and difficulty bars
-  - Current position, with the change since the last update
-  - Position trend sparkline
+  - Current position
+  - Trend: the position change over 1, 7 or 30 days (one switch for the whole page), with *New* and *Lost*
+    for keywords that entered or dropped out of the results, and a 30-day daily sparkline
   - Top-ranking app icons, plus the result count
   - Last update time and inline notes
   - Sorting, filtering, column visibility, multi-select bulk refresh/copy/remove
 - **Add keywords** in bulk (comma or newline separated), with live App Store autocomplete as you type.
 - **Get suggestions**: keyword ideas from the app's title and description, App Store autocomplete, and phrases
   competitors use in their titles. Each has an estimated popularity. A seed keyword is optional.
+- **Ranking summary** above each app's keywords: how many are in the top 10, top 50 and ranked at all, how
+  that changed over the trend window, and a 30-day chart with the biggest gains, drops, new and lost keywords.
 - **Ranking sheet**: the full ~250-app search ranking for any keyword. Click any app to see *its* keywords,
   add it to My Apps, or open it in the App Store.
 - **Competitor keywords**: any app's page lists every cached keyword it ranks for. *Discover keywords*
@@ -54,6 +57,10 @@ new release to download instead. If you're on macOS v0.2.0 or earlier, download 
 - **Caching and refresh**: keyword data is shared per term and storefront and reused while fresh (24h by
   default). Per-row, bulk, "outdated only" and "refresh all" buttons re-fetch on demand. Every fetch stores a
   snapshot, which is what powers the trends.
+- **Daily ranking updates**: while the app is open, every tracked keyword is refreshed once per day (on launch,
+  hourly checks and on wake), so trends get one point per day. Days the app wasn't open stay as gaps. It
+  backs off when Apple rate limits, refreshes the app you're looking at first, and can be turned off from the
+  sidebar.
 - Dark and light themes.
 
 ## Development
@@ -123,7 +130,9 @@ closely for low- and mid-volume keywords.
 - `keywords`: one row per *(term, storefront)*, shared by every app that tracks it. Requests within the TTL
   (24 hours) never touch Apple, and concurrent requests for the same keyword share
   one fetch.
-- `keyword_snapshots`: appended on every fetch. Trends and position history come from here.
+- `keyword_snapshots`: appended on every fetch. Trends and position history come from here, using each
+  day's last snapshot. After 48 hours only that one is kept, and after 90 days snapshots keep just the top
+  100 results.
 - `apps`: app metadata, refreshed weekly or when it's needed for a different storefront.
 - `search_hints`: autocomplete responses, cached for 3 days.
 

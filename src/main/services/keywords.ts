@@ -1,15 +1,24 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, min, sql } from "drizzle-orm";
 import pLimit from "p-limit";
 import { storeSearch } from "@main/apple/store-search";
 import { db } from "@main/db";
 import { appKeywords, keywords, keywordSnapshots, type Keyword } from "@main/db/schema";
 import { ensureApps, getCachedApps, upsertApps } from "./apps";
+import type { DailyPosition, Trend, TrendWindow } from "@shared/trends";
 import { computeDifficulty, estimatePopularity } from "./scoring";
+import {
+  computeTrends,
+  dailyPoints,
+  dailySeries,
+  localDay,
+  positionHistory,
+  startOfLocalDay,
+  TREND_LOOKBACK_DAYS,
+} from "./trends";
 
 /** How long cached keyword data is fresh before it's refetched from Apple. */
 export const KEYWORD_CACHE_TTL_MS = 24 * 3_600_000;
 export const TOP_APPS_PREVIEW = 5;
-const HISTORY_POINTS = 30;
 const DIFFICULTY_SAMPLE = 10;
 
 export function normalizeTerm(term: string) {
@@ -135,9 +144,10 @@ export type KeywordRow = {
   notes: string | null;
   tracked: boolean;
   position: number | null;
-  /** Position change since the previous snapshot; positive = moved up. */
-  positionChange: number | null;
-  history: { at: Date; position: number | null; popularity: number | null }[];
+  /** Position change over each window, so the page can switch windows without refetching. */
+  trends: Record<TrendWindow, Trend>;
+  /** Daily positions for the sparkline, oldest first. */
+  history: DailyPosition[];
   topApps: { id: string; name: string; iconUrl: string | null }[];
 };
 
@@ -158,39 +168,38 @@ async function buildRows(appId: string, base: BaseKeyword[]): Promise<KeywordRow
   if (base.length === 0) return [];
   const ids = base.map((k) => k.id);
 
-  const snapshots = await db
-    .select({
-      keywordId: keywordSnapshots.keywordId,
-      at: keywordSnapshots.fetchedAt,
-      popularity: keywordSnapshots.popularity,
-      position: snapshotPosition(appId),
-    })
-    .from(keywordSnapshots)
-    .where(inArray(keywordSnapshots.keywordId, ids))
-    .orderBy(desc(keywordSnapshots.fetchedAt));
+  const [snapshots, firsts] = await Promise.all([
+    db
+      .select({
+        keywordId: keywordSnapshots.keywordId,
+        at: keywordSnapshots.fetchedAt,
+        position: snapshotPosition(appId),
+      })
+      .from(keywordSnapshots)
+      .where(
+        and(
+          inArray(keywordSnapshots.keywordId, ids),
+          gte(keywordSnapshots.fetchedAt, startOfLocalDay(new Date(), TREND_LOOKBACK_DAYS)),
+        ),
+      ),
+    // A keyword younger than a window is compared with its first point, so we need its age.
+    db
+      .select({ keywordId: keywordSnapshots.keywordId, first: min(keywordSnapshots.fetchedAt) })
+      .from(keywordSnapshots)
+      .where(inArray(keywordSnapshots.keywordId, ids))
+      .groupBy(keywordSnapshots.keywordId),
+  ]);
 
-  const historyByKeyword = new Map<number, KeywordRow["history"]>();
-  for (const s of snapshots) {
-    const list = historyByKeyword.get(s.keywordId) ?? [];
-    if (list.length < HISTORY_POINTS) list.push({ at: s.at, position: s.position, popularity: s.popularity });
-    historyByKeyword.set(s.keywordId, list);
-  }
+  const snapshotsByKeyword = Map.groupBy(snapshots, (s) => s.keywordId);
+  const firstDayByKeyword = new Map(firsts.map((f) => [f.keywordId, f.first ? localDay(f.first) : null]));
 
   const previewIds = base.flatMap((k) => k.rankedAppIds.slice(0, TOP_APPS_PREVIEW));
   const appsById = await getCachedApps(previewIds);
 
   return base.map((k) => {
-    const history = (historyByKeyword.get(k.id) ?? []).reverse();
+    const days = dailyPoints(snapshotsByKeyword.get(k.id) ?? []);
     const index = k.rankedAppIds.indexOf(appId);
     const position = index >= 0 ? index + 1 : null;
-    const previous = history.length > 1 ? history[history.length - 2].position : undefined;
-    let positionChange: number | null = null;
-    if (previous !== undefined) {
-      // Entering the ranking counts as a climb from just below the last result.
-      const prev = previous ?? (k.resultCount ?? 250) + 1;
-      const curr = position ?? (k.resultCount ?? 250) + 1;
-      positionChange = position === null && previous === null ? 0 : prev - curr;
-    }
 
     return {
       id: k.id,
@@ -204,8 +213,8 @@ async function buildRows(appId: string, base: BaseKeyword[]): Promise<KeywordRow
       notes: k.notes ?? null,
       tracked: k.tracked ?? false,
       position,
-      positionChange,
-      history,
+      trends: computeTrends(days, firstDayByKeyword.get(k.id) ?? null),
+      history: positionHistory(days),
       topApps: k.rankedAppIds.slice(0, TOP_APPS_PREVIEW).map((id) => {
         const app = appsById.get(id);
         return { id, name: app?.name ?? "Unknown app", iconUrl: app?.iconUrl ?? null };
@@ -297,17 +306,26 @@ export async function getKeywordRanking(keywordId: number, limit?: number) {
   };
 }
 
-/** Popularity/position history for a single keyword and app. */
+/** How many days the ranking dialog's history covers. */
+const KEYWORD_HISTORY_DAYS = 90;
+
+/** Daily popularity/difficulty/position for one keyword (and app), oldest first, null on gap days. */
 export async function getKeywordHistory(keywordId: number, appId: string | null) {
-  return db
+  const rows = await db
     .select({
       at: keywordSnapshots.fetchedAt,
       popularity: keywordSnapshots.popularity,
       difficulty: keywordSnapshots.difficulty,
-      resultCount: keywordSnapshots.resultCount,
       position: appId ? snapshotPosition(appId) : sql<number | null>`null`,
     })
     .from(keywordSnapshots)
-    .where(eq(keywordSnapshots.keywordId, keywordId))
-    .orderBy(keywordSnapshots.fetchedAt);
+    .where(
+      and(
+        eq(keywordSnapshots.keywordId, keywordId),
+        gte(keywordSnapshots.fetchedAt, startOfLocalDay(new Date(), KEYWORD_HISTORY_DAYS - 1)),
+      ),
+    );
+  return dailySeries(dailyPoints(rows), KEYWORD_HISTORY_DAYS).map(
+    (d) => d && { at: d.at, popularity: d.popularity, difficulty: d.difficulty, position: d.position },
+  );
 }

@@ -5,6 +5,7 @@ import { loadAppState, restorableBounds, saveAppState, trackWindowState } from "
 import { initDatabase } from "@main/db";
 import { registerTrpcHandler } from "@main/ipc";
 import { buildMenu } from "@main/menu";
+import { startRankUpdates } from "@main/services/rank-updates";
 import { checkForUpdatesInteractively, initUpdater } from "@main/updater";
 
 // Keep development data apart from the installed app's.
@@ -132,6 +133,7 @@ if (!app.requestSingleInstanceLock()) {
     });
     createWindow();
     initUpdater(() => mainWindow);
+    startRankUpdates();
 
     // macOS: clicking the dock icon reopens the window.
     app.on("activate", () => {

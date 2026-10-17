@@ -1,12 +1,13 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, RefreshCwIcon } from "lucide-react";
 import { AppIcon } from "@/components/shared/app-icon";
-import { ChangeBadge } from "@/components/shared/change-badge";
 import { ScoreBar } from "@/components/shared/score-bar";
 import { Sparkline } from "@/components/shared/sparkline";
+import { describeTrend, TrendBadge } from "@/components/shared/trend-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { countryFlag } from "@shared/countries";
+import { trendSortValue } from "@shared/trends";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { copyKeyword } from "./keyword-actions-menu";
@@ -194,32 +195,30 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
   },
   {
     id: "trend",
-    accessorFn: (r) => r.positionChange ?? undefined,
+    accessorFn: (r) => trendSortValue(r.trend),
     ...nullsLast,
     meta: { label: "Trend" },
     size: 140,
     header: ({ column }) => <SortHeader label="Trend" column={column} />,
     cell: ({ row }) => {
-      const { history, positionChange } = row.original;
+      const { history, trend } = row.original;
+      const rising = trend.state === "up" || trend.state === "new";
+      const falling = trend.state === "down" || trend.state === "lost";
       return (
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-2">
-              <ChangeBadge value={positionChange} className="w-8 text-xs" />
+              <TrendBadge trend={trend} className="w-8 text-xs" />
               <Sparkline
-                values={history.map((h) => h.position)}
+                values={history.map((h) => (h ? h.position : undefined))}
                 invert
-                className={cn(
-                  positionChange != null && positionChange > 0 && "text-emerald-500",
-                  positionChange != null && positionChange < 0 && "text-rose-500",
-                )}
+                className={cn(rising && "text-emerald-500", falling && "text-rose-500")}
               />
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            {history.length < 2
-              ? "Trend appears after the keyword is refreshed again"
-              : `Position over the last ${history.length} updates`}
+            {describeTrend(trend)}
+            <span className="block opacity-70">Daily position over the last 30 days</span>
           </TooltipContent>
         </Tooltip>
       );

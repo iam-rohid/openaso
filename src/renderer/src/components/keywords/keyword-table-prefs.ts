@@ -1,4 +1,5 @@
 import type { ColumnSizingState, ColumnVisibilityState, SortingState } from "@tanstack/react-table";
+import { DEFAULT_TREND_WINDOW, type TrendWindow } from "@shared/trends";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 
 const DEFAULT_SORT: SortingState = [{ id: "popularity", desc: true }];
@@ -12,3 +13,5 @@ export const useKeywordColumnVisibility = () =>
   useLocalStorageState<ColumnVisibilityState>("openaso:kw-columns", DEFAULT_VISIBILITY);
 export const useKeywordColumnSizing = () =>
   useLocalStorageState<ColumnSizingState>("openaso:kw-sizes", DEFAULT_SIZING);
+/** The window every trend delta on the app page compares over. */
+export const useTrendWindow = () => useLocalStorageState<TrendWindow>("openaso:trend-window", DEFAULT_TREND_WINDOW);

@@ -7,6 +7,8 @@ import type { ThemeSource } from "@shared/ipc";
 type AppState = {
   window?: { bounds: Rectangle; maximized: boolean };
   theme?: ThemeSource;
+  /** Refresh tracked keywords once a day in the background (on unless turned off). */
+  autoUpdateRankings?: boolean;
 };
 
 const file = () => path.join(app.getPath("userData"), "app-state.json");

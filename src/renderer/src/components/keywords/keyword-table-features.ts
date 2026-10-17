@@ -13,9 +13,12 @@ import {
   sortFn_text,
   tableFeatures,
 } from "@tanstack/react-table";
+import type { Trend } from "@shared/trends";
 import type { RouterOutputs } from "@/trpc/react";
 
-export type KeywordRow = RouterOutputs["keywords"]["list"][number];
+export type KeywordListRow = RouterOutputs["keywords"]["list"][number];
+/** A list row with its trend for the page's chosen window picked out, so the Trend column can sort by it. */
+export type KeywordRow = KeywordListRow & { trend: Trend };
 
 export type KeywordTableActions = {
   appId: string;

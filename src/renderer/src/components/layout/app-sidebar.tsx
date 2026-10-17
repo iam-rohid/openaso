@@ -68,6 +68,7 @@ import { useAfterMenuClose } from "@/hooks/use-after-menu-close";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { cn } from "@/lib/utils";
 import { type RouterOutputs, useTRPC } from "@/trpc/react";
+import { RankUpdatesItem } from "./rank-updates-item";
 import { ThemeToggle } from "./theme-toggle";
 import { UpdateItem } from "./update-item";
 
@@ -201,6 +202,7 @@ export function AppSidebar() {
         <SidebarFooter>
           <SidebarMenu>
             <UpdateItem />
+            <RankUpdatesItem />
             <SidebarMenuItem>
               <ThemeToggle />
             </SidebarMenuItem>

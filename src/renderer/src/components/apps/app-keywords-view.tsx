@@ -7,13 +7,15 @@ import {
   StarIcon,
 } from "lucide-react";
 import { Navigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { RankSummary } from "@/components/apps/rank-summary";
 import { TemporaryAppMenu } from "@/components/apps/temporary-app-menu";
 import { AddKeywordsDialog } from "@/components/keywords/add-keywords-dialog";
 import { KeywordColumnsMenu } from "@/components/keywords/keyword-columns-menu";
 import { KeywordSearch } from "@/components/keywords/keyword-search";
 import { KeywordTable } from "@/components/keywords/keyword-table";
+import { useTrendWindow } from "@/components/keywords/keyword-table-prefs";
 import type { KeywordRow, KeywordTableActions } from "@/components/keywords/keyword-table-features";
 import { RankingDialog, type RankingTarget } from "@/components/keywords/ranking-dialog";
 import { SuggestionsDialog } from "@/components/keywords/suggestions-dialog";
@@ -96,6 +98,20 @@ export function AppKeywordsView({ appId }: { appId: string }) {
     ...trpc.keywords.list.queryOptions({ appId, country, scope: "tracked" }),
     enabled: isTracked,
   });
+  const [trendWindow, setTrendWindow] = useTrendWindow();
+  const rows = useMemo(
+    () => keywords.data?.map((row) => ({ ...row, trend: row.trends[trendWindow] })),
+    [keywords.data, trendWindow],
+  );
+
+  // The daily ranking update refreshes the app being viewed first.
+  const setRankFocus = useMutation(trpc.rankUpdates.setFocus.mutationOptions());
+  useEffect(() => {
+    if (!isTracked) return;
+    setRankFocus.mutate({ appId, country });
+    return () => setRankFocus.mutate(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mutate is stable
+  }, [appId, country, isTracked]);
 
   const invalidateKeywords = () => queryClient.invalidateQueries(trpc.keywords.pathFilter());
 
@@ -298,10 +314,19 @@ export function AppKeywordsView({ appId }: { appId: string }) {
         </div>
       </PageHeader>
 
+      {!isTemporary && rows && rows.length > 0 && (
+        <RankSummary
+          rows={rows}
+          window={trendWindow}
+          onWindowChange={setTrendWindow}
+          onOpenKeyword={actions.onOpenRanking}
+        />
+      )}
+
       <KeywordTable
         // Remount per app/storefront so selection resets.
         key={`${appId}-${country}`}
-        data={keywords.data}
+        data={rows}
         isLoading={app.isLoading || keywords.isLoading}
         actions={actions}
         globalFilter={filter}
