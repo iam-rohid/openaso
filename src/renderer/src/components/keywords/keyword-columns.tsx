@@ -211,7 +211,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
               <TrendBadge trend={trend} className="w-8 text-xs" />
               <Sparkline
                 values={history.map((h) => (h ? h.position : undefined))}
-                invert
+                variant="rank"
                 className={cn(rising && "text-emerald-500", falling && "text-rose-500")}
               />
             </div>

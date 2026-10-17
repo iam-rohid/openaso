@@ -1,26 +1,34 @@
 import { cn } from "@/lib/utils";
 
+/** A rank chart spans at least this many positions, so moving one place reads as a small step. */
+const MIN_RANK_SPAN = 20;
+
 /**
- * Minimal SVG sparkline over evenly spaced points. `invert` flips the axis so lower
- * values (better ranks) plot higher. Null points are drawn at the bottom (unranked);
- * undefined points are gaps (no data that day), which break the line.
+ * Minimal SVG sparkline over evenly spaced points, drawn on a faint track spanning the
+ * whole range so a short history reads as "starts here" rather than as a stray mark.
+ * - `rank`: App Store positions. Better (lower) plots higher, on a log scale, so moves
+ *   near the top count for more than moves far down. Null points are unranked and sit
+ *   at the bottom.
+ * - `score`: 0–100 values on a fixed scale, so small wobbles stay small.
+ * Undefined points are gaps (no data that day), which break the line.
  */
 export function Sparkline({
   values,
-  invert = false,
+  variant,
   width = 88,
   height = 22,
   className,
 }: {
   values: (number | null | undefined)[];
-  invert?: boolean;
+  variant: "rank" | "score";
   width?: number;
   height?: number;
   className?: string;
 }) {
-  const nums = values.filter((v): v is number => v != null);
+  const pad = 2;
   const known = values.filter((v) => v !== undefined).length;
-  if (values.length < 2 || known < 2 || nums.length === 0) {
+  const bottom = height - pad;
+  if (values.length < 2 || known === 0) {
     return (
       <svg width={width} height={height} className={cn("text-muted-foreground/40", className)}>
         <line x1={0} x2={width} y1={height / 2} y2={height / 2} stroke="currentColor" strokeWidth={1.25} />
@@ -28,18 +36,12 @@ export function Sparkline({
     );
   }
 
-  const min = Math.min(...nums);
-  const max = Math.max(...nums);
-  const span = max - min || 1;
-  const pad = 2;
+  const toY = variant === "rank" ? rankScale(values, pad, height) : (v: number) =>
+    bottom - (Math.min(100, Math.max(0, v)) / 100) * (height - pad * 2);
   const points = values.map((v, i) => {
     if (v === undefined) return null;
     const x = (i / (values.length - 1)) * width;
-    if (v === null) return [x, height - pad] as const;
-    let t = (v - min) / span;
-    if (invert) t = 1 - t;
-    if (max === min) t = 0.5;
-    return [x, height - pad - t * (height - pad * 2)] as const;
+    return [x, v === null ? bottom : toY(v)] as const;
   });
 
   let d = "";
@@ -58,11 +60,39 @@ export function Sparkline({
 
   return (
     <svg width={width} height={height} className={cn("text-primary overflow-visible", className)}>
+      <line
+        x1={0}
+        x2={width}
+        y1={bottom}
+        y2={bottom}
+        className="text-muted-foreground/25"
+        stroke="currentColor"
+        strokeWidth={1}
+        strokeDasharray="2 3"
+      />
       <path d={d} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
       {isolated.map(([x, y]) => (
-        <circle key={x} cx={x} cy={y} r={1} fill="currentColor" />
+        <circle key={x} cx={x} cy={y} r={1.25} fill="currentColor" />
       ))}
       {last && <circle cx={last[0]} cy={last[1]} r={2} fill="currentColor" />}
     </svg>
   );
+}
+
+/** Log-scaled y for positions, best at the top, spanning at least MIN_RANK_SPAN positions. */
+function rankScale(values: (number | null | undefined)[], pad: number, height: number) {
+  const nums = values.filter((v): v is number => v != null);
+  if (nums.length === 0) return () => height - pad;
+  let best = Math.min(...nums);
+  let worst = Math.max(...nums);
+  if (worst - best < MIN_RANK_SPAN) {
+    best = Math.max(1, Math.round((best + worst) / 2 - MIN_RANK_SPAN / 2));
+    worst = best + MIN_RANK_SPAN;
+  }
+  const lo = Math.log(best);
+  const span = Math.log(worst) - lo;
+  // Keep ranked points a little above the bottom, where unranked days sit.
+  const top = pad;
+  const floor = height - pad * 2.5;
+  return (v: number) => top + ((Math.log(v) - lo) / span) * (floor - top);
 }

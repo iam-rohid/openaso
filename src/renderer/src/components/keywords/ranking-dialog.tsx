@@ -145,7 +145,7 @@ export function RankingDialog({
                     <Sparkline
                       width={160}
                       values={(history.data ?? []).map((h) => (h ? h[metric.id] : undefined))}
-                      invert={metric.id === "position"}
+                      variant={metric.id === "position" ? "rank" : "score"}
                     />
                   </div>
                 </TooltipTrigger>
