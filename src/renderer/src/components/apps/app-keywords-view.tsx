@@ -16,6 +16,7 @@ import { KeywordColumnsMenu } from "@/components/keywords/keyword-columns-menu";
 import { KeywordFiltersMenu, toColumnFilters, useKeywordFilters } from "@/components/keywords/keyword-filters";
 import { KeywordSearch } from "@/components/keywords/keyword-search";
 import { KeywordTable } from "@/components/keywords/keyword-table";
+import { KeywordTransferItems } from "@/components/keywords/keyword-transfer-items";
 import { useTrendWindow } from "@/components/keywords/keyword-table-prefs";
 import type { KeywordRow, KeywordTableActions } from "@/components/keywords/keyword-table-features";
 import { RankingDialog, type RankingTarget } from "@/components/keywords/ranking-dialog";
@@ -189,6 +190,16 @@ export function AppKeywordsView({ appId }: { appId: string }) {
   const staleCount = keywords.data?.filter((k) => k.stale).length ?? 0;
   const refreshing = refresh.isPending || refreshApp.isPending;
 
+  const transferItems = isTracked && (
+    <KeywordTransferItems
+      appId={appId}
+      country={country}
+      window={trendWindow}
+      canExport={!!keywords.data?.length}
+      onImported={(ids) => refresh.mutate({ keywordIds: ids })}
+    />
+  );
+
   if (app.data && !isTracked) return <Navigate to="/" />;
 
   if (app.isError) {
@@ -317,9 +328,11 @@ export function AppKeywordsView({ appId }: { appId: string }) {
             <KeywordColumnsMenu hideRankColumns={isTemporary} />
           </ButtonGroup>
           {app.data?.isTemporary ? (
-            <TemporaryAppMenu app={{ ...app.data, country }} />
+            <TemporaryAppMenu app={{ ...app.data, country }}>{transferItems}</TemporaryAppMenu>
           ) : (
-            <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" variant="outline" />
+            <AppLinksMenu appId={appId} country={country} storeUrl={app.data?.storeUrl} size="icon" variant="outline">
+              {transferItems}
+            </AppLinksMenu>
           )}
           <KeywordSearch
             value={filter}

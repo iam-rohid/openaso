@@ -1,4 +1,5 @@
 import { CopyIcon, LineChartIcon, MoreHorizontalIcon, StoreIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,19 +10,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-/** External links for an app: copy its App Store link, or open it in the App Store or Sensor Tower. */
+/**
+ * External links for an app: copy its App Store link, or open it in the App Store or Sensor Tower.
+ * `children` are extra items shown above the links.
+ */
 export function AppLinksMenu({
   appId,
   country,
   storeUrl,
   size = "icon-sm",
   variant = "ghost",
+  children,
 }: {
   appId: string;
   country: string;
   storeUrl?: string | null;
   size?: "icon" | "icon-sm";
   variant?: "ghost" | "outline";
+  children?: ReactNode;
 }) {
   const appStoreUrl = storeUrl ?? `https://apps.apple.com/${country.toLowerCase()}/app/id${appId}`;
   const sensorTowerUrl = `https://app.sensortower.com/overview/${appId}?country=${country.toUpperCase()}`;
@@ -35,6 +41,7 @@ export function AppLinksMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
+        {children}
         <DropdownMenuItem
           onClick={() => {
             void navigator.clipboard.writeText(appStoreUrl);

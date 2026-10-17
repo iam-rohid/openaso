@@ -1,5 +1,5 @@
 import { EllipsisIcon, LinkIcon, PencilIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { AddAppDialog } from "@/components/apps/add-app-dialog";
 import { RenameTemporaryAppDialog } from "@/components/apps/temporary-app-form";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAfterMenuClose } from "@/hooks/use-after-menu-close";
 
-/** Header menu for a temporary app, standing in for the App Store links real apps get. */
-export function TemporaryAppMenu({ app }: { app: { id: string; name: string; country: string } }) {
+/**
+ * Header menu for a temporary app, standing in for the App Store links real apps get.
+ * `children` are extra items shown above its own.
+ */
+export function TemporaryAppMenu({
+  app,
+  children,
+}: {
+  app: { id: string; name: string; country: string };
+  children?: ReactNode;
+}) {
   const menu = useAfterMenuClose();
   const [renameOpen, setRenameOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -27,6 +36,7 @@ export function TemporaryAppMenu({ app }: { app: { id: string; name: string; cou
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-48" onCloseAutoFocus={menu.onCloseAutoFocus}>
+          {children}
           <DropdownMenuItem onSelect={() => menu.defer(() => setRenameOpen(true))}>
             <PencilIcon /> Rename…
           </DropdownMenuItem>
