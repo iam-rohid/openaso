@@ -4,6 +4,8 @@ copyright: Copyright © 2026 Rohid
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 
 directories:
+  # Explicit, or electron-builder would package www/ (the marketing site has its own package.json).
+  app: .
   buildResources: build
   output: dist
 
