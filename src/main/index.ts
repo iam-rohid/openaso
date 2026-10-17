@@ -1,3 +1,4 @@
+import { execFile } from "node:child_process";
 import path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
 import { NEW_APP_CHANNEL, THEME_CHANNEL, type ThemeSource } from "@shared/ipc";
@@ -14,6 +15,25 @@ if (!app.isPackaged) app.setPath("userData", path.join(app.getPath("appData"), "
 let mainWindow: BrowserWindow | null = null;
 
 const isMac = process.platform === "darwin";
+
+/**
+ * Opens a web page in the default browser. On macOS, opening a URL normally lets the app
+ * that claims it take over (apps.apple.com goes to the App Store), so name the browser explicitly.
+ */
+async function openInBrowser(url: string) {
+  if (isMac) {
+    try {
+      const browser = await app.getApplicationInfoForProtocol("https://");
+      await new Promise<void>((resolve, reject) =>
+        execFile("open", ["-a", browser.path, url], (err) => (err ? reject(err) : resolve())),
+      );
+      return;
+    } catch (err) {
+      console.error("Failed to open the link in the default browser", err);
+    }
+  }
+  await shell.openExternal(url);
+}
 
 function createWindow() {
   const state = loadAppState();
@@ -44,13 +64,14 @@ function createWindow() {
 
   // Links never open inside the app: web pages go to the default browser.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^(https?|itms-apps):/.test(url)) void shell.openExternal(url);
+    if (/^https?:/.test(url)) void openInBrowser(url);
+    else if (url.startsWith("itms-apps:")) void shell.openExternal(url);
     return { action: "deny" };
   });
   win.webContents.on("will-navigate", (event, url) => {
     if (url.startsWith(win.webContents.getURL().split("#")[0])) return;
     event.preventDefault();
-    if (/^https?:/.test(url)) void shell.openExternal(url);
+    if (/^https?:/.test(url)) void openInBrowser(url);
   });
 
   if (process.env.ELECTRON_RENDERER_URL) {
