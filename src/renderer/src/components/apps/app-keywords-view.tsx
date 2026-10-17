@@ -109,6 +109,11 @@ export function AppKeywordsView({ appId }: { appId: string }) {
       })),
     [keywords.data, trendWindow],
   );
+  const [keywordFilters, setKeywordFilters] = useKeywordFilters();
+  const columnFilters = useMemo(
+    () => toColumnFilters(keywordFilters, { hideRankColumns: isTemporary }),
+    [keywordFilters, isTemporary],
+  );
 
   // The daily ranking update refreshes the app being viewed first.
   const setRankFocus = useMutation(trpc.rankUpdates.setFocus.mutationOptions());
@@ -180,8 +185,6 @@ export function AppKeywordsView({ appId }: { appId: string }) {
     [keywords.data],
   );
   const staleCount = keywords.data?.filter((k) => k.stale).length ?? 0;
-  const ranked = keywords.data?.filter((k) => k.position != null).length ?? 0;
-  const top10 = keywords.data?.filter((k) => k.position != null && k.position <= 10).length ?? 0;
   const refreshing = refresh.isPending || refreshApp.isPending;
 
   if (app.data && !isTracked) return <Navigate to="/" />;
@@ -223,20 +226,18 @@ export function AppKeywordsView({ appId }: { appId: string }) {
                     Temporary
                   </Badge>
                 )}
+                {app.data.subtitle && (
+                  <span className="truncate" title={app.data.subtitle}>
+                    {app.data.subtitle}
+                  </span>
+                )}
+                {/* The subtitle truncates; the rating always stays visible. */}
                 {app.data.rating != null && (
-                  <>
+                  <span className="flex shrink-0 items-center gap-1">
+                    {app.data.subtitle && "· "}
                     <StarIcon className="size-3 shrink-0 fill-current" /> {app.data.rating.toFixed(1)} (
                     {compactNumber(app.data.ratingCount)})
-                  </>
-                )}
-                {app.data.isTemporary ? null : keywords.data ? (
-                  keywords.data.length > 0 && (
-                    <span className="truncate">
-                      {app.data.rating != null && "· "}Ranked in {ranked} · Top 10 in {top10}
-                    </span>
-                  )
-                ) : (
-                  <Skeleton className="h-3 w-24" />
+                  </span>
                 )}
               </p>
             </div>
@@ -305,7 +306,14 @@ export function AppKeywordsView({ appId }: { appId: string }) {
               </Button>
             </>
           )}
-          <KeywordColumnsMenu hideRankColumns={isTemporary} />
+          <ButtonGroup>
+            <KeywordFiltersMenu
+              filters={keywordFilters}
+              onChange={setKeywordFilters}
+              hideRankColumns={isTemporary}
+            />
+            <KeywordColumnsMenu hideRankColumns={isTemporary} />
+          </ButtonGroup>
           {app.data?.isTemporary ? (
             <TemporaryAppMenu app={{ ...app.data, country }} />
           ) : (
@@ -336,6 +344,7 @@ export function AppKeywordsView({ appId }: { appId: string }) {
         isLoading={app.isLoading || keywords.isLoading}
         actions={actions}
         globalFilter={filter}
+        columnFilters={columnFilters}
         hideRankColumns={isTemporary}
         emptyState={
           <Empty className="py-16">
