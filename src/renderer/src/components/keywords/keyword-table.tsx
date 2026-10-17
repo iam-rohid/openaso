@@ -1,4 +1,4 @@
-import { useTable, type RowSelectionState } from "@tanstack/react-table";
+import { useTable, type ColumnFiltersState, type RowSelectionState } from "@tanstack/react-table";
 import { CopyIcon, RefreshCwIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import {
 } from "./keyword-table-features";
 
 const EMPTY: KeywordRow[] = [];
+const NO_FILTERS: ColumnFiltersState = [];
 
 /** The filler column has no fixed width so it absorbs leftover space and the other columns keep their sizes. */
 const FILL_COLUMN = "filler";
@@ -27,6 +28,7 @@ export function KeywordTable({
   actions,
   emptyState,
   globalFilter,
+  columnFilters = NO_FILTERS,
   hideRankColumns = false,
 }: {
   data: KeywordRow[] | undefined;
@@ -35,6 +37,8 @@ export function KeywordTable({
   emptyState: React.ReactNode;
   /** Text filter over keyword terms and notes, controlled by the page. */
   globalFilter: string;
+  /** Range filters from the header's filters menu, controlled by the page. */
+  columnFilters?: ColumnFiltersState;
   /** Hide position/trend regardless of the saved column choice. */
   hideRankColumns?: boolean;
 }) {
@@ -54,6 +58,7 @@ export function KeywordTable({
         : columnVisibility,
       columnSizing,
       globalFilter,
+      columnFilters,
       rowSelection,
     },
     defaultColumn: { minSize: 60 },
@@ -159,7 +164,11 @@ export function KeywordTable({
         {!isLoading && rows.length === 0 && (
           <div className="sticky left-0">
             {globalFilter ? (
-              <p className="text-muted-foreground py-16 text-center text-sm">No keywords match “{globalFilter}”.</p>
+              <p className="text-muted-foreground py-16 text-center text-sm">
+                No keywords match “{globalFilter}”{columnFilters.length > 0 && " with the current filters"}.
+              </p>
+            ) : columnFilters.length > 0 && (data?.length ?? 0) > 0 ? (
+              <p className="text-muted-foreground py-16 text-center text-sm">No keywords match the current filters.</p>
             ) : (
               emptyState
             )}

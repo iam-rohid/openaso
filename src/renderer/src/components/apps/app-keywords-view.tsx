@@ -13,6 +13,7 @@ import { RankSummary } from "@/components/apps/rank-summary";
 import { TemporaryAppMenu } from "@/components/apps/temporary-app-menu";
 import { AddKeywordsDialog } from "@/components/keywords/add-keywords-dialog";
 import { KeywordColumnsMenu } from "@/components/keywords/keyword-columns-menu";
+import { KeywordFiltersMenu, toColumnFilters, useKeywordFilters } from "@/components/keywords/keyword-filters";
 import { KeywordSearch } from "@/components/keywords/keyword-search";
 import { KeywordTable } from "@/components/keywords/keyword-table";
 import { useTrendWindow } from "@/components/keywords/keyword-table-prefs";
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,

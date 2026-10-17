@@ -11,6 +11,7 @@ import { trendSortValue } from "@shared/trends";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { copyKeyword } from "./keyword-actions-menu";
+import type { RangeFilterValue } from "./keyword-filters";
 import { NotesCell } from "./notes-cell";
 import type { KeywordRow, KeywordTableActions, KeywordTableFeatures } from "./keyword-table-features";
 
@@ -44,6 +45,19 @@ function SortHeader({
 }
 
 const nullsLast = { sortUndefined: "last" as const };
+
+/** Range filter for numeric columns (see keyword-filters); rows without a value never match. */
+const inRange = {
+  filterFn: (
+    row: { getValue: (id: string) => unknown },
+    columnId: string,
+    { min, max }: RangeFilterValue,
+  ) => {
+    const value = row.getValue(columnId);
+    if (typeof value !== "number") return false;
+    return (min == null || value >= min) && (max == null || value <= max);
+  },
+};
 
 /** Columns about the app's own ranking; meaningless for temporary apps, which aren't on the App Store. */
 export const RANK_COLUMN_IDS = ["position", "trend"];
@@ -156,6 +170,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
   },
   {
     id: "popularity",
+    ...inRange,
     accessorFn: (r) => r.popularity ?? undefined,
     ...nullsLast,
     meta: { label: "Popularity" },
@@ -165,6 +180,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
   },
   {
     id: "difficulty",
+    ...inRange,
     accessorFn: (r) => r.difficulty ?? undefined,
     ...nullsLast,
     meta: { label: "Difficulty" },
@@ -174,6 +190,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
   },
   {
     id: "position",
+    ...inRange,
     accessorFn: (r) => r.position ?? undefined,
     ...nullsLast,
     meta: { label: "Position" },
@@ -195,6 +212,7 @@ export const keywordColumns: ColumnDef<KeywordTableFeatures, KeywordRow, any>[] 
   },
   {
     id: "trend",
+    ...inRange,
     accessorFn: (r) => trendSortValue(r.trend),
     ...nullsLast,
     meta: { label: "Trend" },
