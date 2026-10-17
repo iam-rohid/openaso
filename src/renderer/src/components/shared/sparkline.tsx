@@ -4,13 +4,14 @@ import { cn } from "@/lib/utils";
 const MIN_RANK_SPAN = 20;
 
 /**
- * Minimal SVG sparkline over evenly spaced points, drawn on a faint track spanning the
- * whole range so a short history reads as "starts here" rather than as a stray mark.
+ * Minimal SVG sparkline over evenly spaced points.
  * - `rank`: App Store positions. Better (lower) plots higher, on a log scale, so moves
  *   near the top count for more than moves far down. Null points are unranked and sit
  *   at the bottom.
  * - `score`: 0–100 values on a fixed scale, so small wobbles stay small.
- * Undefined points are gaps (no data that day), which break the line.
+ * Undefined points are gaps (no data that day), drawn as a muted dashed line: flat from
+ * the left edge to the first point, and bridging gaps between points. Days after the
+ * last point stay empty, so stale data doesn't look current.
  */
 export function Sparkline({
   values,
@@ -44,37 +45,37 @@ export function Sparkline({
     return [x, v === null ? bottom : toY(v)] as const;
   });
 
-  let d = "";
-  let penDown = false;
-  for (const p of points) {
-    if (!p) {
-      penDown = false;
-      continue;
+  // Solid runs of consecutive days, and dashed stretches over the gaps between them.
+  let solid = "";
+  let dashed = "";
+  let prev: readonly [number, number] | null = null;
+  for (const [i, p] of points.entries()) {
+    if (!p) continue;
+    if (!prev) {
+      if (p[0] > 0) dashed += `M0,${p[1].toFixed(1)}H${p[0].toFixed(1)}`;
+      solid += `M${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+    } else if (!points[i - 1]) {
+      dashed += `M${prev[0].toFixed(1)},${prev[1].toFixed(1)}L${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+      solid += `M${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+    } else {
+      solid += `L${p[0].toFixed(1)},${p[1].toFixed(1)}`;
     }
-    d += `${penDown ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`;
-    penDown = true;
+    prev = p;
   }
-  // A point with gaps on both sides has no line, so mark it with a dot.
-  const isolated = points.filter((p, i): p is NonNullable<typeof p> => !!p && !points[i - 1] && !points[i + 1]);
-  const last = points.findLast((p) => p != null);
 
   return (
     <svg width={width} height={height} className={cn("text-primary overflow-visible", className)}>
-      <line
-        x1={0}
-        x2={width}
-        y1={bottom}
-        y2={bottom}
-        className="text-muted-foreground/25"
+      <path
+        d={dashed}
+        fill="none"
+        className="text-muted-foreground/40"
         stroke="currentColor"
-        strokeWidth={1}
-        strokeDasharray="2 3"
+        strokeWidth={1.25}
+        strokeDasharray="2 2"
+        strokeLinejoin="round"
       />
-      <path d={d} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
-      {isolated.map(([x, y]) => (
-        <circle key={x} cx={x} cy={y} r={1.25} fill="currentColor" />
-      ))}
-      {last && <circle cx={last[0]} cy={last[1]} r={2} fill="currentColor" />}
+      <path d={solid} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
+      {prev && <circle cx={prev[0]} cy={prev[1]} r={2} fill="currentColor" />}
     </svg>
   );
 }
