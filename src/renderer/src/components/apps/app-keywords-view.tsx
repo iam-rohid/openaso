@@ -282,7 +282,8 @@ export function AppKeywordsView({ appId }: { appId: string }) {
                 </TooltipTrigger>
                 <TooltipContent>Re-fetch keyword data from the App Store</TooltipContent>
               </Tooltip>
-              <DropdownMenuContent align="end">
+              {/* Fit the labels rather than the trigger, which narrows once the outdated badge goes away. */}
+              <DropdownMenuContent align="end" className="w-auto min-w-(--radix-dropdown-menu-trigger-width)">
                 <DropdownMenuItem
                   disabled={staleCount === 0}
                   onClick={() => refreshApp.mutate({ appId, country, all: false })}
