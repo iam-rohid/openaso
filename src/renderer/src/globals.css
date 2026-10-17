@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Folder color classes live in src/shared, outside the renderer's Vite root. */
+@source "../../shared";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
