@@ -1,0 +1,199 @@
+---
+import { Image } from "astro:assets";
+import keywordsShot from "../assets/screenshots/keywords.png";
+import { getLatestRelease } from "../lib/github";
+import DownloadCta from "./DownloadCta.astro";
+
+const release = await getLatestRelease();
+
+// Where the "planner" row sits in the screenshot, as fractions of its size. In the demo
+// data it climbed from #48 to #16 over the 30 days (scripts/capture-screenshots.mjs).
+const row = { top: 0.743, height: 0.054, left: 0.1775 };
+const climb = { term: "planner", from: 48, to: 16, days: 30 };
+---
+
+<section class="relative isolate overflow-hidden">
+  <!-- Backdrop: a faint grid fading out from the top center, and the icon's glow. -->
+  <div
+    aria-hidden="true"
+    class="absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,#000_30%,transparent_100%)]"
+  >
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.045)_1px,transparent_1px)] bg-[size:64px_64px] bg-[position:center_top]"></div>
+  </div>
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute top-[420px] left-1/2 -z-10 h-[620px] w-[min(1100px,140vw)] -translate-x-1/2"
+  >
+    <div class="size-full animate-glow-drift rounded-full bg-[radial-gradient(closest-side,rgb(99_102_241/0.42),rgb(124_58_237/0.22)_55%,transparent)] blur-3xl motion-reduce:animate-none"></div>
+  </div>
+
+  <div class="mx-auto max-w-6xl px-4 pt-16 sm:px-6 sm:pt-24">
+    <div class="mx-auto max-w-3xl text-center" data-reveal-stagger="90">
+      <a
+        href="/changelog"
+        data-reveal
+        class="group inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] py-1 pr-3 pl-1 text-[13px] text-muted transition-colors hover:border-line-strong hover:text-fg"
+      >
+        <span class="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-[#b9b0ff]">
+          {release.tag}
+        </span>
+        See what's new
+        <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">
+          →
+        </span>
+      </a>
+
+      <h1
+        data-reveal
+        class="mt-7 text-[clamp(2.6rem,7vw,4.75rem)] leading-[1.02] font-semibold tracking-[-0.045em] text-balance"
+      >
+        <span class="text-fg">The free, open-source</span>
+        <span class="block text-gradient pb-1">ASO tool</span>
+      </h1>
+
+      <p
+        data-reveal
+        class="mx-auto mt-6 max-w-[38rem] text-[clamp(1rem,2.2vw,1.175rem)] leading-relaxed text-pretty text-muted"
+      >
+        Track rankings, score keyword popularity and difficulty, and see what your competitors rank
+        for. Free for macOS, Windows and Linux. No account, no subscription.
+      </p>
+
+      <div data-reveal class="mt-9">
+        <DownloadCta location="hero" />
+      </div>
+    </div>
+
+    <!-- Product shot: tilts up into place on load, then the "planner" row's climb plays. -->
+    <div class="relative mt-16 [perspective:2000px] sm:mt-20" data-hero-stage>
+      <div class="hero-shot relative mx-auto max-w-[1180px] rounded-[14px] border border-line-strong bg-surface p-[5px] shadow-[0_0_0_1px_rgb(0_0_0/0.6),0_40px_120px_-30px_rgb(99_102_241/0.45),0_30px_60px_-30px_rgb(0_0_0/0.9)] sm:rounded-[18px] sm:p-2">
+        <div class="relative overflow-hidden rounded-[10px] [container-type:inline-size] sm:rounded-[12px]">
+          <Image
+            src={keywordsShot}
+            alt="OpenASO's keyword table for Tiimo: each keyword with its popularity and difficulty bars, App Store position, seven-day trend, a 30-day sparkline and the top-ranking apps."
+            widths={[720, 1180, 1600, 2360]}
+            sizes="(min-width: 1220px) 1180px, 100vw"
+            loading="eager"
+            fetchpriority="high"
+            class="block h-auto w-full"
+          />
+          <!-- macOS draws the traffic lights natively, so the page capture doesn't have them. -->
+          <div aria-hidden="true" class="absolute top-[3%] left-[1.25%] flex gap-[0.62%] w-[6%]">
+            <span class="aspect-square w-[0.85cqw] rounded-full bg-[#ff5f57]"></span>
+            <span class="aspect-square w-[0.85cqw] rounded-full bg-[#febc2e]"></span>
+            <span class="aspect-square w-[0.85cqw] rounded-full bg-[#28c840]"></span>
+          </div>
+
+          <!-- Highlight on the climbing row. -->
+          <div
+            aria-hidden="true"
+            class="hero-row absolute right-0 border-y border-accent/50 bg-accent/[0.09] shadow-[0_0_40px_rgb(124_108_246/0.25)_inset]"
+            style={{
+              top: `${row.top * 100}%`,
+              height: `${row.height * 100}%`,
+              left: `${row.left * 100}%`,
+            }}
+          ></div>
+
+          <!-- Callout with the animated rank. -->
+          <div
+            class="hero-callout absolute right-[2.5%] flex items-center gap-[1.4cqw] rounded-[1.1cqw] border border-line-strong bg-[#101016]/90 px-[1.6cqw] py-[1.1cqw] shadow-[0_20px_50px_-12px_rgb(0_0_0/0.8),0_0_0_1px_rgb(124_108_246/0.25)] backdrop-blur-md"
+            style={{ bottom: `${(1 - row.top) * 100 + 1.2}%` }}
+            data-climb-from={climb.from}
+            data-climb-to={climb.to}
+          >
+            <div class="flex flex-col">
+              <span class="text-[max(9px,1.05cqw)] text-dim">Position for</span>
+              <span class="text-[max(11px,1.45cqw)] font-medium text-fg">“{climb.term}”</span>
+            </div>
+            <span
+              class="font-mono text-[max(18px,2.9cqw)] leading-none font-semibold tracking-tight text-fg tabular-nums"
+              aria-label={`Climbed from #${climb.from} to #${climb.to}`}
+            >
+              #<span data-climb-value>{climb.to}</span>
+            </span>
+            <span class="hero-badge inline-flex items-center gap-[0.3cqw] rounded-full bg-up/12 px-[0.8cqw] py-[0.35cqw] text-[max(9px,1.1cqw)] font-medium text-up">
+              ↑ {climb.from - climb.to}
+              <span class="text-up/70">in {climb.days} days</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <!-- Fade the bottom edge into the page. -->
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-bg"
+      ></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* The shot starts tilted back and settles flat; then the row lights up, the callout
+     pops in and the rank counts up. Reduced motion shows the final state. */
+  .js .hero-shot {
+    animation: tilt-in 1.6s var(--ease-out-soft) 0.35s both;
+    transform-origin: 50% 0%;
+  }
+  .js .hero-row {
+    animation: fade-in 0.8s var(--ease-out-soft) 1.5s both;
+  }
+  .js .hero-callout {
+    animation: pop-in 0.7s var(--ease-out-soft) 1.7s both;
+  }
+  .js .hero-badge {
+    animation: pop-in 0.5s var(--ease-out-soft) 3.4s both;
+  }
+  @keyframes tilt-in {
+    from {
+      opacity: 0;
+      transform: rotateX(18deg) translateY(40px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.94);
+      filter: blur(4px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .js .hero-shot,
+    .js .hero-row,
+    .js .hero-callout,
+    .js .hero-badge {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  // Counts the callout's rank from its old position to the new one once it has popped in.
+  const callout = document.querySelector<HTMLElement>("[data-climb-from]");
+  const value = callout?.querySelector("[data-climb-value]");
+  if (callout && value && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const from = Number(callout.dataset.climbFrom);
+    const to = Number(callout.dataset.climbTo);
+    const duration = 1500;
+    value.textContent = String(from);
+    setTimeout(() => {
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - (1 - t) ** 4;
+        value.textContent = String(Math.round(from + (to - from) * eased));
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, 1900);
+  }
+</script>

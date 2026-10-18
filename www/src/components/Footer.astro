@@ -2,14 +2,14 @@
 import { RELEASES_URL, REPO_URL } from "../consts";
 ---
 
-<footer class="border-t border-neutral-200 dark:border-neutral-800">
-  <div class="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-8 text-sm text-neutral-500 sm:flex-row sm:justify-between">
-    <p>OpenASO. Not affiliated with Apple.</p>
+<footer class="border-t border-line">
+  <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-10 text-[13px] text-dim sm:flex-row sm:justify-between sm:px-6">
+    <p>OpenASO · MIT licensed · Not affiliated with Apple.</p>
     <div class="flex gap-5">
-      <a href={REPO_URL} class="hover:text-neutral-900 dark:hover:text-neutral-100">
+      <a href={REPO_URL} class="transition-colors hover:text-fg">
         GitHub
       </a>
-      <a href={RELEASES_URL} class="hover:text-neutral-900 dark:hover:text-neutral-100">
+      <a href={RELEASES_URL} class="transition-colors hover:text-fg">
         Releases
       </a>
     </div>

@@ -1,5 +1,114 @@
 @import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Dark only. Surfaces step up in lightness; lines are translucent so they sit on any surface. */
+  --color-bg: #07070a;
+  --color-surface: #0d0d12;
+  --color-surface-2: #13131a;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-fg: #ededf1;
+  --color-muted: #9898a6;
+  --color-dim: #62626e;
+
+  /* The app icon's gradient. */
+  --color-accent: #7c6cf6;
+  --color-accent-from: #6366f1;
+  --color-accent-to: #7c3aed;
+  --color-up: #34d399;
+  --color-down: #f87171;
+
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-glow-drift: glow-drift 18s ease-in-out infinite alternate;
+  @keyframes glow-drift {
+    from {
+      transform: translate3d(-4%, 0, 0) scale(1);
+    }
+    to {
+      transform: translate3d(4%, -3%, 0) scale(1.08);
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-bg);
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-bg font-sans text-fg antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: rgb(124 108 246 / 0.35);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/*
+ * Scroll reveal: elements with [data-reveal] start hidden and fade up once
+ * src/scripts/reveal.ts marks them [data-revealed]. Without JS (no .js on <html>) or with
+ * reduced motion they're simply visible. --reveal-delay staggers siblings.
+ */
+@layer components {
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(6px);
+    transition:
+      opacity 0.9s var(--ease-out-soft),
+      transform 0.9s var(--ease-out-soft),
+      filter 0.9s var(--ease-out-soft);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .js [data-reveal][data-revealed] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .js [data-reveal] {
+      opacity: 1;
+      transform: none;
+      filter: none;
+      transition: none;
+    }
+  }
+
+  /* Headline with a dimmed tail, Linear style. */
+  .text-gradient {
+    background: linear-gradient(180deg, #fff 30%, rgb(255 255 255 / 0.62));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/*
+ * Platform-specific download buttons. The inline script in <head> sets data-os (and
+ * data-arch on Macs) before first paint; only the matching variant is shown. With no
+ * JS or an unknown platform, the generic variant links to /download.
+ */
+[data-dl] {
+  display: none;
+}
+html:not([data-os]) [data-dl="generic"],
+html[data-os="unknown"] [data-dl="generic"],
+html[data-os="mac"]:not([data-arch="x64"]) [data-dl="mac-arm64"],
+html[data-os="mac"][data-arch="x64"] [data-dl="mac-x64"],
+html[data-os="windows"] [data-dl="windows"],
+html[data-os="linux"] [data-dl="linux"],
+html[data-os="mobile"] [data-dl="mobile"] {
+  display: flex;
 }

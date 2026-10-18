@@ -1,0 +1,171 @@
+---
+import { REPO_URL } from "../consts";
+import { getDownloads } from "../lib/downloads";
+import Apple from "./icons/Apple.astro";
+import GitHub from "./icons/GitHub.astro";
+import Linux from "./icons/Linux.astro";
+import Windows from "./icons/Windows.astro";
+
+interface Props {
+  /** Where the button is, reported with download_clicked. */
+  location: "hero" | "final_cta" | "download_page";
+  class?: string;
+}
+
+const { location, class: className } = Astro.props;
+const { release, downloads } = await getDownloads();
+
+// Every platform's variant is rendered; global.css shows the one matching <html data-os>.
+const primary =
+  "inline-flex h-11 items-center justify-center gap-2.5 rounded-xl bg-fg px-5 text-[15px] font-medium text-bg shadow-[0_1px_0_rgb(255_255_255/0.6)_inset,0_8px_30px_-8px_rgb(124_108_246/0.6)] transition-all duration-300 hover:-translate-y-px hover:bg-white hover:shadow-[0_1px_0_rgb(255_255_255/0.6)_inset,0_12px_40px_-8px_rgb(124_108_246/0.8)] active:translate-y-0";
+const secondary = "flex items-center justify-center gap-2 text-[13px] text-dim";
+const link = "text-muted underline-offset-4 transition-colors hover:text-fg hover:underline";
+const sep = "text-dim/60";
+---
+
+<div class:list={["flex flex-col items-center gap-3.5", className]} data-download-cta={location}>
+  <div data-dl="mac-arm64" class="flex-col items-center gap-3.5">
+    <a
+      href={downloads["mac-arm64"].asset.url}
+      class={primary}
+      data-event="download_clicked"
+      data-os="mac"
+      data-arch="arm64"
+    >
+      <Apple class="-mt-0.5 size-[18px]" /> Download for macOS
+    </a>
+    <p class={secondary}>
+      <span>{release.tag}</span>
+      <span class={sep}>·</span>
+      <a
+        href={downloads["mac-x64"].asset.url}
+        class={link}
+        data-event="download_clicked"
+        data-os="mac"
+        data-arch="x64"
+      >
+        Intel Mac?
+      </a>
+      <span class={sep}>·</span>
+      <a href="/download" class={link}>
+        Other platforms
+      </a>
+    </p>
+  </div>
+
+  <div data-dl="mac-x64" class="flex-col items-center gap-3.5">
+    <a
+      href={downloads["mac-x64"].asset.url}
+      class={primary}
+      data-event="download_clicked"
+      data-os="mac"
+      data-arch="x64"
+    >
+      <Apple class="-mt-0.5 size-[18px]" /> Download for macOS (Intel)
+    </a>
+    <p class={secondary}>
+      <span>{release.tag}</span>
+      <span class={sep}>·</span>
+      <a
+        href={downloads["mac-arm64"].asset.url}
+        class={link}
+        data-event="download_clicked"
+        data-os="mac"
+        data-arch="arm64"
+      >
+        Apple Silicon?
+      </a>
+      <span class={sep}>·</span>
+      <a href="/download" class={link}>
+        Other platforms
+      </a>
+    </p>
+  </div>
+
+  <div data-dl="windows" class="flex-col items-center gap-3.5">
+    <a
+      href={downloads.windows.asset.url}
+      class={primary}
+      data-event="download_clicked"
+      data-os="windows"
+      data-arch="x64"
+    >
+      <Windows class="size-4" /> Download for Windows
+    </a>
+    <p class={secondary}>
+      <span>{release.tag}</span>
+      <span class={sep}>·</span>
+      <a href="/download" class={link}>
+        Other platforms
+      </a>
+    </p>
+  </div>
+
+  <div data-dl="linux" class="flex-col items-center gap-3.5">
+    <a
+      href={downloads.appimage.asset.url}
+      class={primary}
+      data-event="download_clicked"
+      data-os="linux"
+      data-arch="appimage"
+    >
+      <Linux class="size-[18px]" /> Download for Linux
+    </a>
+    <p class={secondary}>
+      <span>{release.tag} AppImage</span>
+      <span class={sep}>·</span>
+      <a
+        href={downloads.deb.asset.url}
+        class={link}
+        data-event="download_clicked"
+        data-os="linux"
+        data-arch="deb"
+      >
+        .deb
+      </a>
+      <span class={sep}>·</span>
+      <a href="/download" class={link}>
+        Other platforms
+      </a>
+    </p>
+  </div>
+
+  <div data-dl="mobile" class="flex-col items-center gap-3.5">
+    <button type="button" class={primary} data-copy-link data-event="copy_link_clicked">
+      <span data-copy-label>Copy link for your computer</span>
+    </button>
+    <p class={secondary}>
+      <span>Desktop app for macOS, Windows and Linux</span>
+      <span class={sep}>·</span>
+      <a href={REPO_URL} class:list={[link, "inline-flex items-center gap-1"]}>
+        <GitHub class="size-3" /> GitHub
+      </a>
+    </p>
+  </div>
+
+  <div data-dl="generic" class="flex-col items-center gap-3.5">
+    <a href="/download" class={primary}>
+      Download OpenASO
+    </a>
+    <p class={secondary}>
+      <span>{release.tag} · macOS, Windows and Linux</span>
+    </p>
+  </div>
+</div>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy-link]")) {
+    button.addEventListener("click", async () => {
+      const label = button.querySelector("[data-copy-label]");
+      if (!label) return;
+      const original = label.textContent;
+      try {
+        await navigator.clipboard.writeText(`${location.origin}/`);
+        label.textContent = "Link copied";
+      } catch {
+        label.textContent = location.host;
+      }
+      setTimeout(() => (label.textContent = original), 2500);
+    });
+  }
+</script>

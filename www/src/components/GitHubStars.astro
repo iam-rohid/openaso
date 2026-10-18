@@ -1,0 +1,95 @@
+---
+import { REPO, REPO_URL } from "../consts";
+import { formatStars } from "../lib/format";
+import { getStars } from "../lib/github";
+import GitHub from "./icons/GitHub.astro";
+import Star from "./icons/Star.astro";
+
+interface Props {
+  class?: string;
+  /** "pill" for the header; "button" for the larger call to action in the open-source section. */
+  variant?: "pill" | "button";
+}
+
+const { class: className, variant = "pill" } = Astro.props;
+const stars = await getStars();
+---
+
+<a
+  href={REPO_URL}
+  data-stars={stars}
+  data-repo={REPO}
+  data-event="github_star_clicked"
+  aria-label="Star OpenASO on GitHub"
+  class:list={[
+    "group inline-flex items-center gap-2 font-medium whitespace-nowrap transition-colors",
+    variant === "pill" &&
+      "h-8 rounded-full border border-line bg-white/[0.03] px-3 text-[13px] text-muted hover:border-line-strong hover:text-fg",
+    variant === "button" &&
+      "h-10 rounded-lg bg-fg px-4 text-sm text-bg shadow-[0_0_0_1px_rgb(255_255_255/0.1)] hover:bg-white",
+    className,
+  ]}
+>
+  <GitHub class="size-4" />
+  <span>
+    Star<span class:list={[variant === "pill" && "max-sm:hidden"]}> on GitHub</span>
+  </span>
+  <span
+    data-stars-count
+    hidden={stars === 0}
+    class:list={[
+      "inline-flex items-center gap-1 tabular-nums",
+      variant === "pill" && "border-l border-line pl-2 text-fg",
+      variant === "button" && "border-l border-black/15 pl-2",
+    ]}
+  >
+    <Star class="size-3.5 text-amber-400 transition-transform group-hover:scale-110" />
+    <span data-stars-value>{formatStars(stars)}</span>
+  </span>
+</a>
+
+<script>
+  // The count is baked in at build time; refresh it once per session in case it's moved
+  // since. GitHub allows 60 unauthenticated requests an hour per IP, so failures are
+  // expected and ignored.
+  import { formatStars } from "../lib/format";
+
+  const KEY = "openaso:stars";
+  const links = document.querySelectorAll<HTMLElement>("[data-stars]");
+
+  function render(count: number) {
+    for (const link of links) {
+      const wrapper = link.querySelector<HTMLElement>("[data-stars-count]");
+      const value = link.querySelector("[data-stars-value]");
+      if (!wrapper || !value) continue;
+      value.textContent = formatStars(count);
+      wrapper.hidden = count === 0;
+    }
+  }
+
+  async function refresh(repo: string) {
+    let cached: string | null = null;
+    try {
+      cached = sessionStorage.getItem(KEY);
+    } catch {
+      // Storage can be blocked; just fetch.
+    }
+    if (cached != null) return render(Number(cached));
+    try {
+      const res = await fetch(`https://api.github.com/repos/${repo}`);
+      if (!res.ok) return;
+      const { stargazers_count: count } = (await res.json()) as { stargazers_count: number };
+      render(count);
+      try {
+        sessionStorage.setItem(KEY, String(count));
+      } catch {
+        // Ignore.
+      }
+    } catch {
+      // Keep the build-time count.
+    }
+  }
+
+  const repo = links[0]?.dataset.repo;
+  if (repo) void refresh(repo);
+</script>

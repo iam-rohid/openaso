@@ -1,18 +1,31 @@
 ---
 import "../styles/global.css";
+import { SITE_NAME } from "../consts";
 
 interface Props {
   title?: string;
   description?: string;
+  /** Path of the page's Open Graph image, relative to the site root. */
+  ogImage?: string;
+  /** JSON-LD objects for this page, added after the site-wide ones. */
+  jsonLd?: object[];
 }
 
 const {
-  title = "OpenASO: local App Store keyword research & rank tracking",
-  description = "A free desktop app for App Store Optimization. Track keyword rankings, research popularity and difficulty, and spy on competitors' keywords, all on your own computer.",
+  title = "OpenASO: the free, open-source ASO tool",
+  description = "Free, open-source App Store keyword research and rank tracking for macOS, Windows and Linux. Track rankings, score popularity and difficulty, and see what competitors rank for. No account needed.",
+  ogImage = "/og.png",
+  jsonLd = [],
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL("/icon-512.png", Astro.site);
+const ogImageUrl = new URL(ogImage, Astro.site);
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  url: Astro.site?.href,
+};
 ---
 
 <!doctype html>
@@ -20,27 +33,78 @@ const ogImage = new URL("/icon-512.png", Astro.site);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      Runs before first paint so the right download button is shown without a flash.
+      Sets data-os to mac | windows | linux | mobile | unknown, and data-arch="x64" on
+      Intel Macs where the browser can tell (Chromium); Safari can't, so Macs default
+      to Apple Silicon.
+    -->
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        root.classList.add("js");
+        const ua = navigator.userAgent;
+        const uad = navigator.userAgentData;
+        const platform = (uad && uad.platform) || navigator.platform || "";
+        let os = "unknown";
+        if (
+          /iPhone|iPad|iPod|Android/i.test(ua) ||
+          (uad && uad.mobile) ||
+          (/Mac/.test(platform) && navigator.maxTouchPoints > 1)
+        )
+          os = "mobile";
+        else if (/Mac/i.test(platform) || /Mac OS X/.test(ua)) os = "mac";
+        else if (/Win/i.test(platform) || /Windows/.test(ua)) os = "windows";
+        else if (/CrOS/.test(ua)) os = "unknown";
+        else if (/Linux|X11/i.test(platform + ua)) os = "linux";
+        root.dataset.os = os;
+        if (os === "mac" && uad && uad.getHighEntropyValues) {
+          uad
+            .getHighEntropyValues(["architecture"])
+            .then((v) => {
+              if (v.architecture === "x86") root.dataset.arch = "x64";
+            })
+            .catch(() => {});
+        }
+      })();
+    </script>
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#07070a" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="OpenASO" />
+    <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={ogImage} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    {[siteJsonLd, ...jsonLd].map((data) => (
+      <script type="application/ld+json" set:html={JSON.stringify(data)} />
+    ))}
   </head>
-  <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
+  <body>
+    <a
+      href="#main"
+      class="sr-only rounded-md bg-fg px-3 py-2 text-sm text-bg focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
+    >
+      Skip to content
+    </a>
     <slot />
+    <script>
+      import "../scripts/reveal";
+    </script>
   </body>
 </html>
