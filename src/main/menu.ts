@@ -2,12 +2,25 @@ import { app, Menu, shell, type MenuItemConstructorOptions } from "electron";
 
 const REPO_URL = "https://github.com/iam-rohid/openaso";
 
-export function buildMenu({ onCheckForUpdates, onNewApp }: { onCheckForUpdates: () => void; onNewApp: () => void }) {
+export function buildMenu({
+  onCheckForUpdates,
+  onNewApp,
+  onOpenSettings,
+}: {
+  onCheckForUpdates: () => void;
+  onNewApp: () => void;
+  onOpenSettings: () => void;
+}) {
   const isMac = process.platform === "darwin";
   const devItems: MenuItemConstructorOptions[] = app.isPackaged
     ? []
     : [{ role: "reload" }, { role: "forceReload" }, { role: "toggleDevTools" }, { type: "separator" }];
 
+  const settings: MenuItemConstructorOptions = {
+    label: "Settings…",
+    accelerator: "CmdOrCtrl+,",
+    click: onOpenSettings,
+  };
   const checkForUpdates: MenuItemConstructorOptions[] = [
     { type: "separator" },
     { label: "Check for Updates…", click: onCheckForUpdates },
@@ -21,6 +34,8 @@ export function buildMenu({ onCheckForUpdates, onNewApp }: { onCheckForUpdates: 
             submenu: [
               { role: "about" },
               { label: "Check for Updates…", click: onCheckForUpdates },
+              { type: "separator" },
+              settings,
               { type: "separator" },
               { role: "services" },
               { type: "separator" },
@@ -38,6 +53,8 @@ export function buildMenu({ onCheckForUpdates, onNewApp }: { onCheckForUpdates: 
       submenu: [
         { label: "New App…", accelerator: "CmdOrCtrl+N", click: onNewApp },
         { type: "separator" },
+        // macOS has it in the app menu.
+        ...(isMac ? [] : [settings, { type: "separator" } satisfies MenuItemConstructorOptions]),
         isMac ? { role: "close" } : { role: "quit" },
       ],
     },

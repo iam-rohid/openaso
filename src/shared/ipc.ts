@@ -27,6 +27,8 @@ export type ThemeSource = "light" | "dark" | "system";
 
 /** File › New App… (⌘N) asks the renderer to open the add-app box. */
 export const NEW_APP_CHANNEL = "menu:new-app";
+/** Settings… (⌘,) asks the renderer to open the Settings dialog. */
+export const SETTINGS_CHANNEL = "menu:settings";
 
 export const UPDATE_CHANNEL = "update";
 export const UPDATE_GET_CHANNEL = "update:get";
@@ -51,6 +53,8 @@ export type PreloadApi = {
   onUpdate: (callback: (status: UpdateStatus) => void) => () => void;
   /** Subscribes to File › New App…; returns an unsubscribe function. */
   onNewApp: (callback: () => void) => () => void;
+  /** Subscribes to Settings…; returns an unsubscribe function. */
+  onOpenSettings: (callback: () => void) => () => void;
   /** Quits and installs a downloaded update. */
   installUpdate: () => void;
   platform: NodeJS.Platform;

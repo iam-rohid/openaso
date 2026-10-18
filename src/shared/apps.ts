@@ -6,3 +6,9 @@ export const TEMPORARY_APP_NAME_MAX = 30;
 export const APP_ID_PATTERN = /^(?:\d+|tmp_[a-z0-9]+)$/;
 
 export const isTemporaryAppId = (id: string) => id.startsWith(TEMPORARY_APP_PREFIX);
+
+/** Accepts "123", "id123" or a full apps.apple.com URL. */
+export function parseAppId(query: string): string | null {
+  const match = query.trim().match(/(?:^|\/id|^id)(\d{6,})(?:\D|$)/);
+  return match ? match[1] : null;
+}

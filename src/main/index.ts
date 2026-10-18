@@ -1,10 +1,11 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
-import { NEW_APP_CHANNEL, THEME_CHANNEL, type ThemeSource } from "@shared/ipc";
+import { NEW_APP_CHANNEL, SETTINGS_CHANNEL, THEME_CHANNEL, type ThemeSource } from "@shared/ipc";
 import { loadAppState, restorableBounds, saveAppState, trackWindowState } from "@main/app-state";
 import { initDatabase } from "@main/db";
 import { registerTrpcHandler } from "@main/ipc";
+import { startMcpServer } from "@main/mcp/server";
 import { buildMenu } from "@main/menu";
 import { startRankUpdates } from "@main/services/rank-updates";
 import { checkForUpdatesInteractively, initUpdater } from "@main/updater";
@@ -91,6 +92,19 @@ function createWindow() {
   return win;
 }
 
+/** Brings the window forward and sends it a menu command. */
+function sendToWindow(channel: string) {
+  // On macOS the app keeps running without a window; open one and ask once it has loaded.
+  if (!mainWindow) {
+    const win = createWindow();
+    win.webContents.once("did-finish-load", () => win.webContents.send(channel));
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.focus();
+  mainWindow.webContents.send(channel);
+}
+
 /** Opens and migrates the database; on failure, explains and quits. */
 async function setUpDatabase() {
   const dataDir = app.getPath("userData");
@@ -145,21 +159,13 @@ if (!app.requestSingleInstanceLock()) {
     registerThemeHandler();
     buildMenu({
       onCheckForUpdates: () => void checkForUpdatesInteractively(),
-      onNewApp: () => {
-        // On macOS the app keeps running without a window; open one and ask once it has loaded.
-        if (!mainWindow) {
-          const win = createWindow();
-          win.webContents.once("did-finish-load", () => win.webContents.send(NEW_APP_CHANNEL));
-          return;
-        }
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        mainWindow.focus();
-        mainWindow.webContents.send(NEW_APP_CHANNEL);
-      },
+      onNewApp: () => sendToWindow(NEW_APP_CHANNEL),
+      onOpenSettings: () => sendToWindow(SETTINGS_CHANNEL),
     });
     createWindow();
     initUpdater(() => mainWindow);
     startRankUpdates();
+    void startMcpServer();
 
     // macOS: clicking the dock icon reopens the window.
     app.on("activate", () => {

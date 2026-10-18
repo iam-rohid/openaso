@@ -8,17 +8,11 @@ import { createTRPCRouter, publicProcedure } from "@main/api/trpc";
 import { appIdInput, countryInput, folderIdInput } from "@main/api/inputs";
 import { ensureApps, upsertApps } from "@main/services/apps";
 import { DEFAULT_COUNTRY, type CountryCode } from "@shared/countries";
-import { isTemporaryAppId, TEMPORARY_APP_NAME_MAX, TEMPORARY_APP_PREFIX } from "@shared/apps";
+import { isTemporaryAppId, parseAppId, TEMPORARY_APP_NAME_MAX, TEMPORARY_APP_PREFIX } from "@shared/apps";
 
 const DEFAULT_TEMPORARY_NAME = "Temporary App";
 const temporaryNameInput = z.string().trim().min(1).max(TEMPORARY_APP_NAME_MAX);
 const temporaryAppIdInput = appIdInput.refine(isTemporaryAppId, "Not a temporary app");
-
-/** Accepts "123", "id123" or a full apps.apple.com URL. */
-function parseAppId(query: string): string | null {
-  const match = query.trim().match(/(?:^|\/id|^id)(\d{6,})(?:\D|$)/);
-  return match ? match[1] : null;
-}
 
 export const appsRouter = createTRPCRouter({
   /** Sidebar list of tracked apps, each with its storefront and keyword count there. */

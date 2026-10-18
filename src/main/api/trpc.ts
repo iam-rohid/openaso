@@ -21,17 +21,25 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   },
 });
 
+/** A readable message for an upstream Apple failure, and whether Apple is throttling us. */
+export function describeAppleError(error: AppleApiError) {
+  const throttled = error.status === 403 || error.status === 429;
+  return {
+    throttled,
+    message: throttled
+      ? "Apple is rate limiting requests right now. Try again in a minute."
+      : "Couldn't reach the App Store. Check your connection and try again.",
+  };
+}
+
 /** Turn upstream Apple failures into readable tRPC errors. */
 const appleErrors = t.middleware(async ({ next }) => {
   const result = await next();
   if (!result.ok && result.error.cause instanceof AppleApiError) {
-    const status = result.error.cause.status;
+    const { throttled, message } = describeAppleError(result.error.cause);
     throw new TRPCError({
-      code: status === 403 || status === 429 ? "TOO_MANY_REQUESTS" : "BAD_GATEWAY",
-      message:
-        status === 403 || status === 429
-          ? "Apple is rate limiting requests right now. Try again in a minute."
-          : "Couldn't reach the App Store. Check your connection and try again.",
+      code: throttled ? "TOO_MANY_REQUESTS" : "BAD_GATEWAY",
+      message,
       cause: result.error.cause,
     });
   }

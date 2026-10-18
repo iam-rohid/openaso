@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { app, type BrowserWindow, type Rectangle, screen } from "electron";
 import type { ThemeSource } from "@shared/ipc";
+import type { McpSettings } from "@shared/mcp";
 
 /** Small bits of UI state the main process needs before the renderer has loaded. */
 type AppState = {
@@ -9,6 +10,8 @@ type AppState = {
   theme?: ThemeSource;
   /** Refresh tracked keywords once a day in the background (on unless turned off). */
   autoUpdateRankings?: boolean;
+  /** The MCP server for AI agents (off unless turned on in Settings). */
+  mcp?: McpSettings;
 };
 
 const file = () => path.join(app.getPath("userData"), "app-state.json");

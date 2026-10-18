@@ -13,6 +13,7 @@ import {
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
+  SettingsIcon,
   Trash2Icon,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -24,6 +25,7 @@ import { RenameTemporaryAppDialog } from "@/components/apps/temporary-app-form";
 import { FolderDialog, type FolderDialogTarget } from "@/components/folders/folder-dialog";
 import { FolderGlyph } from "@/components/folders/folder-glyph";
 import { useDeleteFolder } from "@/components/folders/use-delete-folder";
+import { SettingsDialog, type SettingsPage } from "@/components/settings/settings-dialog";
 import { AppIcon } from "@/components/shared/app-icon";
 import {
   AlertDialog,
@@ -69,7 +71,6 @@ import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { cn } from "@/lib/utils";
 import { type RouterOutputs, useTRPC } from "@/trpc/react";
 import { RankUpdatesItem } from "./rank-updates-item";
-import { ThemeToggle } from "./theme-toggle";
 import { UpdateItem } from "./update-item";
 
 type TrackedApp = RouterOutputs["apps"]["tracked"][number];
@@ -85,6 +86,7 @@ export function AppSidebar() {
   const pathname = useLocation({ select: (l) => l.pathname });
   const params = useParams({ strict: false });
   const [addOpen, setAddOpen] = useState(false);
+  const [settingsPage, setSettingsPage] = useState<SettingsPage | null>(null);
   const [folderDialog, setFolderDialog] = useState<{ open: boolean; target: FolderDialogTarget }>({
     open: false,
     target: {},
@@ -112,6 +114,8 @@ export function AppSidebar() {
 
   // File › New App… (⌘N) opens the add-app box from anywhere.
   useEffect(() => window.openaso.onNewApp(() => setAddOpen(true)), []);
+  // Settings… (⌘,) opens on whichever page was last open.
+  useEffect(() => window.openaso.onOpenSettings(() => setSettingsPage((page) => page ?? "general")), []);
 
   const rowProps = { folders: folders.data ?? [], onNewFolder: openFolderDialog };
 
@@ -202,15 +206,19 @@ export function AppSidebar() {
         <SidebarFooter>
           <SidebarMenu>
             <UpdateItem />
-            <RankUpdatesItem />
+            <RankUpdatesItem onOpenSettings={() => setSettingsPage("general")} />
             <SidebarMenuItem>
-              <ThemeToggle />
+              <SidebarMenuButton onClick={() => setSettingsPage("general")}>
+                <SettingsIcon />
+                <span>Settings</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
       <AddAppDialog open={addOpen} onOpenChange={setAddOpen} />
+      <SettingsDialog page={settingsPage} onPageChange={setSettingsPage} />
       <FolderDialog
         open={folderDialog.open}
         onOpenChange={(open) => setFolderDialog((prev) => ({ ...prev, open }))}

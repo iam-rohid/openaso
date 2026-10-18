@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
-import { RANK_BUCKETS, summarize, type RankBucket } from "@/lib/trend-summary";
+import { RANK_BUCKETS, summarize, type RankBucket } from "@shared/trend-summary";
 import { cn } from "@/lib/utils";
 
 /** One hue, darkest for the best bucket; dark mode steps the other way so the best stays most prominent. */

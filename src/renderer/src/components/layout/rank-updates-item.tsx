@@ -1,36 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ChartLineIcon, PauseIcon, RefreshCwIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useTRPC } from "@/trpc/react";
 
 /** Keyword tables refetch at most this often while a run is in progress. */
 const LIVE_REFRESH_MS = 10_000;
 
-/** Sidebar footer row for the daily ranking update: progress while it runs, and its on/off switch. */
-export function RankUpdatesItem() {
+/** Sidebar footer row for the daily ranking update's progress; its switch is in Settings. */
+export function RankUpdatesItem({ onOpenSettings }: { onOpenSettings: () => void }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const status = useQuery({
     ...trpc.rankUpdates.status.queryOptions(),
     refetchInterval: (query) => (query.state.data?.running ? 2_000 : 30_000),
   });
-  const setEnabled = useMutation(
-    trpc.rankUpdates.setEnabled.mutationOptions({
-      onSuccess: (next) => queryClient.setQueryData(trpc.rankUpdates.status.queryKey(), next),
-      onError: (err) => toast.error(err.message),
-    }),
-  );
 
   // Show new positions as they land (throttled), and once more when the run ends.
   const data = status.data;
@@ -68,30 +53,13 @@ export function RankUpdatesItem() {
 
   return (
     <SidebarMenuItem>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuButton size={detail ? "lg" : "default"} className="text-muted-foreground">
-            {icon}
-            <div className="grid flex-1 text-left leading-tight">
-              <span className="truncate">{label}</span>
-              {detail && <span className="truncate text-xs opacity-80">{detail}</span>}
-            </div>
-          </SidebarMenuButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="start" className="w-64">
-          <DropdownMenuLabel className="text-muted-foreground text-xs font-normal">
-            Tracked keywords are refreshed once a day while OpenASO is open, so each one gets a daily
-            point for its trend.
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuCheckboxItem
-            checked={data.enabled}
-            onCheckedChange={(enabled) => setEnabled.mutate({ enabled: !!enabled })}
-          >
-            Update rankings daily
-          </DropdownMenuCheckboxItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <SidebarMenuButton size={detail ? "lg" : "default"} className="text-muted-foreground" onClick={onOpenSettings}>
+        {icon}
+        <div className="grid flex-1 text-left leading-tight">
+          <span className="truncate">{label}</span>
+          {detail && <span className="truncate text-xs opacity-80">{detail}</span>}
+        </div>
+      </SidebarMenuButton>
     </SidebarMenuItem>
   );
 }

@@ -1,5 +1,7 @@
-import { TREND_WINDOW_DAYS, type TrendWindow } from "@shared/trends";
-import type { KeywordRow } from "@/components/keywords/keyword-table-features";
+import { TREND_WINDOW_DAYS, type DailyPosition, type Trend, type TrendWindow } from "@shared/trends";
+
+/** A keyword with its daily positions and its trend over the chosen window. */
+type SummaryRow = { history: DailyPosition[]; trend: Trend };
 
 export const RANK_BUCKETS = [
   { id: "top10", label: "1–10" },
@@ -24,7 +26,7 @@ const emptyCounts = (): BucketCounts => ({ top10: 0, top50: 0, rest: 0, unranked
  * a day keeps its last known position, so the bars don't dip on days the app was closed;
  * before its first point it isn't counted at all.
  */
-export function dailyBucketCounts(rows: KeywordRow[]) {
+export function dailyBucketCounts(rows: SummaryRow[]) {
   const length = rows[0]?.history.length ?? 0;
   const days = Array.from({ length }, () => ({ counts: emptyCounts(), known: 0 }));
   for (const row of rows) {
@@ -40,7 +42,7 @@ export function dailyBucketCounts(rows: KeywordRow[]) {
 }
 
 /** Headline counts (cumulative: Top 50 includes the Top 10) now and `window` ago. */
-export function summarize(rows: KeywordRow[], window: TrendWindow) {
+export function summarize<T extends SummaryRow>(rows: T[], window: TrendWindow) {
   const days = dailyBucketCounts(rows);
   const headline = (c: BucketCounts | undefined) =>
     c && { top10: c.top10, top50: c.top10 + c.top50, ranked: c.top10 + c.top50 + c.rest };
@@ -49,7 +51,7 @@ export function summarize(rows: KeywordRow[], window: TrendWindow) {
   // No delta when nothing was known that far back.
   const before = then && then.known > 0 ? headline(then.counts) : undefined;
 
-  const byDelta = (a: KeywordRow, b: KeywordRow) => (b.trend.delta ?? 0) - (a.trend.delta ?? 0);
+  const byDelta = (a: T, b: T) => (b.trend.delta ?? 0) - (a.trend.delta ?? 0);
   const gainers = rows.filter((r) => r.trend.state === "up").sort(byDelta);
   const losers = rows.filter((r) => r.trend.state === "down").sort(byDelta).reverse();
   return {
