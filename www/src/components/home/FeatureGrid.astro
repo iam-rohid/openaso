@@ -74,6 +74,12 @@ const storefronts =
     " ",
   );
 
+const agentCalls = [
+  { tool: "get_app_keywords", detail: "20 keywords" },
+  { tool: "explore_keywords", detail: "36 terms" },
+  { tool: "add_keywords", detail: "8 terms" },
+];
+
 const card =
   "group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface/60 p-6 transition-colors duration-500 hover:border-line-strong sm:p-7";
 const fig = "font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase";
@@ -287,6 +293,55 @@ const body = "mt-2 text-[14px] leading-relaxed text-muted";
         </ul>
       </div>
     </article>
+
+    <!-- 7. AI agents -->
+    <article class:list={[card, "lg:col-span-3"]} data-reveal>
+      <div class="grid h-full gap-8 md:grid-cols-[1fr_1.3fr] md:items-center">
+        <div>
+          <p class={fig}>Fig 1.7</p>
+          <h3 class={title}>Works with Claude and other AI agents</h3>
+          <p class={body}>
+            Turn on the built-in MCP server and connect Claude Desktop, Claude Code, Cursor or any
+            MCP client. Ask for keyword research in plain words, and the agent checks, scores and
+            tracks keywords with your OpenASO data.
+          </p>
+          <a
+            href="/mcp"
+            class="mt-5 inline-flex items-center gap-1.5 text-[14px] text-fg underline-offset-4 hover:underline"
+          >
+            Set it up <span aria-hidden="true">→</span>
+          </a>
+        </div>
+        <div
+          class="space-y-3 rounded-xl border border-line bg-bg/60 p-4 text-[13.5px]"
+          aria-hidden="true"
+        >
+          <p
+            class="agent-row ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-white/[0.07] px-3.5 py-2 text-fg"
+            style={{ "--i": 0 }}
+          >
+            Find low-difficulty keywords for Tiimo and track the best ones.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            {agentCalls.map((c, i) => (
+              <span
+                class="agent-row inline-flex items-center gap-2 rounded-full border border-line px-2.5 py-1 font-mono text-[11.5px] text-dim"
+                style={{ "--i": i + 1 }}
+              >
+                <span class="size-1.5 rounded-full bg-up"></span>
+                {c.tool}
+                <span class="text-muted">{c.detail}</span>
+              </span>
+            ))}
+          </div>
+          <p class="agent-row max-w-[92%] leading-relaxed text-muted" style={{ "--i": 4 }}>
+            Tracked 8 keywords in the US. The best opening is
+            <span class="text-fg">“visual planner”</span>: you're #51, and the apps above you are
+            weak on it. I'd put it in your subtitle.
+          </p>
+        </div>
+      </div>
+    </article>
   </div>
 </section>
 
@@ -336,6 +391,19 @@ const body = "mt-2 text-[14px] leading-relaxed text-muted";
     }
   }
 
+  :global(.js) [data-reveal] .agent-row {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  :global(.js) [data-revealed] .agent-row {
+    transition:
+      opacity 0.6s var(--ease-out-soft),
+      transform 0.6s var(--ease-out-soft);
+    transition-delay: calc(0.3s + var(--i) * 0.35s);
+    opacity: 1;
+    transform: none;
+  }
+
   :global(.js) [data-reveal] .comp-row {
     opacity: 0;
     transform: translateX(-8px);
@@ -377,7 +445,8 @@ const body = "mt-2 text-[14px] leading-relaxed text-muted";
     }
     :global(.js) [data-reveal] .spark path,
     :global(.js) [data-reveal] .meter,
-    :global(.js) [data-reveal] .comp-row {
+    :global(.js) [data-reveal] .comp-row,
+    :global(.js) [data-reveal] .agent-row {
       transition: none;
       stroke-dashoffset: 0;
       transform: none;

@@ -90,6 +90,10 @@ export const ogPages = {
     title: "What's new in OpenASO",
     subtitle: "New features and fixes in every release.",
   },
+  mcp: {
+    title: "Let AI do your keyword research",
+    subtitle: "Connect Claude, Cursor or any MCP agent to OpenASO's built-in MCP server.",
+  },
   "astro-alternative": {
     title: "The free, open-source Astro alternative",
     subtitle: "An honest comparison of OpenASO and Astro for App Store Optimization.",

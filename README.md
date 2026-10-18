@@ -61,6 +61,11 @@ new release to download instead. If you're on macOS v0.2.0 or earlier, download 
   hourly checks and on wake), so trends get one point per day. Days the app wasn't open stay as gaps. It
   backs off when Apple rate limits, refreshes the app you're looking at first, and can be turned off from the
   sidebar.
+- **MCP server for AI agents**: turn it on in Settings (⌘,) and connect Claude Desktop, Claude Code, Cursor,
+  VS Code or any MCP client. Agents can research keywords, read rankings and track apps and keywords for
+  you, with built-in prompts for keyword research, competitor gaps and ranking reports. It listens on
+  `http://127.0.0.1:2776/mcp` while the app is open, refuses browsers, and can only remove data if you
+  allow it. Setup for each client: [openaso.byteform.co/mcp](https://openaso.byteform.co/mcp).
 - Dark and light themes.
 
 ## Development
@@ -84,6 +89,7 @@ It's created, and migrations are applied, on launch. Before an existing database
 | `pnpm dev`         | Run the app with hot reload                         |
 | `pnpm dev:demo`    | Run with a seeded demo database (separate data folder) |
 | `pnpm screenshots` | Capture the website's screenshots from `dev:demo`    |
+| `pnpm mcp:smoke`   | Call every MCP tool against `dev:demo` (`-- --bridge` for the stdio bridge) |
 | `pnpm build`       | Build main, preload and renderer into `out/`        |
 | `pnpm preview`     | Run the production build                            |
 | `pnpm dist`        | Build installers for this OS into `dist/`           |

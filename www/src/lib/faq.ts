@@ -11,6 +11,10 @@ export const faq = [
     a: "They're estimates. Apple only shares real search volume through Search Ads, so popularity comes from App Store autocomplete and difficulty from the strength of the current top 10. Treat them as relative signals for comparing keywords. In our comparisons they track Astro's values closely for low- and mid-volume keywords. Rankings themselves aren't estimated: they're the same ordered results the App Store shows.",
   },
   {
+    q: "Can Claude or other AI agents use OpenASO?",
+    a: "Yes. OpenASO has a built-in MCP server: turn it on in Settings, connect Claude Desktop, Claude Code, Cursor, VS Code or any MCP client, and the agent can research keywords, check rankings and track keywords for your apps. It runs locally while OpenASO is open.",
+  },
+  {
     q: "Does it support Google Play?",
     a: "Not yet. OpenASO covers the iOS App Store in 51 storefronts.",
   },

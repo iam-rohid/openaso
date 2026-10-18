@@ -1,0 +1,350 @@
+---
+import DownloadCta from "../components/DownloadCta.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import Layout from "../layouts/Layout.astro";
+
+// Keep in step with src/main/mcp (tools, prompts) and src/shared/mcp.ts (port) in the app.
+const URL = "http://127.0.0.1:2776/mcp";
+const MIN_VERSION = "0.7.0";
+
+const json = (value: unknown) => JSON.stringify(value, null, 2);
+
+const clients = [
+  {
+    name: "Claude Desktop",
+    where: "Settings → MCP Server → Claude Desktop in OpenASO, then claude_desktop_config.json",
+    steps: [
+      "Copy the config from OpenASO: it contains the paths to OpenASO on your computer, so copy it from the app rather than from here.",
+      "Paste the openaso entry into mcpServers in claude_desktop_config.json (the link in OpenASO reveals the file), then restart Claude.",
+      "Nothing else to install. Claude Desktop starts a small bridge with OpenASO's own app, which forwards to the server. It looks like this on a Mac:",
+    ],
+    code: json({
+      mcpServers: {
+        openaso: {
+          command: "/Applications/OpenASO.app/Contents/MacOS/OpenASO",
+          args: ["/Users/you/Library/Application Support/OpenASO/mcp-bridge.cjs"],
+          env: { ELECTRON_RUN_AS_NODE: "1" },
+        },
+      },
+    }),
+  },
+  {
+    name: "Claude Code",
+    where: "In a terminal",
+    steps: ["Run this, then start a new Claude Code session. Check it with claude mcp list."],
+    code: `claude mcp add --transport http openaso ${URL}`,
+  },
+  {
+    name: "Cursor",
+    where: "~/.cursor/mcp.json",
+    steps: [
+      "Add this to the file (or Cursor Settings → MCP → Add new server), then restart Cursor.",
+    ],
+    code: json({ mcpServers: { openaso: { url: URL } } }),
+  },
+  {
+    name: "VS Code",
+    where: ".vscode/mcp.json, or MCP: Add Server in the Command Palette",
+    steps: [
+      "Add this to the file, then start the server from the MCP view or the file's code lens.",
+    ],
+    code: json({ servers: { openaso: { type: "http", url: URL } } }),
+  },
+  {
+    name: "Any other client",
+    where: "Codex, Windsurf, Zed and more",
+    steps: ["Any MCP client that supports Streamable HTTP can connect to this URL."],
+    code: URL,
+  },
+];
+
+const prompts = [
+  {
+    name: "keyword_research",
+    title: "Keyword research",
+    body: "Finds and scores new keywords for one of your apps, shortlists about 15 and offers to track them.",
+    example: "Find 15 low-difficulty keywords for Tiimo in the US and track the best ones.",
+  },
+  {
+    name: "competitor_gap",
+    title: "Competitor keyword gap",
+    body: "Works out who outranks your app, discovers what they rank for and lists the keywords you're missing.",
+    example: "Which keywords do my top competitors rank for that I don't?",
+  },
+  {
+    name: "ranking_report",
+    title: "Ranking report",
+    body: "Summarizes how your rankings moved over a day, a week or a month, and what to do about it.",
+    example: "How did my keywords move this month? Anything I should change in my subtitle?",
+  },
+  {
+    name: "new_app_keywords",
+    title: "Keywords for a new app",
+    body: "Goes from a description of an app you haven't launched to a scored keyword list, a suggested title and an unreleased app in OpenASO.",
+    example: "I'm building a meal planner for families. What keywords should I target?",
+  },
+];
+
+const toolGroups = [
+  {
+    title: "Read",
+    note: "Your tracked apps and keyword history, straight from the local database.",
+    tools: [
+      ["list_apps", "Tracked apps with their storefront, folder and keyword count"],
+      ["get_app", "An app's title, subtitle, description, rating and version"],
+      ["get_app_keywords", "Positions, trends, popularity and difficulty for an app's keywords"],
+      ["get_ranking_summary", "Top 10 and top 50 counts, biggest gains and drops"],
+      ["get_keyword_history", "90 days of popularity, difficulty and position"],
+    ],
+  },
+  {
+    title: "Research",
+    note: "Looks things up from the App Store, using the 24-hour cache first.",
+    tools: [
+      ["search_app_store", "Find apps by name, term, id or link"],
+      ["explore_keywords", "Score up to 50 keywords at once, with your app's position"],
+      ["get_keyword_ranking", "The apps ranking for a keyword, in order"],
+      ["get_keyword_suggestions", "Keyword ideas for an app, with estimated popularity"],
+      ["get_autocomplete", "What the App Store suggests as you type"],
+      ["discover_app_keywords", "Find the keywords any app, like a competitor, ranks for"],
+    ],
+  },
+  {
+    title: "Track",
+    note: "Adds to or edits what you track. Changes show up in OpenASO right away.",
+    tools: [
+      ["track_app", "Add an App Store app to My Apps"],
+      ["create_unreleased_app", "Add a placeholder for an app that isn't live yet"],
+      ["link_unreleased_app", "Swap the placeholder for the live listing, keeping its keywords"],
+      ["add_keywords", "Track up to 100 keywords at a time"],
+      ["set_keyword_note", "Write a note on a tracked keyword"],
+      ["refresh_app_keywords", "Refetch an app's outdated keywords"],
+    ],
+  },
+  {
+    title: "Remove (off by default)",
+    note: 'Only offered when you turn on "Allow agents to remove data" in Settings.',
+    tools: [
+      ["untrack_app", "Remove an app from My Apps"],
+      ["remove_keywords", "Stop tracking keywords"],
+      ["delete_folder", "Delete a folder; its apps stay tracked"],
+    ],
+  },
+];
+
+const faq = [
+  {
+    q: "The agent says it can't connect",
+    a: "OpenASO has to be open with the server turned on: Settings → MCP Server shows Running and the URL. Use 127.0.0.1 rather than your computer's network address; the server only accepts connections from the same computer.",
+  },
+  {
+    q: "Port 2776 is in use",
+    a: "Settings shows this under the switch. Pick another port there, then update the URL in your HTTP clients. Claude Desktop needs no change: its bridge reads the port from OpenASO's settings.",
+  },
+  {
+    q: "The remove tools don't show up",
+    a: 'Turn on "Allow agents to remove data" in Settings, then reconnect or restart your agent so it fetches the tool list again.',
+  },
+  {
+    q: "The agent says Apple is rate limiting",
+    a: "Apple's public endpoints allow a limited number of requests a minute. The agent gets whatever data it could fetch, plus a note to wait a few minutes. Cached keywords, anything checked in the last 24 hours, don't count against the limit.",
+  },
+];
+
+const title = "OpenASO MCP server: App Store keyword research with Claude and other AI agents";
+const description =
+  "Connect Claude, Cursor, VS Code or any MCP client to OpenASO and let AI agents research App Store keywords, check rankings and track keywords for your apps. Free, local and built in.";
+---
+
+<Layout {title} {description} ogImage="/og/mcp.png">
+  <Header />
+  <main id="main">
+    <section class="relative isolate overflow-hidden">
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[480px] w-[min(900px,140vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(99_102_241/0.28),transparent)] blur-3xl"
+      ></div>
+      <div class="mx-auto max-w-3xl px-4 pt-20 pb-14 text-center sm:px-6 sm:pt-28">
+        <p class="font-mono text-[11px] tracking-[0.14em] text-dim uppercase" data-enter>
+          MCP server
+        </p>
+        <h1
+          class="mt-5 text-[clamp(2.2rem,5.5vw,3.6rem)] leading-[1.05] font-semibold tracking-[-0.04em] text-balance"
+          data-enter
+          style="--enter-delay: 90ms"
+        >
+          <span class="text-fg">Let AI do your</span>{" "}
+          <span class="text-gradient">keyword research</span>
+        </h1>
+        <p
+          class="mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-pretty text-muted"
+          data-enter
+          style="--enter-delay: 180ms"
+        >
+          OpenASO has a built-in MCP server. Connect Claude, Cursor or any MCP agent, and ask it to
+          find keywords, check your rankings, size up competitors and track what it finds, using
+          your own OpenASO data.
+        </p>
+        <p class="mt-6 text-[13px] text-dim" data-enter style="--enter-delay: 270ms">
+          Works with Claude Desktop · Claude Code · Cursor · VS Code · any MCP client
+        </p>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-5xl px-4 sm:px-6" aria-labelledby="setup-heading">
+      <h2 id="setup-heading" class="sr-only">
+        Turn it on
+      </h2>
+      <ol class="grid gap-4 sm:grid-cols-3" data-reveal-stagger="90">
+        {[
+          ["Turn it on", "In OpenASO, open Settings (⌘, or Ctrl+,) → MCP Server and switch it on."],
+          [
+            "Connect your agent",
+            "Pick your client in the same screen and copy its config or command.",
+          ],
+          [
+            "Ask away",
+            "“Find keywords for my app.” The agent uses OpenASO's tools to do the work.",
+          ],
+        ].map(([step, body], i) => (
+          <li class="rounded-2xl border border-line bg-surface/60 p-6" data-reveal>
+            <p class="font-mono text-[11px] text-dim">0{i + 1}</p>
+            <h3 class="mt-3 text-[16px] font-medium text-fg">{step}</h3>
+            <p class="mt-1.5 text-[14px] leading-relaxed text-muted">{body}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="mt-4 text-[12.5px] text-dim">
+        Requires OpenASO {MIN_VERSION} or later. The server runs only while OpenASO is open.
+      </p>
+    </section>
+
+    <section id="setup" class="mx-auto max-w-5xl scroll-mt-20 px-4 py-24 sm:px-6 sm:py-32">
+      <SectionHeading eyebrow="Setup" title="Connect your agent." tail="Pick your client.">
+        Settings → MCP Server in OpenASO shows the same snippets, with your port filled in.
+      </SectionHeading>
+      <div class="mt-12 space-y-4" data-reveal-stagger="80">
+        {clients.map((c) => (
+          <article
+            id={c.name.toLowerCase().replaceAll(" ", "-")}
+            class="scroll-mt-24 rounded-2xl border border-line bg-surface/60 p-6 sm:p-7"
+            data-reveal
+          >
+            <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h3 class="text-[17px] font-medium tracking-tight text-fg">{c.name}</h3>
+              <p class="font-mono text-[11.5px] text-dim">{c.where}</p>
+            </div>
+            <div class="mt-3 space-y-2 text-[14px] leading-relaxed text-muted">
+              {c.steps.map((s) => (
+                <p>{s}</p>
+              ))}
+            </div>
+            <pre class="mt-4 overflow-x-auto rounded-xl border border-line bg-bg/70 p-4 font-mono text-[12.5px] leading-relaxed text-fg"><code>{c.code}</code></pre>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-5xl px-4 sm:px-6" aria-labelledby="prompts-heading">
+      <SectionHeading eyebrow="Try this" title="Built-in prompts." tail="Or just ask.">
+        OpenASO ships four ready-made workflows. In Claude Code they're slash commands, like
+        /mcp__openaso__keyword_research; in Claude Desktop they're in the + menu.
+      </SectionHeading>
+      <div class="mt-12 grid gap-4 sm:grid-cols-2" data-reveal-stagger="80">
+        {prompts.map((p) => (
+          <article
+            class="flex flex-col rounded-2xl border border-line bg-surface/60 p-6 sm:p-7"
+            data-reveal
+          >
+            <p class="font-mono text-[11.5px] text-dim">{p.name}</p>
+            <h3 class="mt-3 text-[16px] font-medium text-fg">{p.title}</h3>
+            <p class="mt-1.5 text-[14px] leading-relaxed text-muted">{p.body}</p>
+            <p class="mt-auto pt-5 text-[13.5px] text-fg">
+              <span class="mr-1.5 text-dim" aria-hidden="true">
+                ›
+              </span>
+              {p.example}
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section id="tools" class="mx-auto max-w-5xl scroll-mt-20 px-4 py-24 sm:px-6 sm:py-32">
+      <SectionHeading eyebrow="Tools" title="20 tools." tail="Read, research, track.">
+        Agents refer to keywords by the words themselves and to apps by name, App Store id or link.
+      </SectionHeading>
+      <div class="mt-12 grid gap-4 lg:grid-cols-2" data-reveal-stagger="80">
+        {toolGroups.map((g) => (
+          <article class="rounded-2xl border border-line bg-surface/60 p-6 sm:p-7" data-reveal>
+            <h3 class="text-[16px] font-medium text-fg">{g.title}</h3>
+            <p class="mt-1 text-[13.5px] text-dim">{g.note}</p>
+            <dl class="mt-5 divide-y divide-line">
+              {g.tools.map(([name, body]) => (
+                <div class="grid gap-1 py-2.5 sm:grid-cols-[200px_1fr] sm:gap-4">
+                  <dt class="font-mono text-[12.5px] text-fg">{name}</dt>
+                  <dd class="text-[13.5px] text-muted">{body}</dd>
+                </div>
+              ))}
+            </dl>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="mx-auto grid max-w-5xl gap-16 px-4 sm:px-6 lg:grid-cols-2 lg:gap-12">
+      <div>
+        <SectionHeading eyebrow="Security" title="Local, and in your control." />
+        <ul class="mt-8 space-y-5 text-[14px] leading-relaxed text-muted" data-reveal>
+          <li>
+            <strong class="font-medium text-fg">Only this computer.</strong> The server listens on
+            127.0.0.1, so nothing else on your network can reach it.
+          </li>
+          <li>
+            <strong class="font-medium text-fg">No websites.</strong> Requests from web browsers are
+            refused, so a page you visit can't use it behind your back.
+          </li>
+          <li>
+            <strong class="font-medium text-fg">Nothing is deleted unless you allow it.</strong>{" "}
+            Agents can add apps and keywords. Removing them needs a separate switch, and those tools
+            are marked destructive so your client asks first.
+          </li>
+          <li>
+            <strong class="font-medium text-fg">Your data stays yours.</strong> OpenASO sends
+            nothing to us. Your agent's AI provider sees what the agent reads, like any other tool
+            it uses.
+          </li>
+        </ul>
+      </div>
+      <div>
+        <SectionHeading eyebrow="Troubleshooting" title="If something's off." />
+        <dl class="mt-8 space-y-6" data-reveal>
+          {faq.map((f) => (
+            <div>
+              <dt class="text-[15px] font-medium text-fg">{f.q}</dt>
+              <dd class="mt-1 text-[14px] leading-relaxed text-muted">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+
+    <section
+      class="mx-auto max-w-3xl px-4 py-28 text-center sm:px-6 sm:py-36"
+      data-reveal-stagger="100"
+    >
+      <h2
+        class="text-[clamp(2rem,5vw,3.2rem)] leading-[1.05] font-semibold tracking-[-0.04em]"
+        data-reveal
+      >
+        <span class="text-fg">Your ASO analyst.</span> <span class="text-gradient">Free.</span>
+      </h2>
+      <div class="mt-10" data-reveal>
+        <DownloadCta location="mcp_page" />
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>
