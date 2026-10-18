@@ -17,7 +17,7 @@ const clients = [
     where: "Settings → MCP Server → Claude Desktop in OpenASO, then claude_desktop_config.json",
     steps: [
       "Copy the config from OpenASO: it contains the paths to OpenASO on your computer, so copy it from the app rather than from here.",
-      "Paste the openaso entry into mcpServers in claude_desktop_config.json (the link in OpenASO reveals the file), then restart Claude.",
+      "Paste the openaso entry into mcpServers in claude_desktop_config.json (the link in OpenASO reveals the file). If the file has no mcpServers yet, add it as a top-level key next to the others, like \"preferences\". Then restart Claude.",
       "Nothing else to install. Claude Desktop starts a small bridge with OpenASO's own app, which forwards to the server. It looks like this on a Mac:",
     ],
     code: json({

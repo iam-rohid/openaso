@@ -24,8 +24,9 @@ const CLIENTS: Client[] = [
     snippet: (status) => json({ mcpServers: { openaso: status.claudeDesktop.server } }),
     hint: (
       <>
-        Add <code>openaso</code> to the <code>mcpServers</code> in Claude Desktop&apos;s{" "}
-        <ShowClaudeConfig />, then restart Claude. No other install needed.
+        Add <code>openaso</code> to <code>mcpServers</code> in Claude Desktop&apos;s <ShowClaudeConfig />. If the
+        file has no <code>mcpServers</code> yet, add it as a top-level key next to the others. Then restart Claude.
+        No other install needed.
       </>
     ),
   },
