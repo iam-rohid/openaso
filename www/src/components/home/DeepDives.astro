@@ -1,5 +1,6 @@
 ---
 import historyShot from "../../assets/screenshots/history.png";
+import mcpShot from "../../assets/screenshots/mcp.png";
 import rankingShot from "../../assets/screenshots/ranking.png";
 import suggestionsShot from "../../assets/screenshots/suggestions.png";
 import AppFrame from "../AppFrame.astro";
@@ -41,6 +42,19 @@ const dives = [
     shot: rankingShot,
     alt: "The ranking sheet for the keyword planner: 248 apps in App Store order, starting with Structured, Calendars and Microsoft Planner, with popularity, difficulty and a position history chart.",
   },
+  {
+    fig: "Fig 2.4",
+    title: "Hand the legwork to an AI agent.",
+    tail: "It works with your OpenASO data.",
+    points: [
+      "Connect Claude, Cursor, VS Code or any MCP client to the built-in server",
+      "Ask in plain words: research keywords, find competitor gaps, explain how rankings moved",
+      "The agent can track apps and keywords, and they show up in OpenASO right away",
+    ],
+    link: { href: "/mcp", label: "Set up the MCP server" },
+    shot: mcpShot,
+    alt: "OpenASO's MCP Server settings: the server is running at http://127.0.0.1:2776/mcp and starts with OpenASO, removing data is off, and the Claude Desktop config is ready to copy, with tabs for Claude Code, Cursor, VS Code and other clients.",
+  },
 ];
 ---
 
@@ -81,6 +95,14 @@ const dives = [
             </li>
           ))}
         </ul>
+        {d.link && (
+          <a
+            href={d.link.href}
+            class="mt-7 inline-flex items-center gap-1.5 text-[14px] text-fg underline-offset-4 hover:underline"
+          >
+            {d.link.label} <span aria-hidden="true">→</span>
+          </a>
+        )}
       </div>
       <div class:list={["relative", i % 2 === 1 && "lg:order-1"]} data-reveal>
         <div

@@ -10,6 +10,7 @@ import HowItWorks from "../components/home/HowItWorks.astro";
 import OpenSource from "../components/home/OpenSource.astro";
 import Private from "../components/home/Private.astro";
 import ProofStrip from "../components/home/ProofStrip.astro";
+import WorksWith from "../components/home/WorksWith.astro";
 import Layout from "../layouts/Layout.astro";
 import { faq } from "../lib/faq";
 import { softwareApplication } from "../lib/structured-data";
@@ -32,6 +33,7 @@ const jsonLd = [
   <Header />
   <main id="main">
     <Hero />
+    <WorksWith />
     <ProofStrip />
     <FeatureGrid />
     <DeepDives />

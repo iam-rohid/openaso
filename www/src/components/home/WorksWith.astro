@@ -1,0 +1,34 @@
+---
+import Claude from "../icons/Claude.astro";
+import ClaudeCode from "../icons/ClaudeCode.astro";
+import Codex from "../icons/Codex.astro";
+import Cursor from "../icons/Cursor.astro";
+
+// MCP clients OpenASO's server works with; the /mcp page has setup for each.
+const clients = [
+  { name: "Claude", Icon: Claude },
+  { name: "Claude Code", Icon: ClaudeCode },
+  { name: "Codex", Icon: Codex },
+  { name: "Cursor", Icon: Cursor },
+];
+---
+
+<section aria-label="Works with AI agents" class="mt-10 border-y border-line bg-surface/60">
+  <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-7 gap-y-3 px-4 py-6 text-[15px] sm:px-6">
+    <p class="font-medium text-fg">Works with</p>
+    <ul class="contents">
+      {clients.map(({ name, Icon }) => (
+        <li class="flex items-center gap-2 text-muted">
+          <Icon class="size-[18px] shrink-0" />
+          {name}
+        </li>
+      ))}
+    </ul>
+    <a
+      href="/mcp"
+      class="text-dim underline-offset-4 transition-colors hover:text-fg hover:underline"
+    >
+      and any MCP client <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</section>

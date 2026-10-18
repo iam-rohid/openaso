@@ -2,6 +2,7 @@
 //
 //   pnpm dev:demo        # first, in another terminal: seeded demo data + remote debugging
 //   pnpm screenshots     # writes www/src/assets/screenshots/*.png
+//   pnpm screenshots mcp # or only the shots named
 //
 // Pages are rendered at a fixed size and 2x scale through the Chrome DevTools protocol,
 // so the shots don't depend on the window's size or the screen it's on.
@@ -23,11 +24,29 @@ const click = (text, row) => `(() => {
   button.click();
 })()`;
 
+/** Opens Settings → MCP Server, with the Claude Desktop snippet showing an installed app's paths. */
+const mcpSettings = `(async () => {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  ${click("Settings")};
+  await wait(500);
+  ${click("MCP Server")};
+  await wait(500);
+  // Removing data is off by default; show it that way.
+  const row = [...document.querySelectorAll("[role=switch]")].find((s) => s.closest("div")?.parentElement?.textContent.includes("Allow agents to remove data"));
+  if (row?.getAttribute("aria-checked") === "true") row.click();
+  // The demo runs from a checkout, so swap in the paths an installed app would show.
+  const pre = document.querySelector("[role=dialog] pre");
+  pre.textContent = pre.textContent
+    .replace(/"command": ".*?"/, '"command": "/Applications/OpenASO.app/Contents/MacOS/OpenASO"')
+    .replace(/"[^"]*mcp-bridge\\.cjs"/, '"/Users/you/Library/Application Support/OpenASO/mcp-bridge.cjs"');
+})()`;
+
 const SHOTS = [
   { name: "keywords", hash: `#/apps/${DEMO_APP}` },
   { name: "history", hash: `#/apps/${DEMO_APP}`, setup: click("Movers & history") },
   { name: "ranking", hash: `#/apps/${DEMO_APP}`, setup: click("#", "planner") },
   { name: "suggestions", hash: `#/apps/${DEMO_APP}`, setup: click("Get Suggestions"), settle: 12000 },
+  { name: "mcp", hash: "#/", setup: mcpSettings },
 ];
 
 const targets = await fetch(`http://127.0.0.1:${PORT}/json`).then((r) => r.json());
@@ -66,13 +85,17 @@ await send("Emulation.setDeviceMetricsOverride", {
 });
 await fs.mkdir(OUT, { recursive: true });
 
-for (const shot of SHOTS) {
+const only = process.argv.slice(2);
+for (const shot of SHOTS.filter((s) => !only.length || only.includes(s.name))) {
   // Reload so dialogs and panels from the previous shot are gone.
   await send("Runtime.evaluate", { expression: `location.hash = ${JSON.stringify(shot.hash)}` });
   await send("Runtime.evaluate", { expression: "location.reload()" });
   await wait(2500);
   if (shot.setup) {
-    const { exceptionDetails } = await send("Runtime.evaluate", { expression: shot.setup });
+    const { exceptionDetails } = await send("Runtime.evaluate", {
+      expression: shot.setup,
+      awaitPromise: true,
+    });
     if (exceptionDetails) throw new Error(`${shot.name}: ${exceptionDetails.exception?.description}`);
   }
   // Park the pointer on empty sidebar space so no row shows its hover state.
