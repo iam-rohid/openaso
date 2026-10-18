@@ -4,6 +4,7 @@
   "version": "0.5.0",
   "private": true,
   "description": "Local App Store keyword research & rank tracking",
+  "license": "MIT",
   "author": {
     "name": "Rohid",
     "email": "iam-rohid@users.noreply.github.com"

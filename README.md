@@ -167,3 +167,7 @@ src/
 │       └── trpc/             # tRPC client (IPC fetch) & query client
 └── shared/                   # countries, folders, IPC types — used by both processes
 ```
+
+## License
+
+[MIT](LICENSE)
