@@ -1,0 +1,58 @@
+<!--
+  Small, non-blocking cookie prompt. Shown until the visitor chooses; "Cookie settings" in
+  the footer opens it again. Both buttons are equally prominent.
+-->
+<div
+  data-consent
+  hidden
+  role="dialog"
+  aria-labelledby="consent-title"
+  class="fixed bottom-4 left-4 z-50 w-[calc(100%-2rem)] max-w-[22rem] rounded-2xl border border-line-strong bg-[#0f0f15]/95 p-5 shadow-[0_24px_60px_-12px_rgb(0_0_0/0.8)] backdrop-blur-xl"
+>
+  <p id="consent-title" class="text-[14px] font-medium text-fg">
+    Can we use a cookie?
+  </p>
+  <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
+    Only to count returning visitors, with PostHog. No ads and no tracking across sites. Either way,
+    we count visits anonymously without cookies.
+  </p>
+  <div class="mt-4 grid grid-cols-2 gap-2">
+    <button
+      type="button"
+      data-consent-choice="denied"
+      class="h-9 rounded-lg border border-line-strong text-[13px] font-medium text-fg transition-colors hover:bg-white/[0.05]"
+    >
+      No thanks
+    </button>
+    <button
+      type="button"
+      data-consent-choice="granted"
+      class="h-9 rounded-lg border border-line-strong text-[13px] font-medium text-fg transition-colors hover:bg-white/[0.05]"
+    >
+      Accept
+    </button>
+  </div>
+</div>
+
+<script>
+  import { analytics } from "../scripts/analytics";
+
+  const prompt = document.querySelector<HTMLElement>("[data-consent]");
+  if (prompt) {
+    const show = () => (prompt.hidden = false);
+    void analytics().then((ph) => {
+      if (ph.get_explicit_consent_status() === "pending") show();
+    });
+    for (const button of prompt.querySelectorAll<HTMLButtonElement>("[data-consent-choice]")) {
+      button.addEventListener("click", () => {
+        prompt.hidden = true;
+        void analytics().then((ph) => {
+          if (button.dataset.consentChoice === "granted") ph.opt_in_capturing();
+          else ph.opt_out_capturing();
+        });
+      });
+    }
+    for (const open of document.querySelectorAll("[data-consent-open]"))
+      open.addEventListener("click", show);
+  }
+</script>

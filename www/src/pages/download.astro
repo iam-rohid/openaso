@@ -1,0 +1,199 @@
+---
+import DownloadCta from "../components/DownloadCta.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import Apple from "../components/icons/Apple.astro";
+import Linux from "../components/icons/Linux.astro";
+import Windows from "../components/icons/Windows.astro";
+import { RELEASES_URL } from "../consts";
+import Layout from "../layouts/Layout.astro";
+import { getDownloads } from "../lib/downloads";
+import { formatSize } from "../lib/format";
+import { softwareApplication } from "../lib/structured-data";
+
+const { release, downloads } = await getDownloads();
+const released = release.publishedAt.toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+const platforms = [
+  {
+    id: "mac",
+    name: "macOS",
+    icon: Apple,
+    requires: "macOS 12 Monterey or later",
+    files: [
+      { ...downloads["mac-arm64"], note: "Apple Silicon (M1 and later)" },
+      { ...downloads["mac-x64"], note: "Intel" },
+    ],
+    steps: [
+      "Open the .dmg and drag OpenASO to Applications.",
+      "The app is signed and notarized by Apple, so it opens without warnings.",
+    ],
+  },
+  {
+    id: "windows",
+    name: "Windows",
+    icon: Windows,
+    requires: "Windows 10 or later, 64-bit",
+    files: [{ ...downloads.windows, note: "Installer" }],
+    steps: [
+      "Run the installer and pick where to install OpenASO.",
+      "The installer isn't code-signed yet. If SmartScreen says “Windows protected your PC”, click More info, then Run anyway.",
+    ],
+  },
+  {
+    id: "linux",
+    name: "Linux",
+    icon: Linux,
+    requires: "64-bit (x64)",
+    files: [
+      { ...downloads.appimage, note: "Any distribution" },
+      { ...downloads.deb, note: "Debian, Ubuntu and derivatives" },
+    ],
+    steps: [
+      "AppImage: make it executable with chmod +x OpenASO-*.AppImage, then run it.",
+      ".deb: install it with sudo apt install ./OpenASO-*.deb. Updates from the .deb are downloaded by hand.",
+    ],
+  },
+];
+---
+
+<Layout
+  title="Download OpenASO for macOS, Windows and Linux"
+  description={`Download OpenASO ${release.tag}, the free, open-source App Store keyword research and rank tracking app, for macOS, Windows and Linux.`}
+  ogImage="/og/download.png"
+  jsonLd={[await softwareApplication()]}
+>
+  <Header />
+  <main id="main">
+    <section class="relative isolate overflow-hidden">
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[480px] w-[min(900px,140vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(99_102_241/0.3),transparent)] blur-3xl"
+      ></div>
+      <div class="mx-auto max-w-3xl px-4 pt-20 pb-16 text-center sm:px-6 sm:pt-28">
+        <img
+          src="/icon-512.png"
+          alt=""
+          width="80"
+          height="80"
+          class="mx-auto drop-shadow-[0_12px_40px_rgb(124_108_246/0.5)]"
+          data-enter
+        />
+        <h1
+          class="mt-8 text-[clamp(2.2rem,5.5vw,3.5rem)] leading-[1.05] font-semibold tracking-[-0.04em]"
+          data-enter
+          style="--enter-delay: 90ms"
+        >
+          Download OpenASO
+        </h1>
+        <p class="mt-4 text-[16px] text-muted" data-enter style="--enter-delay: 180ms">
+          {release.tag} · released {released} ·{" "}
+          <a href="/changelog" class="text-fg underline-offset-4 hover:underline">
+            What's new
+          </a>
+        </p>
+        <div class="mt-10" data-enter style="--enter-delay: 270ms">
+          <DownloadCta location="download_page" />
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-6xl px-4 pb-24 sm:px-6 sm:pb-32">
+      <h2 class="sr-only">All downloads</h2>
+      <div class="grid gap-4 lg:grid-cols-3" data-reveal-stagger="90">
+        {platforms.map((p) => (
+          <article
+            id={p.id}
+            data-reveal
+            class="flex scroll-mt-24 flex-col rounded-2xl border border-line bg-surface/60 p-6 sm:p-7"
+          >
+            <div class="flex items-center gap-3">
+              <p.icon class="size-5 text-fg" />
+              <h3 class="text-[17px] font-medium tracking-tight">{p.name}</h3>
+            </div>
+            <p class="mt-1.5 text-[13px] text-dim">{p.requires}</p>
+
+            <ul class="mt-6 space-y-2.5">
+              {p.files.map((f) => (
+                <li>
+                  <a
+                    href={f.asset.url}
+                    data-event="download_clicked"
+                    data-os={f.os}
+                    data-arch={f.id}
+                    class="group flex items-center justify-between gap-4 rounded-xl border border-line bg-bg/60 px-4 py-3 transition-colors hover:border-line-strong hover:bg-bg"
+                  >
+                    <span class="min-w-0">
+                      <span class="block text-[14px] text-fg">{f.note}</span>
+                      <span class="block font-mono text-[11.5px] text-dim" title={f.asset.name}>
+                        {f.asset.name.split(".").pop()} · {formatSize(f.asset.size)}
+                      </span>
+                    </span>
+                    <svg
+                      viewBox="0 0 16 16"
+                      class="size-4 shrink-0 text-dim transition-colors group-hover:text-fg"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M8 2.5v8m0 0L4.5 7M8 10.5L11.5 7M3 13.5h10"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </a>
+                  {f.asset.digest && (
+                    <details class="mt-1.5 px-1">
+                      <summary class="cursor-pointer text-[11.5px] text-dim hover:text-muted">
+                        SHA-256
+                      </summary>
+                      <code class="mt-1 block font-mono text-[11px] break-all text-dim">
+                        {f.asset.digest.replace(/^sha256:/, "")}
+                      </code>
+                    </details>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            <ol class="mt-6 space-y-2 border-t border-line pt-5 text-[13.5px] leading-relaxed text-muted">
+              {p.steps.map((s) => (
+                <li>{s}</li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </div>
+
+      <div
+        class="mt-4 grid gap-4 rounded-2xl border border-line bg-surface/40 p-6 text-[14px] leading-relaxed text-muted sm:grid-cols-2 sm:p-7"
+        data-reveal
+      >
+        <div>
+          <h3 class="text-[15px] font-medium text-fg">Automatic updates</h3>
+          <p class="mt-1.5">
+            OpenASO checks for new versions on launch and every few hours, downloads them in the
+            background and shows a Restart to update button when one is ready.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-[15px] font-medium text-fg">Older versions</h3>
+          <p class="mt-1.5">
+            Every release, with its notes and installers, is on{" "}
+            <a href={RELEASES_URL} class="text-fg underline-offset-4 hover:underline">
+              GitHub Releases
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

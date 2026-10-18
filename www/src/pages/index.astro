@@ -2,13 +2,44 @@
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import Hero from "../components/Hero.astro";
+import DeepDives from "../components/home/DeepDives.astro";
+import Faq from "../components/home/Faq.astro";
+import FeatureGrid from "../components/home/FeatureGrid.astro";
+import FinalCta from "../components/home/FinalCta.astro";
+import HowItWorks from "../components/home/HowItWorks.astro";
+import OpenSource from "../components/home/OpenSource.astro";
+import Private from "../components/home/Private.astro";
+import ProofStrip from "../components/home/ProofStrip.astro";
 import Layout from "../layouts/Layout.astro";
+import { faq } from "../lib/faq";
+import { softwareApplication } from "../lib/structured-data";
+
+const jsonLd = [
+  await softwareApplication(),
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  },
+];
 ---
 
-<Layout>
+<Layout jsonLd={jsonLd}>
   <Header />
   <main id="main">
     <Hero />
+    <ProofStrip />
+    <FeatureGrid />
+    <DeepDives />
+    <HowItWorks />
+    <Private />
+    <OpenSource />
+    <Faq />
+    <FinalCta />
   </main>
   <Footer />
 </Layout>

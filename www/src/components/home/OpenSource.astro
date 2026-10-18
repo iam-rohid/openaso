@@ -1,0 +1,121 @@
+---
+import { REPO_URL } from "../../consts";
+import GitHubStars from "../GitHubStars.astro";
+import SectionHeading from "../SectionHeading.astro";
+
+const lines = [
+  { kind: "cmd", text: "git clone https://github.com/iam-rohid/openaso" },
+  { kind: "out", text: "Cloning into 'openaso'… done." },
+  { kind: "cmd", text: "cd openaso && pnpm install" },
+  { kind: "out", text: "Dependencies installed, better-sqlite3 rebuilt for Electron" },
+  { kind: "cmd", text: "pnpm dev" },
+  { kind: "out", text: "OpenASO is running with hot reload" },
+];
+const facts = [
+  "Read every line that touches your data",
+  "Fix a bug or add a feature, then send a pull request",
+  "Fork it and make it your own",
+];
+---
+
+<section class="border-t border-line">
+  <div class="mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32">
+    <SectionHeading eyebrow="Open source" title="MIT licensed." tail="Fork the whole thing.">
+      OpenASO is built in the open with Electron, React and SQLite. Nothing is hidden.
+    </SectionHeading>
+
+    <div class="mt-14 grid gap-4 lg:grid-cols-[1.35fr_1fr]" data-reveal-stagger="100">
+      <div
+        class="overflow-hidden rounded-2xl border border-line bg-[#0a0a0e] font-mono text-[12.5px] leading-[1.9] sm:text-[13px]"
+        data-reveal
+        aria-label="Run OpenASO from source: git clone the repository, run pnpm install, then pnpm dev."
+        role="img"
+      >
+        <div class="flex items-center gap-2 border-b border-line px-4 py-3">
+          <span class="size-2.5 rounded-full bg-white/10"></span>
+          <span class="size-2.5 rounded-full bg-white/10"></span>
+          <span class="size-2.5 rounded-full bg-white/10"></span>
+          <span class="ml-3 text-[11.5px] text-dim">~/code</span>
+        </div>
+        <div class="overflow-x-auto px-5 py-5" aria-hidden="true">
+          {lines.map((l, i) => (
+            <p class="term-line whitespace-nowrap" style={{ "--i": i }}>
+              {l.kind === "cmd" ? (
+                <>
+                  <span class="text-accent">$</span> <span class="text-fg">{l.text}</span>
+                </>
+              ) : (
+                <span class="text-dim">✓ {l.text}</span>
+              )}
+            </p>
+          ))}
+          <p class="term-line" style={{ "--i": lines.length }}>
+            <span class="text-accent">$</span>{" "}
+            <span class="cursor inline-block h-[1.1em] w-[0.55em] translate-y-[0.2em] bg-fg/80"></span>
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="flex flex-col rounded-2xl border border-line bg-surface/60 p-6 sm:p-8"
+        data-reveal
+      >
+        <p class="font-mono text-[11.5px] text-dim">MIT licensed · iam-rohid/openaso</p>
+        <ul class="mt-6 space-y-3.5">
+          {facts.map((f) => (
+            <li class="flex gap-3 text-[15px] text-muted">
+              <svg
+                viewBox="0 0 16 16"
+                class="mt-[5px] size-4 shrink-0 text-accent"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3.5 8.5l3 3 6-7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              {f}
+            </li>
+          ))}
+        </ul>
+        <div class="mt-auto flex flex-wrap items-center gap-4 pt-10">
+          <GitHubStars variant="button" />
+          <a href={REPO_URL} class="text-[14px] text-muted transition-colors hover:text-fg">
+            Browse source <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  :global(.js) [data-reveal] .term-line {
+    opacity: 0;
+  }
+  :global(.js) [data-revealed] .term-line {
+    transition: opacity 0.25s linear calc(0.5s + var(--i) * 0.45s);
+    opacity: 1;
+  }
+  .cursor {
+    animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) [data-reveal] .term-line {
+      opacity: 1;
+      transition: none;
+    }
+    .cursor {
+      animation: none;
+    }
+  }
+</style>

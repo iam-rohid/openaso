@@ -14,7 +14,7 @@
   --color-line-strong: rgb(255 255 255 / 0.14);
   --color-fg: #ededf1;
   --color-muted: #9898a6;
-  --color-dim: #62626e;
+  --color-dim: #7d7d8a;
 
   /* The app icon's gradient. */
   --color-accent: #7c6cf6;
@@ -83,6 +83,25 @@
       transform: none;
       filter: none;
       transition: none;
+    }
+  }
+
+  /* Above-the-fold entrance: pure CSS, so it starts at first paint instead of waiting
+     for the reveal script (the hero text is the page's largest paint). */
+  [data-enter] {
+    animation: enter 0.9s var(--ease-out-soft) both;
+    animation-delay: var(--enter-delay, 0ms);
+  }
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+      filter: blur(6px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-enter] {
+      animation: none;
     }
   }
 

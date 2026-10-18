@@ -2,8 +2,12 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "openaso-www",
   "compatibility_date": "2026-10-01",
+  "main": "./worker/index.ts",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
+    // Only the PostHog proxy needs the Worker; pages and files skip it.
+    "run_worker_first": ["/ingest/*"],
   },
 }

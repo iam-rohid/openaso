@@ -1,0 +1,27 @@
+---
+import { faq } from "../../lib/faq";
+import SectionHeading from "../SectionHeading.astro";
+---
+
+<section id="faq" class="border-t border-line">
+  <div class="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 sm:py-32 lg:grid-cols-[1fr_1.6fr]">
+    <SectionHeading eyebrow="FAQ" title="Questions," tail="answered." />
+    <div class="divide-y divide-line border-y border-line" data-reveal>
+      {faq.map((item) => (
+        <details class="group" data-faq={item.q}>
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-[15.5px] font-medium text-fg transition-colors hover:text-white [&::-webkit-details-marker]:hidden">
+            {item.q}
+            <span
+              aria-hidden="true"
+              class="relative size-3.5 shrink-0 text-dim transition-transform duration-300 group-open:rotate-45"
+            >
+              <span class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-current" />
+              <span class="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-current" />
+            </span>
+          </summary>
+          <p class="max-w-2xl pb-6 text-[14.5px] leading-relaxed text-muted">{item.a}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>

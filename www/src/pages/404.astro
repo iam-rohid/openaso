@@ -1,17 +1,27 @@
 ---
+import DownloadCta from "../components/DownloadCta.astro";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="Page not found · OpenASO">
+<Layout title="Page not found · OpenASO" description="This page doesn't exist." noindex>
   <Header />
-  <main class="mx-auto max-w-3xl px-4 py-32 text-center">
-    <p class="text-sm font-medium text-neutral-500">404</p>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight">Page not found</h1>
-    <a href="/" class="mt-8 inline-block text-sm underline underline-offset-2">
-      Back to home
-    </a>
+  <main id="main" class="mx-auto max-w-2xl px-4 py-32 text-center sm:px-6 sm:py-40">
+    <p class="font-mono text-[11px] tracking-[0.14em] text-dim uppercase">404 · Unranked</p>
+    <h1 class="mt-4 text-[clamp(2rem,5vw,3rem)] leading-[1.05] font-semibold tracking-[-0.04em]">
+      This page didn't make the top 250.
+    </h1>
+    <p class="mt-4 text-[16px] text-muted">
+      It may have moved, or it never existed. Try the{" "}
+      <a href="/" class="text-fg underline-offset-4 hover:underline">
+        home page
+      </a>{" "}
+      instead.
+    </p>
+    <div class="mt-12">
+      <DownloadCta location="final_cta" />
+    </div>
   </main>
   <Footer />
 </Layout>

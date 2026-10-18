@@ -1,5 +1,6 @@
 # Makes www/ its own pnpm workspace root, independent of the Electron app's.
 allowBuilds:
+  core-js: false
   esbuild: true
   sharp: true
   workerd: true

@@ -1,0 +1,207 @@
+---
+import DownloadCta from "../components/DownloadCta.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import Layout from "../layouts/Layout.astro";
+
+// Astro's details as listed on tryastro.app. Re-check before changing CHECKED.
+const CHECKED = "October 2026";
+
+type Cell = string | boolean;
+const rows: { label: string; openaso: Cell; astro: Cell }[] = [
+  { label: "Price", openaso: "Free", astro: "$9/month, billed yearly ($108)" },
+  { label: "Platforms", openaso: "macOS, Windows, Linux", astro: "macOS 14 or later" },
+  { label: "Open source", openaso: "Yes, MIT", astro: false },
+  { label: "Sign-up or license", openaso: "None", astro: "Paid subscription" },
+  { label: "Storefronts", openaso: "51", astro: "60+" },
+  { label: "Keyword rank tracking", openaso: true, astro: true },
+  { label: "Popularity and difficulty", openaso: true, astro: true },
+  { label: "Keyword suggestions", openaso: true, astro: true },
+  { label: "Full search ranking for a keyword", openaso: true, astro: true },
+  {
+    label: "Competitor keywords",
+    openaso: "From keywords you've checked, plus Discover",
+    astro: "From a database of millions of keywords",
+  },
+  { label: "Keyword translations", openaso: false, astro: "Yes, with DeepL" },
+  { label: "Ratings and reviews analysis", openaso: false, astro: true },
+  { label: "CSV import and export", openaso: "Yes, Astro-compatible", astro: true },
+];
+
+const astroBetter = [
+  {
+    title: "A head start on competitor keywords",
+    body: "Astro already knows which keywords an app ranks for from its large keyword database. OpenASO only knows the keywords you, or its Discover button, have checked, so competitor research takes a few more clicks at first.",
+  },
+  {
+    title: "Translations and ratings",
+    body: "Astro translates foreign keywords with DeepL and analyzes ratings and reviews across storefronts. OpenASO doesn't do either yet.",
+  },
+  {
+    title: "More storefronts",
+    body: "Astro covers more than 60 countries; OpenASO covers 51.",
+  },
+];
+
+const openasoBetter = [
+  {
+    title: "Free, with no limits",
+    body: "No subscription and no keyword caps. Track as many apps and keywords as Apple's rate limits allow.",
+  },
+  {
+    title: "Windows and Linux too",
+    body: "OpenASO runs on macOS 12 and later, Windows and Linux, so your whole team can use it.",
+  },
+  {
+    title: "Open source and local",
+    body: "Read the code, change it or fork it. Your keywords stay in a SQLite file on your computer.",
+  },
+];
+
+const title = "OpenASO vs Astro: a free, open-source Astro alternative";
+const description =
+  "Compare OpenASO and Astro for App Store keyword research and rank tracking: price, platforms, features, and where each one is the better choice.";
+---
+
+<Layout {title} {description} ogImage="/og/astro-alternative.png">
+  <Header />
+  <main id="main">
+    <section class="relative isolate overflow-hidden">
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[480px] w-[min(900px,140vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(99_102_241/0.28),transparent)] blur-3xl"
+      ></div>
+      <div class="mx-auto max-w-3xl px-4 pt-20 pb-14 text-center sm:px-6 sm:pt-28">
+        <p class="font-mono text-[11px] tracking-[0.14em] text-dim uppercase" data-enter>
+          OpenASO vs Astro
+        </p>
+        <h1
+          class="mt-5 text-[clamp(2.2rem,5.5vw,3.6rem)] leading-[1.05] font-semibold tracking-[-0.04em] text-balance"
+          data-enter
+          style="--enter-delay: 90ms"
+        >
+          <span class="text-fg">The free, open-source</span>{" "}
+          <span class="text-gradient">Astro alternative</span>
+        </h1>
+        <p
+          class="mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-pretty text-muted"
+          data-enter
+          style="--enter-delay: 180ms"
+        >
+          Astro is a great app, and it inspired OpenASO. If you want the same core workflow for
+          free, on any desktop, with the code open, OpenASO is for you. Here's an honest comparison.
+        </p>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-4xl px-4 sm:px-6" aria-labelledby="compare-heading">
+      <h2 id="compare-heading" class="sr-only">
+        Feature comparison
+      </h2>
+      <div class="overflow-x-auto rounded-2xl border border-line bg-surface/50" data-reveal>
+        <table class="w-full min-w-[560px] text-left text-[14px]">
+          <thead>
+            <tr class="border-b border-line">
+              <th scope="col" class="px-5 py-4 font-normal text-dim">
+                <span class="sr-only">Feature</span>
+              </th>
+              <th scope="col" class="w-[32%] px-5 py-4 font-medium text-fg">
+                <span class="inline-flex items-center gap-2">
+                  <img src="/favicon.png" alt="" width="18" height="18" class="rounded-[5px]" />
+                  OpenASO
+                </span>
+              </th>
+              <th scope="col" class="w-[32%] px-5 py-4 font-medium text-muted">
+                Astro
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-line">
+            {rows.map((r) => (
+              <tr>
+                <th scope="row" class="px-5 py-3.5 font-normal text-muted">
+                  {r.label}
+                </th>
+                {[r.openaso, r.astro].map((cell, i) => (
+                  <td class:list={["px-5 py-3.5", i === 0 ? "text-fg" : "text-muted"]}>
+                    {cell === true ? (
+                      <span class="text-up" aria-label="Yes">
+                        ✓
+                      </span>
+                    ) : cell === false ? (
+                      <span class="text-dim" aria-label="No">
+                        —
+                      </span>
+                    ) : (
+                      cell
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-4 text-[12.5px] text-dim">
+        Astro's details are from tryastro.app, checked {CHECKED}. Prices and features change; check
+        their site for the latest. OpenASO isn't affiliated with Astro.
+      </p>
+    </section>
+
+    <section class="mx-auto grid max-w-5xl gap-16 px-4 py-24 sm:px-6 sm:py-32 lg:grid-cols-2 lg:gap-12">
+      <div>
+        <SectionHeading eyebrow="Fair is fair" title="Where Astro is the better choice" />
+        <dl class="mt-8 space-y-6" data-reveal-stagger="90">
+          {astroBetter.map((p) => (
+            <div data-reveal>
+              <dt class="text-[15px] font-medium text-fg">{p.title}</dt>
+              <dd class="mt-1 text-[14px] leading-relaxed text-muted">{p.body}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <div>
+        <SectionHeading eyebrow="Why OpenASO" title="Where OpenASO is the better choice" />
+        <dl class="mt-8 space-y-6" data-reveal-stagger="90">
+          {openasoBetter.map((p) => (
+            <div data-reveal>
+              <dt class="text-[15px] font-medium text-fg">{p.title}</dt>
+              <dd class="mt-1 text-[14px] leading-relaxed text-muted">{p.body}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-5xl px-4 sm:px-6">
+      <div class="rounded-2xl border border-line bg-surface/50 p-6 sm:p-10" data-reveal>
+        <h2 class="text-[clamp(1.4rem,3vw,1.9rem)] font-semibold tracking-[-0.03em]">
+          <span class="text-fg">Switching from Astro?</span>{" "}
+          <span class="text-dim">Bring your keywords.</span>
+        </h2>
+        <p class="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted">
+          Export your keywords from Astro as CSV and import the file into an app in OpenASO. It
+          reads Astro's format, so your keyword lists move over in one step. OpenASO exports in the
+          same format too, so you can always go back.
+        </p>
+      </div>
+    </section>
+
+    <section
+      class="mx-auto max-w-3xl px-4 py-28 text-center sm:px-6 sm:py-36"
+      data-reveal-stagger="100"
+    >
+      <h2
+        class="text-[clamp(2rem,5vw,3.2rem)] leading-[1.05] font-semibold tracking-[-0.04em]"
+        data-reveal
+      >
+        <span class="text-fg">Rank higher.</span> <span class="text-gradient">Pay nothing.</span>
+      </h2>
+      <div class="mt-10" data-reveal>
+        <DownloadCta location="final_cta" />
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

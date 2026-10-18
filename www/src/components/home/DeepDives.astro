@@ -1,0 +1,94 @@
+---
+import historyShot from "../../assets/screenshots/history.png";
+import rankingShot from "../../assets/screenshots/ranking.png";
+import suggestionsShot from "../../assets/screenshots/suggestions.png";
+import AppFrame from "../AppFrame.astro";
+
+const dives = [
+  {
+    fig: "Fig 2.1",
+    title: "See every move.",
+    tail: "Know what changed, and when.",
+    points: [
+      "How many keywords are in the top 10, top 50 and ranked at all, and how that changed",
+      "A 30-day chart of where your keywords rank",
+      "Biggest gains and drops, plus keywords that newly ranked or dropped out",
+    ],
+    shot: historyShot,
+    alt: "The Movers and history panel above Tiimo's keywords: a 30-day chart of how many keywords rank in the top 10, top 50 and lower, next to lists of the biggest gains and drops.",
+  },
+  {
+    fig: "Fig 2.2",
+    title: "Find keywords worth targeting.",
+    tail: "Before you spend a character on them.",
+    points: [
+      "Suggestions from your metadata, App Store autocomplete and competitors' titles",
+      "Each with an estimated popularity, so the best ideas come first",
+      "Add a seed keyword to explore a new direction, then add the picks in one go",
+    ],
+    shot: suggestionsShot,
+    alt: "The keyword suggestions dialog for Tiimo, listing ideas such as habit tracker and adhd planner free with their source and estimated popularity.",
+  },
+  {
+    fig: "Fig 2.3",
+    title: "Look over any competitor's shoulder.",
+    tail: "Every app, every position.",
+    points: [
+      "The full ranking for a keyword: about 250 apps, with ratings and release dates",
+      "Click through to any app to see every keyword it ranks for",
+      "Look up any keyword in the Keyword Explorer without tracking it",
+    ],
+    shot: rankingShot,
+    alt: "The ranking sheet for the keyword planner: 248 apps in App Store order, starting with Structured, Calendars and Microsoft Planner, with popularity, difficulty and a position history chart.",
+  },
+];
+---
+
+<section class="mx-auto max-w-6xl space-y-28 px-4 py-12 sm:space-y-36 sm:px-6 sm:py-16">
+  {dives.map((d, i) => (
+    <div
+      class:list={[
+        "grid items-center gap-10 lg:gap-14",
+        i % 2 === 0
+          ? "lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)]"
+          : "lg:grid-cols-[minmax(0,8fr)_minmax(0,5fr)]",
+      ]}
+    >
+      <div class:list={["max-w-md", i % 2 === 1 && "lg:order-2"]} data-reveal>
+        <p class="font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase">{d.fig}</p>
+        <h2 class="mt-4 text-[clamp(1.6rem,3.2vw,2.25rem)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
+          <span class="text-fg">{d.title}</span>
+          <span class="text-dim"> {d.tail}</span>
+        </h2>
+        <ul class="mt-7 space-y-3.5">
+          {d.points.map((p) => (
+            <li class="flex gap-3 text-[15px] leading-relaxed text-muted">
+              <svg
+                viewBox="0 0 16 16"
+                class="mt-[5px] size-4 shrink-0 text-accent"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3.5 8.5l3 3 6-7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              {p}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class:list={["relative", i % 2 === 1 && "lg:order-1"]} data-reveal>
+        <div
+          aria-hidden="true"
+          class="absolute -inset-10 -z-10 rounded-full bg-[radial-gradient(closest-side,rgb(99_102_241/0.18),transparent)] blur-2xl"
+        />
+        <AppFrame src={d.shot} alt={d.alt} sizes="(min-width: 1024px) 720px, 100vw" />
+      </div>
+    </div>
+  ))}
+</section>

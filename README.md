@@ -105,6 +105,15 @@ It's created, and migrations are applied, on launch. Before an existing database
 
 To try a build locally: `pnpm dist` (installers for this OS in `dist/`) or `pnpm dist:dir` (just the app).
 
+### Website
+
+The marketing site in `www/` is a static Astro site on Cloudflare Workers (`cd www && pnpm install && pnpm dev`).
+It reads the latest release, changelog and star count from GitHub at build time. Cloudflare Workers Builds deploys
+it on every push to `main`, and [www-rebuild.yml](.github/workflows/www-rebuild.yml) rebuilds it when a release is
+published and once a day. Its Worker only proxies `/ingest/*` to PostHog.
+
+To refresh the app screenshots, run `pnpm dev:demo`, then `pnpm screenshots` in another terminal.
+
 ## How the data works
 
 Apple only exposes real search volume through the Search Ads API, which needs an account. OpenASO uses

@@ -1,17 +1,60 @@
 ---
 import { RELEASES_URL, REPO_URL } from "../consts";
+
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { href: "/#features", label: "Features" },
+      { href: "/download", label: "Download" },
+      { href: "/changelog", label: "Changelog" },
+      { href: "/astro-alternative", label: "Astro alternative" },
+    ],
+  },
+  {
+    title: "Open source",
+    links: [
+      { href: REPO_URL, label: "GitHub" },
+      { href: RELEASES_URL, label: "Releases" },
+      { href: `${REPO_URL}/issues`, label: "Report an issue" },
+      { href: `${REPO_URL}/blob/main/LICENSE`, label: "MIT license" },
+    ],
+  },
+];
 ---
 
 <footer class="border-t border-line">
-  <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-10 text-[13px] text-dim sm:flex-row sm:justify-between sm:px-6">
-    <p>OpenASO · MIT licensed · Not affiliated with Apple.</p>
-    <div class="flex gap-5">
-      <a href={REPO_URL} class="transition-colors hover:text-fg">
-        GitHub
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-[1.5fr_1fr_1fr] sm:px-6">
+    <div>
+      <a href="/" class="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight">
+        <img src="/favicon.png" alt="" width="24" height="24" class="rounded-[6px]" />
+        OpenASO
       </a>
-      <a href={RELEASES_URL} class="transition-colors hover:text-fg">
-        Releases
-      </a>
+      <p class="mt-3 max-w-xs text-[13px] leading-relaxed text-dim">
+        The free, open-source ASO tool for macOS, Windows and Linux. Not affiliated with Apple.
+      </p>
+    </div>
+    {columns.map((c) => (
+      <nav aria-label={c.title}>
+        <p class="text-[13px] font-medium text-muted">{c.title}</p>
+        <ul class="mt-3 space-y-2">
+          {c.links.map((l) => (
+            <li>
+              <a href={l.href} class="text-[13px] text-dim transition-colors hover:text-fg">
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    ))}
+  </div>
+  <div class="border-t border-line">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-[12.5px] text-dim sm:px-6">
+      <p>© {new Date().getFullYear()} OpenASO contributors · MIT licensed</p>
+      <button type="button" data-consent-open class="transition-colors hover:text-fg">
+        Cookie settings
+      </button>
     </div>
   </div>
 </footer>

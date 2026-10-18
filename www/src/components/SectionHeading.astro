@@ -1,0 +1,26 @@
+---
+interface Props {
+  /** Small mono label above the title, Linear-style. */
+  eyebrow: string;
+  title: string;
+  /** Dimmed continuation of the title. */
+  tail?: string;
+  align?: "left" | "center";
+  class?: string;
+}
+
+const { eyebrow, title, tail, align = "left", class: className } = Astro.props;
+---
+
+<div class:list={[align === "center" && "mx-auto text-center", "max-w-3xl", className]} data-reveal>
+  <p class="font-mono text-[11px] tracking-[0.14em] text-dim uppercase">{eyebrow}</p>
+  <h2 class="mt-4 text-[clamp(1.85rem,4.2vw,2.9rem)] leading-[1.08] font-semibold tracking-[-0.035em] text-balance">
+    <span class="text-fg">{title}</span>
+    {tail && <span class="text-dim"> {tail}</span>}
+  </h2>
+  {Astro.slots.has("default") && (
+    <p class="mt-5 max-w-xl text-[16px] leading-relaxed text-pretty text-muted">
+      <slot />
+    </p>
+  )}
+</div>

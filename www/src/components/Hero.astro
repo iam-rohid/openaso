@@ -28,10 +28,10 @@ const climb = { term: "planner", from: 48, to: 16, days: 30 };
   </div>
 
   <div class="mx-auto max-w-6xl px-4 pt-16 sm:px-6 sm:pt-24">
-    <div class="mx-auto max-w-3xl text-center" data-reveal-stagger="90">
+    <div class="mx-auto max-w-3xl text-center">
       <a
         href="/changelog"
-        data-reveal
+        data-enter
         class="group inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] py-1 pr-3 pl-1 text-[13px] text-muted transition-colors hover:border-line-strong hover:text-fg"
       >
         <span class="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-[#b9b0ff]">
@@ -44,7 +44,8 @@ const climb = { term: "planner", from: 48, to: 16, days: 30 };
       </a>
 
       <h1
-        data-reveal
+        data-enter
+        style="--enter-delay: 90ms"
         class="mt-7 text-[clamp(2.6rem,7vw,4.75rem)] leading-[1.02] font-semibold tracking-[-0.045em] text-balance"
       >
         <span class="text-fg">The free, open-source</span>
@@ -52,14 +53,15 @@ const climb = { term: "planner", from: 48, to: 16, days: 30 };
       </h1>
 
       <p
-        data-reveal
+        data-enter
+        style="--enter-delay: 180ms"
         class="mx-auto mt-6 max-w-[38rem] text-[clamp(1rem,2.2vw,1.175rem)] leading-relaxed text-pretty text-muted"
       >
         Track rankings, score keyword popularity and difficulty, and see what your competitors rank
         for. Free for macOS, Windows and Linux. No account, no subscription.
       </p>
 
-      <div data-reveal class="mt-9">
+      <div data-enter style="--enter-delay: 270ms" class="mt-9">
         <DownloadCta location="hero" />
       </div>
     </div>
@@ -131,17 +133,17 @@ const climb = { term: "planner", from: 48, to: 16, days: 30 };
 <style>
   /* The shot starts tilted back and settles flat; then the row lights up, the callout
      pops in and the rank counts up. Reduced motion shows the final state. */
-  .js .hero-shot {
+  :global(.js) .hero-shot {
     animation: tilt-in 1.6s var(--ease-out-soft) 0.35s both;
     transform-origin: 50% 0%;
   }
-  .js .hero-row {
+  :global(.js) .hero-row {
     animation: fade-in 0.8s var(--ease-out-soft) 1.5s both;
   }
-  .js .hero-callout {
+  :global(.js) .hero-callout {
     animation: pop-in 0.7s var(--ease-out-soft) 1.7s both;
   }
-  .js .hero-badge {
+  :global(.js) .hero-badge {
     animation: pop-in 0.5s var(--ease-out-soft) 3.4s both;
   }
   @keyframes tilt-in {
@@ -167,10 +169,10 @@ const climb = { term: "planner", from: 48, to: 16, days: 30 };
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .js .hero-shot,
-    .js .hero-row,
-    .js .hero-callout,
-    .js .hero-badge {
+    :global(.js) .hero-shot,
+    :global(.js) .hero-row,
+    :global(.js) .hero-callout,
+    :global(.js) .hero-badge {
       animation: none;
     }
   }

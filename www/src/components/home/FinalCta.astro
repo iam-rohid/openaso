@@ -1,0 +1,36 @@
+---
+import DownloadCta from "../DownloadCta.astro";
+---
+
+<section class="relative isolate overflow-hidden border-t border-line">
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute -bottom-64 left-1/2 -z-10 h-[520px] w-[min(1000px,140vw)] -translate-x-1/2"
+  >
+    <div class="size-full animate-glow-drift rounded-full bg-[radial-gradient(closest-side,rgb(99_102_241/0.35),rgb(124_58_237/0.18)_55%,transparent)] blur-3xl motion-reduce:animate-none"></div>
+  </div>
+  <div class="mx-auto max-w-3xl px-4 py-28 text-center sm:px-6 sm:py-40" data-reveal-stagger="100">
+    <img
+      src="/icon-512.png"
+      alt=""
+      width="72"
+      height="72"
+      loading="lazy"
+      class="mx-auto drop-shadow-[0_12px_40px_rgb(124_108_246/0.55)]"
+      data-reveal
+    />
+    <h2
+      class="mt-8 text-[clamp(2.2rem,6vw,4rem)] leading-[1.04] font-semibold tracking-[-0.045em]"
+      data-reveal
+    >
+      <span class="text-fg">Rank higher.</span> <span class="text-gradient">Pay nothing.</span>
+    </h2>
+    <p class="mx-auto mt-5 max-w-lg text-[17px] leading-relaxed text-muted" data-reveal>
+      Free and open source, for macOS, Windows and Linux. Install it, add your app and see where you
+      stand in minutes.
+    </p>
+    <div class="mt-10" data-reveal>
+      <DownloadCta location="final_cta" />
+    </div>
+  </div>
+</section>

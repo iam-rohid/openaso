@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import ConsentPrompt from "../components/ConsentPrompt.astro";
 import { SITE_NAME } from "../consts";
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
   ogImage?: string;
   /** JSON-LD objects for this page, added after the site-wide ones. */
   jsonLd?: object[];
+  /** Keep the page out of search results (the 404 page). */
+  noindex?: boolean;
 }
 
 const {
@@ -16,9 +19,12 @@ const {
   description = "Free, open-source App Store keyword research and rank tracking for macOS, Windows and Linux. Track rankings, score popularity and difficulty, and see what competitors rank for. No account needed.",
   ogImage = "/og.png",
   jsonLd = [],
+  noindex = false,
 } = Astro.props;
 
-const canonical = new URL(Astro.url.pathname, Astro.site);
+// Pages build to files (download.html) but are served without the extension.
+const path = Astro.url.pathname.replace(/(index)?\.html$/, "").replace(/(.)\/$/, "$1");
+const canonical = new URL(path, Astro.site);
 const ogImageUrl = new URL(ogImage, Astro.site);
 const siteJsonLd = {
   "@context": "https://schema.org",
@@ -70,7 +76,7 @@ const siteJsonLd = {
     </script>
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
@@ -103,8 +109,10 @@ const siteJsonLd = {
       Skip to content
     </a>
     <slot />
+    <ConsentPrompt />
     <script>
       import "../scripts/reveal";
+      import "../scripts/analytics";
     </script>
   </body>
 </html>

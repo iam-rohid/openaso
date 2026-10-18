@@ -1,0 +1,387 @@
+---
+import SectionHeading from "../SectionHeading.astro";
+
+// Figures below come from the demo data the screenshots use (Tiimo, US storefront), so
+// the graphics and the screenshots tell the same story.
+
+/** A climbing sparkline path from `from` to `to` (positions; lower is better). */
+function sparkline(from: number, to: number, seed: number, w = 120, h = 32) {
+  let s = seed;
+  const rand = () => ((s = (s * 9301 + 49297) % 233280), s / 233280);
+  const n = 30;
+  const pts = Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1);
+    const pos =
+      from + (to - from) * t + (i === n - 1 ? 0 : (rand() - 0.5) * Math.max(2, from * 0.15));
+    return pos;
+  });
+  const max = Math.max(...pts);
+  const min = Math.min(...pts);
+  return pts
+    .map((p, i) => {
+      const x = (i / (n - 1)) * w;
+      const y = 3 + ((p - min) / (max - min || 1)) * (h - 6);
+      return `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+const tracked = [
+  { term: "adhd planner", from: 6, to: 2 },
+  { term: "neurodivergent", from: 21, to: 6 },
+  { term: "adhd reminders", from: 15, to: 6 },
+  { term: "visual planner", from: 93, to: 51 },
+].map((k, i) => ({ ...k, path: sparkline(k.from, k.to, i + 3) }));
+
+const suggestions = [
+  ["habit tracker", 52],
+  ["adhd planner free", 44],
+  ["calendar", 51],
+  ["adhd cleaning planner", 48],
+  ["daily planner", 36],
+  ["tasks", 49],
+  ["visual timer", 33],
+  ["morning routine", 31],
+  ["todo", 39],
+  ["executive function", 38],
+  ["focus timer", 35],
+  ["chores", 34],
+] as const;
+const rows = [suggestions.slice(0, 6), suggestions.slice(6)];
+
+const competitor = [
+  { term: "planner", position: 1 },
+  { term: "adhd planner", position: 1 },
+  { term: "daily planner", position: 1 },
+  { term: "routine planner", position: 1 },
+];
+
+const ranking = [
+  { name: "Structured: Daily Planner Todo", hue: 4 },
+  { name: "Tiimo: To-Do List Planner", hue: 258, you: true },
+  { name: "ADHD Planner Organizer Planwoo", hue: 270 },
+  { name: "Finch: Self-Care Pet", hue: 30 },
+  { name: "Habit Tracker", hue: 350 },
+  { name: "Daily Planner, To-Do List", hue: 24 },
+  { name: "InControl - ADHD Daily Planner", hue: 200 },
+  { name: "Routine Planner & Habit Coach", hue: 150 },
+  { name: "Focus Planner: Daily Routines", hue: 220 },
+  { name: "Visual Timer for Kids", hue: 45 },
+];
+
+const storefronts =
+  "US GB CA AU NZ IE DE FR ES IT NL BE CH AT PT SE NO DK FI PL CZ GR HU RO UA RU TR IL SA AE EG NG ZA IN PK JP KR CN HK TW SG MY TH ID PH VN BR MX AR CL CO".split(
+    " ",
+  );
+
+const card =
+  "group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface/60 p-6 transition-colors duration-500 hover:border-line-strong sm:p-7";
+const fig = "font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase";
+const title = "mt-3 text-[17px] font-medium tracking-tight text-fg";
+const body = "mt-2 text-[14px] leading-relaxed text-muted";
+---
+
+<section id="features" class="relative mx-auto max-w-6xl scroll-mt-20 px-4 py-24 sm:px-6 sm:py-32">
+  <SectionHeading
+    eyebrow="Features"
+    title="Everything you need to rank."
+    tail="Tracking, research and competitor insight in one app."
+  />
+
+  <div class="mt-14 grid gap-4 lg:grid-cols-3" data-reveal-stagger="90">
+    <!-- 1. Rank tracking -->
+    <article class:list={[card, "lg:col-span-2"]} data-reveal>
+      <p class={fig}>Fig 1.1</p>
+      <h3 class={title}>Rank tracking that updates itself</h3>
+      <p class={body}>
+        Every tracked keyword is refreshed once a day while the app is open, so you get the change
+        over 1, 7 or 30 days and a sparkline per keyword.
+      </p>
+      <div class="mt-7 divide-y divide-line rounded-xl border border-line bg-bg/60">
+        {tracked.map((k, i) => (
+          <div class="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3 sm:grid-cols-[1fr_120px_56px_64px]">
+            <span class="truncate text-[13.5px] text-fg">{k.term}</span>
+            <svg
+              viewBox="0 0 120 32"
+              class="spark hidden h-8 w-[120px] overflow-visible sm:block"
+              style={{ "--i": i }}
+              aria-hidden="true"
+            >
+              <path
+                d={k.path}
+                pathLength="1"
+                fill="none"
+                stroke="var(--color-up)"
+                stroke-width="1.5"
+              />
+            </svg>
+            <span class="text-right font-mono text-[13px] font-medium text-fg tabular-nums">
+              #{k.to}
+            </span>
+            <span class="rounded-full bg-up/10 px-2 py-0.5 text-center font-mono text-[11.5px] text-up tabular-nums">
+              ↑{k.from - k.to}
+            </span>
+          </div>
+        ))}
+      </div>
+    </article>
+
+    <!-- 2. Popularity & difficulty -->
+    <article class={card} data-reveal>
+      <p class={fig}>Fig 1.2</p>
+      <h3 class={title}>Popularity and difficulty</h3>
+      <p class={body}>
+        See how often a keyword is searched and how hard it is to rank for, before you spend a
+        metadata slot on it.
+      </p>
+      <div class="mt-auto space-y-5 pt-8">
+        <p class="text-[13px] text-dim">“adhd planner” in the US</p>
+        {[
+          { label: "Popularity", value: 52, color: "#84cc16" },
+          { label: "Difficulty", value: 43, color: "#facc15" },
+        ].map((m, i) => (
+          <div>
+            <div class="flex items-baseline justify-between text-[13px]">
+              <span class="text-muted">{m.label}</span>
+              <span class="font-mono text-fg tabular-nums">{m.value}</span>
+            </div>
+            <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                class="meter h-full rounded-full"
+                style={{ width: `${m.value}%`, background: m.color, "--i": i }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+
+    <!-- 3. Suggestions -->
+    <article class={card} data-reveal>
+      <p class={fig}>Fig 1.3</p>
+      <h3 class={title}>Keyword suggestions</h3>
+      <p class={body}>
+        Ideas from your title and description, App Store autocomplete and the phrases competitors
+        put in their titles, each with an estimated popularity.
+      </p>
+      <div
+        class="-mx-6 mt-auto space-y-2.5 pt-8 [mask-image:linear-gradient(90deg,transparent,#000_18%,#000_82%,transparent)] sm:-mx-7"
+        aria-hidden="true"
+      >
+        {rows.map((row, r) => (
+          <div class="flex w-max gap-2.5">
+            {[0, 1].map(() => (
+              <div class:list={["marquee flex gap-2.5", r === 1 && "marquee-reverse"]}>
+                {row.map(([term, pop]) => (
+                  <span class="inline-flex items-center gap-2 rounded-full border border-line bg-bg/70 py-1.5 pr-1.5 pl-3 text-[12.5px] whitespace-nowrap text-muted">
+                    {term}
+                    <span class="rounded-full bg-white/[0.06] px-1.5 font-mono text-[11px] text-fg tabular-nums">
+                      {pop}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </article>
+
+    <!-- 4. Full ranking sheet -->
+    <article class:list={[card, "lg:col-span-2"]} data-reveal>
+      <div class="grid h-full gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-center">
+        <div>
+          <p class={fig}>Fig 1.4</p>
+          <h3 class={title}>The full ranking sheet</h3>
+          <p class={body}>
+            The complete ~250-app search ranking for any keyword, exactly as the App Store orders
+            it. Click any app to see the keywords it ranks for.
+          </p>
+        </div>
+        <div
+          class="relative h-[232px] overflow-hidden rounded-xl border border-line bg-bg/60 [mask-image:linear-gradient(180deg,transparent,#000_14%,#000_86%,transparent)]"
+          aria-hidden="true"
+        >
+          <div class="ranking-scroll">
+            {[0, 1].map(() => (
+              <ol class="divide-y divide-line">
+                {ranking.map((app, i) => (
+                  <li
+                    class:list={[
+                      "flex items-center gap-3 px-4 py-2.5 text-[13px]",
+                      app.you && "bg-accent/[0.1]",
+                    ]}
+                  >
+                    <span class="w-5 text-right font-mono text-[11.5px] text-dim tabular-nums">
+                      {i + 1}
+                    </span>
+                    <span
+                      class="size-6 shrink-0 rounded-[7px]"
+                      style={{
+                        background: `linear-gradient(135deg, oklch(0.72 0.15 ${app.hue}), oklch(0.55 0.17 ${app.hue + 30}))`,
+                      }}
+                    />
+                    <span class:list={["truncate", app.you ? "text-fg" : "text-muted"]}>
+                      {app.name}
+                    </span>
+                    {app.you && (
+                      <span class="ml-auto rounded-full bg-accent/20 px-2 py-0.5 text-[11px] text-[#c4bbff]">
+                        You
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            ))}
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 5. Competitor keywords -->
+    <article class={card} data-reveal>
+      <p class={fig}>Fig 1.5</p>
+      <h3 class={title}>Competitor keywords</h3>
+      <p class={body}>
+        Open any app to see every keyword it ranks for, or let Discover check likely ones for you.
+      </p>
+      <div class="mt-auto pt-8">
+        <p class="text-[13px] text-dim">Structured ranks for</p>
+        <ul class="mt-3 space-y-2">
+          {competitor.map((k, i) => (
+            <li
+              class="comp-row flex items-center justify-between rounded-lg border border-line bg-bg/60 px-3 py-2 text-[13px]"
+              style={{ "--i": i }}
+            >
+              <span class="text-muted">{k.term}</span>
+              <span class="font-mono font-medium text-up tabular-nums">#{k.position}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </article>
+
+    <!-- 6. Storefronts -->
+    <article class:list={[card, "lg:col-span-2"]} data-reveal>
+      <div class="grid h-full gap-8 sm:grid-cols-[1fr_1.4fr] sm:items-center">
+        <div>
+          <p class={fig}>Fig 1.6</p>
+          <h3 class={title}>51 storefronts</h3>
+          <p class={body}>
+            Switch countries anywhere in the app. Your choice carries across pages and is remembered
+            between launches.
+          </p>
+        </div>
+        <ul
+          class="grid grid-cols-9 gap-1.5 sm:grid-cols-[repeat(13,minmax(0,1fr))]"
+          aria-hidden="true"
+        >
+          {storefronts.map((code, i) => (
+            <li
+              class="store flex h-7 items-center justify-center rounded-md border border-line bg-bg/60 font-mono text-[10.5px] text-dim"
+              style={{ "--i": i }}
+            >
+              {code}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </article>
+  </div>
+</section>
+
+<style>
+  /* Each graphic animates once its card has been revealed (see scripts/reveal.ts). Without
+     JS, or with reduced motion, the final state is shown. */
+  .spark path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+  :global(.js) [data-reveal] .spark path {
+    stroke-dashoffset: 1;
+  }
+  :global(.js) [data-revealed] .spark path {
+    transition: stroke-dashoffset 1.6s var(--ease-out-soft) calc(0.3s + var(--i) * 0.12s);
+    stroke-dashoffset: 0;
+  }
+
+  :global(.js) [data-reveal] .meter {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  :global(.js) [data-revealed] .meter {
+    transition: transform 1.4s var(--ease-out-soft) calc(0.4s + var(--i) * 0.15s);
+    transform: none;
+  }
+
+  .marquee {
+    animation: marquee 38s linear infinite;
+  }
+  .marquee-reverse {
+    animation-direction: reverse;
+    animation-duration: 44s;
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(calc(-100% - 0.625rem));
+    }
+  }
+
+  .ranking-scroll {
+    animation: ranking 22s linear infinite;
+  }
+  @keyframes ranking {
+    to {
+      transform: translateY(-50%);
+    }
+  }
+
+  :global(.js) [data-reveal] .comp-row {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  :global(.js) [data-revealed] .comp-row {
+    transition:
+      opacity 0.6s var(--ease-out-soft),
+      transform 0.6s var(--ease-out-soft);
+    transition-delay: calc(0.4s + var(--i) * 0.12s);
+    opacity: 1;
+    transform: none;
+  }
+
+  /* A slow highlight sweeps across the storefront codes. */
+  .store {
+    animation: store-sweep 6s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.11s);
+  }
+  @keyframes store-sweep {
+    0%,
+    12%,
+    100% {
+      color: var(--color-dim);
+      border-color: var(--color-line);
+      background: rgb(7 7 10 / 0.6);
+    }
+    5% {
+      color: #d6d0ff;
+      border-color: rgb(124 108 246 / 0.5);
+      background: rgb(124 108 246 / 0.14);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee,
+    .ranking-scroll,
+    .store {
+      animation: none;
+    }
+    :global(.js) [data-reveal] .spark path,
+    :global(.js) [data-reveal] .meter,
+    :global(.js) [data-reveal] .comp-row {
+      transition: none;
+      stroke-dashoffset: 0;
+      transform: none;
+      opacity: 1;
+    }
+  }
+</style>

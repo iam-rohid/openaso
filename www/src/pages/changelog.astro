@@ -1,0 +1,132 @@
+---
+import { marked } from "marked";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import { REPO_URL } from "../consts";
+import Layout from "../layouts/Layout.astro";
+import { getReleases } from "../lib/github";
+
+// Built from GitHub Releases at build time; the site is rebuilt when a release is published.
+const releases = await getReleases();
+
+/** Release notes end lines with a commit hash, e.g. "(d4d30dd)"; link it to the commit. */
+const render = (body: string) =>
+  marked.parse(
+    body.replace(
+      /\(([0-9a-f]{7,40})\)/g,
+      (_, sha) => `([${sha.slice(0, 7)}](${REPO_URL}/commit/${sha}))`,
+    ),
+    { async: false },
+  );
+
+const format = (d: Date) =>
+  d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+---
+
+<Layout
+  title="Changelog · OpenASO"
+  description="Every OpenASO release: new features and fixes in the free, open-source App Store keyword research and rank tracking app."
+  ogImage="/og/changelog.png"
+>
+  <Header />
+  <main id="main" class="mx-auto max-w-5xl px-4 pt-20 pb-28 sm:px-6 sm:pt-28">
+    <div class="max-w-2xl" data-enter>
+      <p class="font-mono text-[11px] tracking-[0.14em] text-dim uppercase">Changelog</p>
+      <h1 class="mt-4 text-[clamp(2.2rem,5.5vw,3.5rem)] leading-[1.05] font-semibold tracking-[-0.04em]">
+        What's new in OpenASO
+      </h1>
+      <p class="mt-4 text-[16px] text-muted">
+        New features and fixes in every release. Installed apps update themselves within a few hours
+        of a release.
+      </p>
+    </div>
+
+    <ol class="mt-16 border-t border-line">
+      {releases.map((r, i) => (
+        <li
+          id={r.tag}
+          class="grid scroll-mt-24 gap-4 border-b border-line py-10 md:grid-cols-[200px_1fr] md:gap-10"
+          data-reveal
+        >
+          <div class="md:sticky md:top-24 md:self-start">
+            <a href={`#${r.tag}`} class="group inline-flex items-center gap-2">
+              <h2 class="text-[19px] font-semibold tracking-tight text-fg">{r.tag}</h2>
+              {i === 0 && (
+                <span class="rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-medium text-[#b9b0ff]">
+                  Latest
+                </span>
+              )}
+            </a>
+            <p class="mt-1 text-[13px] text-dim">
+              <time datetime={r.publishedAt.toISOString()}>{format(r.publishedAt)}</time>
+            </p>
+          </div>
+          <div class="release-notes text-[15px] leading-relaxed text-muted">
+            {r.body.trim() ? <Fragment set:html={render(r.body)} /> : <p>Maintenance release.</p>}
+            <p class="mt-6">
+              <a href={r.url} class="text-[13px] text-dim transition-colors hover:text-fg">
+                View on GitHub <span aria-hidden="true">↗</span>
+              </a>
+            </p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .release-notes :global(h2),
+  .release-notes :global(h3) {
+    margin-top: 1.5rem;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-dim);
+  }
+  .release-notes :global(h2:first-child),
+  .release-notes :global(h3:first-child) {
+    margin-top: 0;
+  }
+  .release-notes :global(ul) {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+  .release-notes :global(li) {
+    position: relative;
+    padding-left: 1.1rem;
+  }
+  .release-notes :global(li)::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.7em;
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background: var(--color-accent);
+  }
+  .release-notes :global(p + p) {
+    margin-top: 0.75rem;
+  }
+  .release-notes :global(a) {
+    color: var(--color-fg);
+    text-underline-offset: 4px;
+  }
+  .release-notes :global(a:hover) {
+    text-decoration: underline;
+  }
+  .release-notes :global(li a) {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-dim);
+  }
+  .release-notes :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--color-fg);
+  }
+</style>

@@ -1,0 +1,98 @@
+---
+import SectionHeading from "../SectionHeading.astro";
+
+const points = [
+  {
+    title: "Local database",
+    body: "Keywords, rankings and history live in a SQLite file in your app data folder. Back it up, move it or delete it.",
+  },
+  {
+    title: "No account, no server",
+    body: "There's nothing to sign up for and no OpenASO server in between. Your list of keywords is yours alone.",
+  },
+  {
+    title: "Only Apple's public endpoints",
+    body: "Apple's free App Store search, lookup and autocomplete endpoints, cached and rate limited so they stay happy.",
+  },
+];
+---
+
+<section class="mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32">
+  <div class="grid items-center gap-14 lg:grid-cols-2">
+    <div>
+      <SectionHeading eyebrow="Private by design" title="Your keywords never leave your computer.">
+        Your keyword strategy is valuable. OpenASO keeps it on your machine.
+      </SectionHeading>
+      <dl class="mt-10 space-y-6" data-reveal-stagger="90">
+        {points.map((p) => (
+          <div data-reveal>
+            <dt class="text-[15px] font-medium text-fg">{p.title}</dt>
+            <dd class="mt-1 text-[14px] leading-relaxed text-muted">{p.body}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+
+    <!-- Data flow: your computer talks to Apple directly; there's no server of ours. -->
+    <div class="relative" data-reveal aria-hidden="true">
+      <div class="absolute inset-0 -z-10 bg-[radial-gradient(closest-side,rgb(99_102_241/0.16),transparent)] blur-2xl"></div>
+      <div class="rounded-2xl border border-line bg-surface/60 p-6 sm:p-8">
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
+          <div class="rounded-xl border border-line-strong bg-bg/80 p-4 text-center">
+            <img src="/favicon.png" alt="" width="36" height="36" class="mx-auto rounded-[9px]" />
+            <p class="mt-3 text-[13px] font-medium text-fg">Your computer</p>
+            <p class="mt-1 font-mono text-[11px] text-dim">openaso.db</p>
+          </div>
+          <svg viewBox="0 0 120 40" class="w-16 sm:w-28" fill="none">
+            <path class="flow" d="M2 14H118" stroke="var(--color-accent)" stroke-width="1.5" />
+            <path
+              class="flow flow-back"
+              d="M118 26H2"
+              stroke="var(--color-dim)"
+              stroke-width="1.5"
+            />
+            <path d="M112 9l6 5-6 5M8 21l-6 5 6 5" stroke-width="1.5" stroke="var(--color-dim)" />
+          </svg>
+          <div class="rounded-xl border border-line-strong bg-bg/80 p-4 text-center">
+            <svg viewBox="0 0 24 24" class="mx-auto size-9 text-fg" fill="currentColor">
+              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"></path>
+            </svg>
+            <p class="mt-3 text-[13px] font-medium text-fg">App Store</p>
+            <p class="mt-1 font-mono text-[11px] text-dim">public endpoints</p>
+          </div>
+        </div>
+        <div class="mt-6 flex items-center justify-center gap-2 rounded-lg border border-dashed border-line-strong px-4 py-3 text-[13px] text-dim">
+          <svg viewBox="0 0 16 16" class="size-4 text-down" fill="none">
+            <path
+              d="M4 4l8 8M12 4l-8 8"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+            ></path>
+          </svg>
+          OpenASO servers: <span class="text-muted">none</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .flow {
+    stroke-dasharray: 4 6;
+    animation: flow 1.4s linear infinite;
+  }
+  .flow-back {
+    animation-duration: 1.8s;
+  }
+  @keyframes flow {
+    to {
+      stroke-dashoffset: -20;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flow {
+      animation: none;
+    }
+  }
+</style>
