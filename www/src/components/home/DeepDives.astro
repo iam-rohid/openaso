@@ -58,59 +58,62 @@ const dives = [
 ];
 ---
 
-<section class="mx-auto max-w-6xl space-y-28 px-4 py-12 sm:space-y-36 sm:px-6 sm:py-16">
-  {dives.map((d, i) => (
-    <div
-      class:list={[
-        "grid items-center gap-10 lg:gap-14",
-        i % 2 === 0
-          ? "lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)]"
-          : "lg:grid-cols-[minmax(0,8fr)_minmax(0,5fr)]",
-      ]}
-    >
-      <div class:list={["max-w-md", i % 2 === 1 && "lg:order-2"]} data-reveal>
-        <p class="font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase">{d.fig}</p>
-        <h2 class="mt-4 text-[clamp(1.6rem,3.2vw,2.25rem)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
-          <span class="text-fg">{d.title}</span>
-          <span class="text-dim"> {d.tail}</span>
-        </h2>
-        <ul class="mt-7 space-y-3.5">
-          {d.points.map((p) => (
-            <li class="flex gap-3 text-[15px] leading-relaxed text-muted">
-              <svg
-                viewBox="0 0 16 16"
-                class="mt-[5px] size-4 shrink-0 text-accent"
-                aria-hidden="true"
-              >
-                <path
-                  d="M3.5 8.5l3 3 6-7"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              {p}
-            </li>
-          ))}
-        </ul>
-        {d.link && (
-          <a
-            href={d.link.href}
-            class="mt-7 inline-flex items-center gap-1.5 text-[14px] text-fg underline-offset-4 hover:underline"
-          >
-            {d.link.label} <span aria-hidden="true">→</span>
-          </a>
-        )}
+<!-- Full width and clipped, so the screenshots' glow can't widen the page on phones. -->
+<div class="overflow-x-clip">
+  <section class="mx-auto max-w-6xl space-y-28 px-4 py-12 sm:space-y-36 sm:px-6 sm:py-16">
+    {dives.map((d, i) => (
+      <div
+        class:list={[
+          "grid items-center gap-10 lg:gap-14",
+          i % 2 === 0
+            ? "lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)]"
+            : "lg:grid-cols-[minmax(0,8fr)_minmax(0,5fr)]",
+        ]}
+      >
+        <div class:list={["max-w-md", i % 2 === 1 && "lg:order-2"]} data-reveal>
+          <p class="font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase">{d.fig}</p>
+          <h2 class="mt-4 text-[clamp(1.6rem,3.2vw,2.25rem)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
+            <span class="text-fg">{d.title}</span>
+            <span class="text-dim"> {d.tail}</span>
+          </h2>
+          <ul class="mt-7 space-y-3.5">
+            {d.points.map((p) => (
+              <li class="flex gap-3 text-[15px] leading-relaxed text-muted">
+                <svg
+                  viewBox="0 0 16 16"
+                  class="mt-[5px] size-4 shrink-0 text-accent"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                {p}
+              </li>
+            ))}
+          </ul>
+          {d.link && (
+            <a
+              href={d.link.href}
+              class="mt-7 inline-flex items-center gap-1.5 text-[14px] text-fg underline-offset-4 hover:underline"
+            >
+              {d.link.label} <span aria-hidden="true">→</span>
+            </a>
+          )}
+        </div>
+        <div class:list={["relative", i % 2 === 1 && "lg:order-1"]} data-reveal>
+          <div
+            aria-hidden="true"
+            class="absolute -inset-10 -z-10 rounded-full bg-[radial-gradient(closest-side,rgb(99_102_241/0.18),transparent)] blur-2xl"
+          />
+          <AppFrame src={d.shot} alt={d.alt} sizes="(min-width: 1024px) 720px, 100vw" />
+        </div>
       </div>
-      <div class:list={["relative", i % 2 === 1 && "lg:order-1"]} data-reveal>
-        <div
-          aria-hidden="true"
-          class="absolute -inset-10 -z-10 rounded-full bg-[radial-gradient(closest-side,rgb(99_102_241/0.18),transparent)] blur-2xl"
-        />
-        <AppFrame src={d.shot} alt={d.alt} sizes="(min-width: 1024px) 720px, 100vw" />
-      </div>
-    </div>
-  ))}
-</section>
+    ))}
+  </section>
+</div>
