@@ -105,6 +105,28 @@
     }
   }
 
+  /* Mobile menu (Header.astro): fades in, then its items rise in one after another.
+     Closing is instant; animating a <dialog> out needs allow-discrete, which Safari
+     handles unevenly. */
+  [data-mobile-nav][open] {
+    animation: menu-fade 0.2s ease-out;
+  }
+  [data-mobile-nav][open] [data-mobile-nav-item] {
+    animation: enter 0.6s var(--ease-out-soft) both;
+    animation-delay: calc(60ms + var(--i, 0) * 45ms);
+  }
+  @keyframes menu-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-mobile-nav][open],
+    [data-mobile-nav][open] [data-mobile-nav-item] {
+      animation: none;
+    }
+  }
+
   /* Headline with a dimmed tail, Linear style. */
   .text-gradient {
     background: linear-gradient(180deg, #fff 30%, rgb(255 255 255 / 0.62));
@@ -130,4 +152,9 @@ html[data-os="windows"] [data-dl="windows"],
 html[data-os="linux"] [data-dl="linux"],
 html[data-os="mobile"] [data-dl="mobile"] {
   display: flex;
+}
+
+/* The page behind the open mobile menu stays put. */
+html:has([data-mobile-nav][open]) {
+  overflow: hidden;
 }

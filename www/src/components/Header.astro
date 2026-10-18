@@ -7,6 +7,11 @@ const nav = [
   { href: "/changelog", label: "Changelog" },
   { href: "/mcp", label: "MCP" },
 ];
+
+// With build.format "file", the build sees /download.html; links use /download.
+// /#features is a section of the homepage, never the current page.
+const pathname = Astro.url.pathname.replace(/\.html$/, "");
+const isCurrent = (href: string) => href === pathname;
 ---
 
 <header
@@ -24,7 +29,8 @@ const nav = [
           <li>
             <a
               href={item.href}
-              class="rounded-md px-3 py-2 text-[13px] text-muted transition-colors hover:text-fg"
+              aria-current={isCurrent(item.href) ? "page" : undefined}
+              class="rounded-md px-3 py-2 text-[13px] text-muted transition-colors hover:text-fg aria-[current=page]:text-fg"
             >
               {item.label}
             </a>
@@ -32,9 +38,92 @@ const nav = [
         ))}
       </ul>
       <GitHubStars class="ml-1" />
+      {/* The menu needs JS to open, so the button only shows once <html> has .js. */}
+      <button
+        type="button"
+        data-mobile-nav-open
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        class="-mr-2 hidden size-10 items-center justify-center rounded-md text-muted transition-colors hover:text-fg [.js_&]:max-sm:inline-flex"
+      >
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          class="size-5"
+          aria-hidden="true"
+        >
+          <path d="M3 6.5h14M3 13.5h14" />
+        </svg>
+      </button>
     </nav>
   </div>
 </header>
+
+<dialog
+  id="mobile-nav"
+  data-mobile-nav
+  aria-label="Menu"
+  class="m-0 h-dvh max-h-none w-full max-w-none border-0 bg-bg p-0 text-fg backdrop:bg-transparent"
+>
+  <div class="flex h-full flex-col">
+    {/* Lines up with the header so the menu button seems to turn into the close button. */}
+    <div class="flex h-16 shrink-0 items-center justify-between gap-6 border-b border-line px-4">
+      <a href="/" class="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight">
+        <img src="/favicon.png" alt="" width="26" height="26" class="rounded-[7px]" />
+        OpenASO
+      </a>
+      <button
+        type="button"
+        data-mobile-nav-close
+        autofocus
+        aria-label="Close menu"
+        class="-mr-2 inline-flex size-10 items-center justify-center rounded-md text-muted transition-colors hover:text-fg"
+      >
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          class="size-5"
+          aria-hidden="true"
+        >
+          <path d="M5 5l10 10M15 5L5 15" />
+        </svg>
+      </button>
+    </div>
+    <nav class="flex-1 overflow-y-auto px-4 pt-6">
+      <ul class="flex flex-col">
+        {nav.map((item, i) => (
+          <li data-mobile-nav-item style={`--i: ${i}`}>
+            <a
+              href={item.href}
+              aria-current={isCurrent(item.href) ? "page" : undefined}
+              class="group flex items-center gap-3 py-3 text-2xl font-semibold tracking-tight text-muted transition-colors hover:text-fg aria-[current=page]:text-fg"
+            >
+              {item.label}
+              <span
+                class="hidden size-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--color-accent)] group-aria-[current=page]:block"
+                aria-hidden="true"
+              ></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    <div
+      data-mobile-nav-item
+      style={`--i: ${nav.length}`}
+      class="shrink-0 px-4 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+    >
+      <GitHubStars variant="button" class="w-full justify-center" />
+    </div>
+  </div>
+</dialog>
 
 <script>
   const header = document.querySelector<HTMLElement>("[data-header]");
@@ -42,5 +131,23 @@ const nav = [
     const update = () => header.toggleAttribute("data-scrolled", window.scrollY > 8);
     update();
     window.addEventListener("scroll", update, { passive: true });
+  }
+
+  const menu = document.querySelector<HTMLDialogElement>("[data-mobile-nav]");
+  const open = document.querySelector<HTMLButtonElement>("[data-mobile-nav-open]");
+  if (menu && open) {
+    open.addEventListener("click", () => {
+      menu.showModal();
+      open.setAttribute("aria-expanded", "true");
+    });
+    menu.addEventListener("close", () => open.setAttribute("aria-expanded", "false"));
+    // Close on any link too: /#features only scrolls on the homepage, leaving the menu up.
+    menu.addEventListener("click", (event) => {
+      if ((event.target as Element).closest("a, [data-mobile-nav-close]")) menu.close();
+    });
+    // Widening past the breakpoint (e.g. rotating a tablet) brings the desktop nav back.
+    matchMedia("(min-width: 40rem)").addEventListener("change", (event) => {
+      if (event.matches) menu.close();
+    });
   }
 </script>
