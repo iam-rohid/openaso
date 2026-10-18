@@ -1,0 +1,29 @@
+name: Rebuild website
+
+# The website is built and deployed by Cloudflare Workers Builds on every push to main.
+# It also reads GitHub data at build time (latest release, changelog, star count), so
+# rebuild it when a release is published and once a day.
+#
+# Needs the CF_DEPLOY_HOOK_URL secret: a deploy hook from the Worker's
+# Settings → Builds → Deploy Hooks in the Cloudflare dashboard.
+
+on:
+  release:
+    types: [published]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger a Workers Builds deploy
+        env:
+          HOOK: ${{ secrets.CF_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::CF_DEPLOY_HOOK_URL isn't set; skipping the website rebuild."
+            exit 0
+          fi
+          curl --fail --silent --show-error -X POST "$HOOK"
