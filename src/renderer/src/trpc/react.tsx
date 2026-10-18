@@ -1,6 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { createTRPCContext } from "@trpc/tanstack-react-query";
+import { createTRPCContext, createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
 import type { AppRouter } from "@main/api/root";
@@ -31,6 +31,9 @@ const trpcClient = createTRPCClient<AppRouter>({
     httpBatchLink({ url: TRPC_URL, transformer: superjson, fetch: ipcFetch }),
   ],
 });
+
+/** Query options for use outside React, e.g. in route loaders; shares the hooks' cache keys. */
+export const trpc = createTRPCOptionsProxy<AppRouter>({ client: trpcClient, queryClient });
 
 export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
   return (
