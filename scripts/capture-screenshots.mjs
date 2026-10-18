@@ -15,7 +15,20 @@ const DEMO_APP = "1480220328";
 const WIDTH = 1440;
 const HEIGHT = 900;
 
-const SHOTS = [{ name: "keywords", hash: `#/apps/${DEMO_APP}` }];
+/** Clicks the first button whose text starts with `text`, optionally in the table row for keyword `row`. */
+const click = (text, row) => `(() => {
+  const scope = ${row ? `[...document.querySelectorAll("tr")].find((tr) => [...tr.cells].some((td) => td.textContent.trim() === ${JSON.stringify(row)}))` : "document"};
+  const button = [...scope.querySelectorAll("button")].find((b) => b.textContent.trim().startsWith(${JSON.stringify(text)}));
+  if (!button) throw new Error("No button " + ${JSON.stringify(text)});
+  button.click();
+})()`;
+
+const SHOTS = [
+  { name: "keywords", hash: `#/apps/${DEMO_APP}` },
+  { name: "history", hash: `#/apps/${DEMO_APP}`, setup: click("Movers & history") },
+  { name: "ranking", hash: `#/apps/${DEMO_APP}`, setup: click("#", "planner") },
+  { name: "suggestions", hash: `#/apps/${DEMO_APP}`, setup: click("Get Suggestions"), settle: 12000 },
+];
 
 const targets = await fetch(`http://127.0.0.1:${PORT}/json`).then((r) => r.json());
 const page = targets.find((t) => t.type === "page");
@@ -54,11 +67,18 @@ await send("Emulation.setDeviceMetricsOverride", {
 await fs.mkdir(OUT, { recursive: true });
 
 for (const shot of SHOTS) {
+  // Reload so dialogs and panels from the previous shot are gone.
   await send("Runtime.evaluate", { expression: `location.hash = ${JSON.stringify(shot.hash)}` });
+  await send("Runtime.evaluate", { expression: "location.reload()" });
+  await wait(2500);
+  if (shot.setup) {
+    const { exceptionDetails } = await send("Runtime.evaluate", { expression: shot.setup });
+    if (exceptionDetails) throw new Error(`${shot.name}: ${exceptionDetails.exception?.description}`);
+  }
   // Park the pointer on empty sidebar space so no row shows its hover state.
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 150, y: HEIGHT - 200 });
   // Let queries settle and icons load.
-  await wait(2500);
+  await wait(shot.settle ?? 2500);
   const { data } = await send("Page.captureScreenshot", { format: "png" });
   const file = path.join(OUT, `${shot.name}.png`);
   await fs.writeFile(file, Buffer.from(data, "base64"));
