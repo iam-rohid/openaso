@@ -24,7 +24,7 @@ import { createMcpServer } from "./tools";
  * and are refused if they carry an Origin, which browsers send and MCP clients don't.
  */
 
-let settings: McpSettings = { enabled: false, port: DEFAULT_MCP_PORT, allowRemove: false };
+let settings: McpSettings = { enabled: false, autoStart: false, port: DEFAULT_MCP_PORT, allowRemove: false };
 let server: http.Server | null = null;
 let error: string | null = null;
 let lastRequestAt: Date | null = null;
@@ -144,9 +144,13 @@ async function apply() {
   }
 }
 
-/** Loads the saved settings (only once the data folder is set) and starts the server if it's on. */
+/**
+ * Loads the saved settings (only once the data folder is set) and starts the server if it
+ * starts with the app. Otherwise it stays off until turned on in Settings.
+ */
 export function startMcpServer() {
-  settings = { ...settings, ...loadAppState().mcp };
+  const saved = { ...settings, ...loadAppState().mcp };
+  settings = { ...saved, enabled: saved.autoStart };
   return apply();
 }
 

@@ -6,6 +6,8 @@ export const mcpUrl = (port: number) => `http://127.0.0.1:${port}${MCP_PATH}`;
 
 export type McpSettings = {
   enabled: boolean;
+  /** Turns the server on when OpenASO launches; otherwise it starts off. */
+  autoStart: boolean;
   port: number;
   /** Registers the tools that untrack apps and remove keywords. */
   allowRemove: boolean;

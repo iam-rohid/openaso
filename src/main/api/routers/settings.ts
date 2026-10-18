@@ -30,6 +30,7 @@ export const settingsRouter = createTRPCRouter({
     .input(
       z.object({
         enabled: z.boolean().optional(),
+        autoStart: z.boolean().optional(),
         port: z.number().int().min(1024).max(65535).optional(),
         allowRemove: z.boolean().optional(),
       }),

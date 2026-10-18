@@ -51,7 +51,7 @@ export function SettingsDialog({
             </button>
           ))}
         </nav>
-        <div className="min-w-0 flex-1 overflow-y-auto px-8 pt-6 pb-8">
+        <div className="min-w-0 flex-1 overflow-y-auto bg-background px-8 pt-6 pb-8">
           <Content />
         </div>
       </DialogContent>

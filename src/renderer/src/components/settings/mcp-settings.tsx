@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { DEFAULT_MCP_PORT, MCP_GUIDE_URL, type McpSettings, type McpStatus } from "@shared/mcp";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { timeAgo } from "@/lib/format";
@@ -98,6 +99,19 @@ export function McpSettings() {
       </SettingsRow>
 
       <div className={cn("divide-y transition-opacity", !enabled && "opacity-60")}>
+        <SettingsRow
+          label="Start with OpenASO"
+          htmlFor="settings-mcp-auto-start"
+          description="Turn the server on whenever OpenASO opens."
+          control={
+            <Checkbox
+              id="settings-mcp-auto-start"
+              checked={data?.autoStart ?? false}
+              disabled={!data}
+              onCheckedChange={(next) => change({ autoStart: next === true })}
+            />
+          }
+        />
         <SettingsRow
           label="Port"
           htmlFor="settings-mcp-port"
