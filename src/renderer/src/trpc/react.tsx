@@ -32,6 +32,9 @@ const trpcClient = createTRPCClient<AppRouter>({
   ],
 });
 
+// AI agents change data through the MCP server behind the UI's back; refetch whatever is on screen.
+window.openaso.onDataChanged(() => void queryClient.invalidateQueries());
+
 /** Query options for use outside React, e.g. in route loaders; shares the hooks' cache keys. */
 export const trpc = createTRPCOptionsProxy<AppRouter>({ client: trpcClient, queryClient });
 

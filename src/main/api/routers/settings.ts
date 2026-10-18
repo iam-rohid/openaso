@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import { TRPCError } from "@trpc/server";
 import { app, shell } from "electron";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "@main/api/trpc";
@@ -14,6 +17,14 @@ export const settingsRouter = createTRPCRouter({
   checkForUpdates: publicProcedure.mutation(() => checkForUpdatesInteractively()),
 
   mcpStatus: publicProcedure.query(() => getMcpStatus()),
+
+  /** Reveals Claude Desktop's config file (or its folder, before it has one). */
+  showClaudeDesktopConfig: publicProcedure.mutation(() => {
+    const file = getMcpStatus().claudeDesktop.configPath;
+    if (fs.existsSync(file)) return shell.showItemInFolder(file);
+    if (fs.existsSync(path.dirname(file))) return void shell.openPath(path.dirname(file));
+    throw new TRPCError({ code: "NOT_FOUND", message: "Couldn't find Claude Desktop's settings. Is it installed?" });
+  }),
 
   updateMcp: publicProcedure
     .input(

@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
 import {
+  DATA_CHANGED_CHANNEL,
   NEW_APP_CHANNEL,
   SETTINGS_CHANNEL,
   THEME_CHANNEL,
@@ -24,6 +25,11 @@ const api: PreloadApi = {
     const listener = () => callback();
     ipcRenderer.on(NEW_APP_CHANNEL, listener);
     return () => ipcRenderer.removeListener(NEW_APP_CHANNEL, listener);
+  },
+  onDataChanged: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on(DATA_CHANGED_CHANNEL, listener);
+    return () => ipcRenderer.removeListener(DATA_CHANGED_CHANNEL, listener);
   },
   onOpenSettings: (callback) => {
     const listener = () => callback();

@@ -17,6 +17,13 @@ export type McpStatus = McpSettings & {
   /** Why the server isn't running although it's enabled, e.g. the port is taken. */
   error: string | null;
   lastRequestAt: Date | null;
+  claudeDesktop: ClaudeDesktopSetup;
+};
+
+/** Claude Desktop only runs stdio servers, so it launches the bundled bridge with OpenASO's binary. */
+export type ClaudeDesktopSetup = {
+  server: { command: string; args: string[]; env: Record<string, string> };
+  configPath: string;
 };
 
 /** Setup guide for every client, on the website. */

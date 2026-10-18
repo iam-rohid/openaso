@@ -25,6 +25,9 @@ asarUnpack:
 extraResources:
   - from: drizzle
     to: drizzle
+  # Copied into the data folder for MCP clients that only speak stdio (Claude Desktop).
+  - from: resources/mcp-bridge.cjs
+    to: mcp-bridge.cjs
 
 mac:
   category: public.app-category.developer-tools

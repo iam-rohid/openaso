@@ -1,7 +1,17 @@
+import fs from "node:fs";
 import http from "node:http";
+import path from "node:path";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { app } from "electron";
 import { loadAppState, saveAppState } from "@main/app-state";
-import { DEFAULT_MCP_PORT, MCP_PATH, mcpUrl, type McpSettings, type McpStatus } from "@shared/mcp";
+import {
+  type ClaudeDesktopSetup,
+  DEFAULT_MCP_PORT,
+  MCP_PATH,
+  mcpUrl,
+  type McpSettings,
+  type McpStatus,
+} from "@shared/mcp";
 import { createMcpServer } from "./tools";
 
 /**
@@ -19,8 +29,47 @@ let server: http.Server | null = null;
 let error: string | null = null;
 let lastRequestAt: Date | null = null;
 
+const BRIDGE_FILE = "mcp-bridge.cjs";
+
+/**
+ * Where stdio clients run the bridge from: the data folder, so the path survives updates
+ * and AppImages (which mount somewhere new every launch). It reads the port from there too.
+ */
+const installedBridge = () => path.join(app.getPath("userData"), BRIDGE_FILE);
+
+/** Copies the bundled bridge into the data folder, replacing an older version. */
+function installBridge() {
+  const source = app.isPackaged
+    ? path.join(process.resourcesPath, BRIDGE_FILE)
+    : path.join(app.getAppPath(), "resources", BRIDGE_FILE);
+  try {
+    fs.copyFileSync(source, installedBridge());
+  } catch (err) {
+    console.error("Failed to install the MCP bridge", err);
+  }
+}
+
+function claudeDesktopSetup(): ClaudeDesktopSetup {
+  return {
+    server: {
+      // An AppImage's binary lives in a temporary mount; $APPIMAGE is the file itself.
+      command: process.env.APPIMAGE ?? process.execPath,
+      args: [installedBridge()],
+      env: { ELECTRON_RUN_AS_NODE: "1" },
+    },
+    configPath: path.join(app.getPath("appData"), "Claude", "claude_desktop_config.json"),
+  };
+}
+
 export function getMcpStatus(): McpStatus {
-  return { ...settings, running: !!server, url: mcpUrl(settings.port), error, lastRequestAt };
+  return {
+    ...settings,
+    running: !!server,
+    url: mcpUrl(settings.port),
+    error,
+    lastRequestAt,
+    claudeDesktop: claudeDesktopSetup(),
+  };
 }
 
 function isAllowedHost(host: string | undefined) {
@@ -43,7 +92,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
   }
 
   lastRequestAt = new Date();
-  const mcp = createMcpServer();
+  const mcp = createMcpServer({ allowRemove: settings.allowRemove });
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   res.on("close", () => {
     void transport.close();
@@ -82,6 +131,7 @@ async function apply() {
   await stop();
   error = null;
   if (!settings.enabled) return;
+  installBridge();
   try {
     server = await listen(settings.port);
   } catch (err) {

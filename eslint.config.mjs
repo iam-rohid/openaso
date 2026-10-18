@@ -17,4 +17,9 @@ export default defineConfig([
     files: ["src/main/**/*.ts", "src/preload/**/*.ts", "scripts/**/*.mjs", "*.config.{ts,mjs}"],
     languageOptions: { globals: globals.node },
   },
+  {
+    files: ["resources/**/*.cjs"],
+    languageOptions: { globals: globals.node, sourceType: "commonjs" },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
 ]);

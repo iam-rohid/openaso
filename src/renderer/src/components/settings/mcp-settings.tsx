@@ -12,21 +12,32 @@ import { useTRPC } from "@/trpc/react";
 import { CopyButton } from "./copy-button";
 import { SEGMENT_ITEM, SettingsRow, SettingsSection } from "./settings-row";
 
-type Client = { id: string; label: string; snippet: (url: string) => string; hint: React.ReactNode };
+type Client = { id: string; label: string; snippet: (status: McpStatus) => string; hint: React.ReactNode };
 
 const json = (value: unknown) => JSON.stringify(value, null, 2);
 
 const CLIENTS: Client[] = [
   {
+    id: "claude-desktop",
+    label: "Claude Desktop",
+    snippet: (status) => json({ mcpServers: { openaso: status.claudeDesktop.server } }),
+    hint: (
+      <>
+        Add <code>openaso</code> to the <code>mcpServers</code> in Claude Desktop&apos;s{" "}
+        <ShowClaudeConfig />, then restart Claude. No other install needed.
+      </>
+    ),
+  },
+  {
     id: "claude-code",
     label: "Claude Code",
-    snippet: (url) => `claude mcp add --transport http openaso ${url}`,
+    snippet: ({ url }) => `claude mcp add --transport http openaso ${url}`,
     hint: "Run this in a terminal, then start a new Claude Code session.",
   },
   {
     id: "cursor",
     label: "Cursor",
-    snippet: (url) => json({ mcpServers: { openaso: { url } } }),
+    snippet: ({ url }) => json({ mcpServers: { openaso: { url } } }),
     hint: (
       <>
         Add this to <code>~/.cursor/mcp.json</code>, then restart Cursor.
@@ -36,7 +47,7 @@ const CLIENTS: Client[] = [
   {
     id: "vscode",
     label: "VS Code",
-    snippet: (url) => json({ servers: { openaso: { type: "http", url } } }),
+    snippet: ({ url }) => json({ servers: { openaso: { type: "http", url } } }),
     hint: (
       <>
         Add this to <code>.vscode/mcp.json</code>, or run <strong>MCP: Add Server</strong> from the Command Palette.
@@ -46,7 +57,7 @@ const CLIENTS: Client[] = [
   {
     id: "other",
     label: "Other",
-    snippet: (url) => url,
+    snippet: ({ url }) => url,
     hint: "Any MCP client that supports Streamable HTTP can connect to this URL.",
   },
 ];
@@ -125,10 +136,10 @@ export function McpSettings() {
           {data && (
             <div className="relative mt-3 rounded-lg border bg-muted/40">
               <pre className="overflow-x-auto p-3 pr-24 font-mono text-xs leading-relaxed">
-                {selected.snippet(data.url)}
+                {selected.snippet(data)}
               </pre>
               <div className="absolute top-2 right-2">
-                <CopyButton text={selected.snippet(data.url)} />
+                <CopyButton text={selected.snippet(data)} />
               </div>
             </div>
           )}
@@ -215,5 +226,18 @@ function PortInput({ port, onChange }: { port: number; onChange: (port: number) 
         }
       }}
     />
+  );
+}
+
+/** Reveals claude_desktop_config.json, which Claude Desktop creates on first use of its settings. */
+function ShowClaudeConfig() {
+  const trpc = useTRPC();
+  const show = useMutation(
+    trpc.settings.showClaudeDesktopConfig.mutationOptions({ onError: (err) => toast.error(err.message) }),
+  );
+  return (
+    <button type="button" className="text-foreground underline underline-offset-4" onClick={() => show.mutate()}>
+      claude_desktop_config.json
+    </button>
   );
 }

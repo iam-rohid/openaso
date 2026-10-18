@@ -30,6 +30,9 @@ export const NEW_APP_CHANNEL = "menu:new-app";
 /** Settings… (⌘,) asks the renderer to open the Settings dialog. */
 export const SETTINGS_CHANNEL = "menu:settings";
 
+/** An AI agent changed data through the MCP server, so the renderer refetches what it shows. */
+export const DATA_CHANGED_CHANNEL = "data-changed";
+
 export const UPDATE_CHANNEL = "update";
 export const UPDATE_GET_CHANNEL = "update:get";
 export const UPDATE_INSTALL_CHANNEL = "update:install";
@@ -53,6 +56,8 @@ export type PreloadApi = {
   onUpdate: (callback: (status: UpdateStatus) => void) => () => void;
   /** Subscribes to File › New App…; returns an unsubscribe function. */
   onNewApp: (callback: () => void) => () => void;
+  /** Subscribes to changes made outside the UI (by AI agents); returns an unsubscribe function. */
+  onDataChanged: (callback: () => void) => () => void;
   /** Subscribes to Settings…; returns an unsubscribe function. */
   onOpenSettings: (callback: () => void) => () => void;
   /** Quits and installs a downloaded update. */
