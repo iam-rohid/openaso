@@ -9,8 +9,12 @@ import { buildMenu } from "@main/menu";
 import { startRankUpdates } from "@main/services/rank-updates";
 import { checkForUpdatesInteractively, initUpdater } from "@main/updater";
 
-// Keep development data apart from the installed app's.
-if (!app.isPackaged) app.setPath("userData", path.join(app.getPath("appData"), "OpenASO Dev"));
+// Keep development data apart from the installed app's. OPENASO_DEMO uses a separate,
+// seeded database for the marketing site's screenshots.
+const isDemo = !app.isPackaged && !!process.env.OPENASO_DEMO;
+if (!app.isPackaged) {
+  app.setPath("userData", path.join(app.getPath("appData"), isDemo ? "OpenASO Demo" : "OpenASO Dev"));
+}
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -136,6 +140,7 @@ if (!app.requestSingleInstanceLock()) {
   void app.whenReady().then(async () => {
     nativeTheme.themeSource = loadAppState().theme ?? "dark";
     if (!(await setUpDatabase())) return app.quit();
+    if (import.meta.env.DEV && isDemo) await (await import("@main/dev/seed-demo")).seedDemo();
     registerTrpcHandler();
     registerThemeHandler();
     buildMenu({

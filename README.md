@@ -82,6 +82,8 @@ It's created, and migrations are applied, on launch. Before an existing database
 | Script             | What it does                                       |
 | ------------------ | -------------------------------------------------- |
 | `pnpm dev`         | Run the app with hot reload                         |
+| `pnpm dev:demo`    | Run with a seeded demo database (separate data folder) |
+| `pnpm screenshots` | Capture the website's screenshots from `dev:demo`    |
 | `pnpm build`       | Build main, preload and renderer into `out/`        |
 | `pnpm preview`     | Run the production build                            |
 | `pnpm dist`        | Build installers for this OS into `dist/`           |

@@ -12,6 +12,8 @@
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
+    "dev:demo": "OPENASO_DEMO=1 electron-vite dev --remoteDebuggingPort 9229",
+    "screenshots": "node scripts/capture-screenshots.mjs",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "postinstall": "electron-builder install-app-deps",
